@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>R线策略中台后台原型</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">R</div>
+          <div>
+            <strong>R线策略中台</strong>
+            <span>用户分数与高优识别</span>
+          </div>
+        </div>
+        <nav class="nav-list" aria-label="主导航">
+          <button class="nav-item active" data-view="dashboard">总览</button>
+          <button class="nav-item" data-view="tags">标签库</button>
+          <button class="nav-item" data-view="scoring">评分周期</button>
+          <button class="nav-item" data-view="tasks">任务引擎</button>
+          <button class="nav-item" data-view="operations">中心化提分</button>
+          <button class="nav-item" data-view="backend">后台底座</button>
+          <button class="nav-item" data-view="demands">提需清单</button>
+          <button class="nav-item" data-view="examples">R线样例</button>
+        </nav>
+        <div class="source-box">
+          <span>资料口径</span>
+          <strong>CSI标签体系 + R线商业规划 + 阅读器/卡册/教研SOP</strong>
+          <small>已结合现有工作台、营销中心活动页和CRM标签/分群承接能力。</small>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">2026-06-24 版本</p>
+            <h1>R线用户分数系统落地工作台</h1>
+            <p class="page-note">点击任意卡片、表格行或字段，可在右侧查看规则、字段、周期、负责人和验收口径。</p>
+          </div>
+          <div class="top-actions">
+            <label class="search">
+              <span>搜索</span>
+              <input id="globalSearch" type="search" placeholder="用户 / 标签 / 任务" />
+            </label>
+            <a class="doc-link" href="https://alidocs.dingtalk.com/i/nodes/EpGBa2Lm8azLY0OAtwyxKRkGWgN7R35y?utm_scene=person_space" target="_blank" rel="noreferrer">方案文档</a>
+          </div>
+        </header>
+
+        <section class="view active" id="view-dashboard">
+          <div class="kpi-grid">
+            <article class="kpi" data-detail="kpi:highPriority" tabindex="0">
+              <span>今日高优池</span>
+              <strong>286</strong>
+              <em>H1/H2 用户，可派发任务</em>
+            </article>
+            <article class="kpi" data-detail="kpi:liftPool" tabindex="0">
+              <span>H3提分池</span>
+              <strong>418</strong>
+              <em>适合活动、讲座、复习直播</em>
+            </article>
+            <article class="kpi warning" data-detail="kpi:risk" tabindex="0">
+              <span>风险熔断</span>
+              <strong>17</strong>
+              <em>退款/投诉/强负向优先处理</em>
+            </article>
+            <article class="kpi positive" data-detail="kpi:convertible" tabindex="0">
+              <span>预计可转化</span>
+              <strong>42</strong>
+              <em>已领券、问价或下单未付</em>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel wide">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Lifecycle</p>
+                  <h2>生命周期推进</h2>
+                </div>
+                <div class="segmented" role="group" aria-label="生命周期">
+                  <button class="segment active" data-life="monthly">月课28天</button>
+                  <button class="segment" data-life="annual">正价课12月</button>
+                </div>
+              </div>
+              <div class="timeline" id="lifecycleTimeline"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Score</p>
+                  <h2>双分模型</h2>
+                </div>
+              </div>
+              <div class="score-stack">
+                <div data-detail="score:priority" tabindex="0">
+                  <span>高优识别分</span>
+                  <strong>学习健康35 / 效果20 / 家长20 / 商业15 / 适配10</strong>
+                </div>
+                <div data-detail="score:lift" tabindex="0">
+                  <span>运营提分潜力</span>
+                  <strong>学习基础30 / 效果缺口25 / 家长认知20 / 可达15 / 窗口10</strong>
+                </div>
+                <div class="risk-rule" data-detail="score:fuse" tabindex="0">
+                  <span>熔断</span>
+                  <strong>投诉、退款、强负向、触达饱和 > 90% 时暂停销售任务</strong>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Queue</p>
+                  <h2>今日任务结构</h2>
+                </div>
+              </div>
+              <div class="bar-list">
+                <div class="bar-row" data-detail="queue:p0" tabindex="0"><span>P0临门/风险</span><i style="--w: 72%"></i><b>59</b></div>
+                <div class="bar-row" data-detail="queue:p1" tabindex="0"><span>P1高优转化</span><i style="--w: 88%"></i><b>96</b></div>
+                <div class="bar-row" data-detail="queue:p2" tabindex="0"><span>P2提分邀约</span><i style="--w: 64%"></i><b>138</b></div>
+                <div class="bar-row" data-detail="queue:p3" tabindex="0"><span>P3习惯修复</span><i style="--w: 45%"></i><b>74</b></div>
+              </div>
+            </section>
+
+            <section class="panel wide">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Users</p>
+                  <h2>高优用户样例</h2>
+                </div>
+                <span class="status-pill">示例数据</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>用户</th>
+                      <th>阶段</th>
+                      <th>分层</th>
+                      <th>触发原因</th>
+                      <th>推荐动作</th>
+                      <th>风险</th>
+                    </tr>
+                  </thead>
+                  <tbody id="userRows"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-tags">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Tags</p>
+                <h2>现有CSI标签库与R线使用口径</h2>
+              </div>
+              <div class="filters">
+                <select id="categoryFilter" aria-label="标签分类"></select>
+                <select id="availabilityFilter" aria-label="可用性"></select>
+                <select id="cycleFilter" aria-label="刷新周期"></select>
+              </div>
+            </div>
+            <div class="table-wrap large">
+              <table>
+                <thead>
+                  <tr>
+                    <th>编号</th>
+                    <th>标签</th>
+                    <th>分类</th>
+                    <th>优先级</th>
+                    <th>可用性</th>
+                    <th>刷新</th>
+                    <th>R线口径</th>
+                  </tr>
+                </thead>
+                <tbody id="tagRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-scoring">
+          <div class="section-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Refresh</p>
+                  <h2>后台刷新与查看周期</h2>
+                </div>
+              </div>
+              <div class="cycle-grid" id="cycleGrid"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Threshold</p>
+                  <h2>分层阈值</h2>
+                </div>
+              </div>
+              <div class="tier-list">
+                <div><b>H1</b><span>高优识别≥75，商业意向≥60，无熔断</span></div>
+                <div><b>H2</b><span>高优识别65-74，或效果强但未进入购买</span></div>
+                <div><b>H3</b><span>高优40-64，运营提分潜力≥70</span></div>
+                <div><b>H4</b><span>风险扣分明显，需先修复体验</span></div>
+                <div><b>L</b><span>低学习、低互动、低意向，低频自动触达</span></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-tasks">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Task Engine</p>
+                <h2>指导师任务规则</h2>
+              </div>
+            </div>
+            <div class="task-grid" id="taskRules"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-operations">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Lift</p>
+                <h2>中心化提分排期</h2>
+              </div>
+            </div>
+            <div class="ops-grid" id="opsRows"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-backend">
+          <div class="section-grid backend-layout">
+            <section class="panel wide">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Admin Base</p>
+                  <h2>已授权后台能力映射</h2>
+                </div>
+                <span class="status-pill">2026-06-24 实读</span>
+              </div>
+              <div class="backend-grid" id="backendModules"></div>
+            </section>
+
+            <section class="panel wide">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Marketing Activity</p>
+                  <h2>营销中心活动字段</h2>
+                </div>
+              </div>
+              <div class="table-wrap large">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>板块</th>
+                      <th>已有字段/按钮</th>
+                      <th>R线可用方式</th>
+                      <th>需补充</th>
+                    </tr>
+                  </thead>
+                  <tbody id="activityFieldRows"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Reuse</p>
+                  <h2>R线可直接承接场景</h2>
+                </div>
+              </div>
+              <div class="task-grid compact" id="backendReuseCards"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Blocks</p>
+                  <h2>上线前阻塞项</h2>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>优先级</th>
+                      <th>问题</th>
+                      <th>讨论对象</th>
+                    </tr>
+                  </thead>
+                  <tbody id="backendBlockRows"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-demands">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Requirement</p>
+                <h2>跨部门提需清单</h2>
+              </div>
+            </div>
+            <div class="table-wrap large">
+              <table>
+                <thead>
+                  <tr>
+                    <th>优先级</th>
+                    <th>模块</th>
+                    <th>需求</th>
+                    <th>对接方</th>
+                    <th>验收口径</th>
+                  </tr>
+                </thead>
+                <tbody id="demandRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-examples">
+          <div class="examples-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">R1-R3</p>
+                  <h2>低阶绘本样例</h2>
+                </div>
+              </div>
+              <div class="example-list">
+                <article>
+                  <b>Big Dog, Small Dog</b>
+                  <span>R1 概念/标签式绘本：每页聚焦一个可见属性，适合观察完课、核心词曝光、卡牌获得。</span>
+                </article>
+                <article>
+                  <b>Magic Canvas</b>
+                  <span>导读 + 核心词单词卡 + 读中互动，可用于学习深度和词汇复现评分。</span>
+                </article>
+                <article>
+                  <b>Pets Around Me</b>
+                  <span>熟悉日常主题，适合做T7打卡挑战和T14单词PK。</span>
+                </article>
+              </div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Service</p>
+                  <h2>服务与内容节点</h2>
+                </div>
+              </div>
+              <div class="example-list">
+                <article>
+                  <b>月课T21成果报告</b>
+                  <span>呈现已读绘本、已获卡牌、核心词、互动正确率，承接W4转化。</span>
+                </article>
+                <article>
+                  <b>季度词汇复习直播</b>
+                  <span>针对掌握一般的孩子做中心化复习，提升B03进步感知和B06活动参与。</span>
+                </article>
+                <article>
+                  <b>KET/PET规划讲座</b>
+                  <span>面向7-12岁和高阶用户，强化长期出口，服务M9/M12续费。</span>
+                </article>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+    <aside class="detail-drawer" id="detailDrawer" aria-hidden="true" aria-labelledby="detailTitle">
+      <header class="drawer-head">
+        <div>
+          <p class="eyebrow" id="detailEyebrow">Drilldown</p>
+          <h2 id="detailTitle">下钻详情</h2>
+        </div>
+        <button class="drawer-close" id="drawerClose" type="button" aria-label="关闭详情">×</button>
+      </header>
+      <div class="drawer-body" id="detailBody"></div>
+    </aside>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
