@@ -181,6 +181,19 @@ function confirmReset(store) {
   });
 }
 
+function confirmUndo(store) {
+  const close = openModal({
+    title: "撤销最近一次本地演示变更",
+    trustedHtml: `<p>此操作会撤销最新一次本地演示变更，且不会自动连续撤销两次。取消不会更改当前状态。</p><div class="form-actions"><button id="undoCancelButton" type="button" class="secondary-button">取消</button><button id="confirmUndoButton" type="button" class="danger-button">确认撤销</button></div>`
+  });
+  document.getElementById("undoCancelButton")?.addEventListener("click", () => close());
+  document.getElementById("confirmUndoButton")?.addEventListener("click", () => {
+    if (store.undo()) toast("已撤销最近一次数据变更。", "success");
+    else toast("没有可撤销的数据变更。", "info");
+    close({ restoreFocus: false });
+  });
+}
+
 function renderPlaceholder(container, item, role, state) {
   const roleLabel = ROLES.find((candidate) => candidate.id === role)?.label || role;
   const taskCount = roleTaskCount(state, role);
@@ -345,8 +358,7 @@ function boot() {
     if (target.closest("#navCloseButton, #navOverlay")) closeMobileNav();
     if (target.closest(".nav-item, .brand")) closeMobileNav({ restoreFocus: false });
     if (target.closest("#undoButton")) {
-      if (store.undo()) toast("已撤销最近一次数据变更。", "success");
-      else toast("没有可撤销的数据变更。", "info");
+      confirmUndo(store);
     }
     if (target.closest("#resetButton")) confirmReset(store);
     if (target.closest("#exportSnapshotButton")) exportSnapshot(store);

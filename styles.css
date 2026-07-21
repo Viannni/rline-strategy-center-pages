@@ -1278,6 +1278,10 @@ textarea:focus-visible,
   display: none;
 }
 
+.desktop-guidance.is-visible {
+  display: block;
+}
+
 .detail-toolbar {
   display: flex;
   min-height: 42px;
@@ -2290,10 +2294,6 @@ textarea:focus-visible,
 
   .import-wizard__body {
     min-height: 0;
-  }
-
-  .desktop-guidance {
-    display: block;
   }
 
   .kpi-strip {

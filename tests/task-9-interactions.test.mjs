@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { createStore } from "../core/store.js";
 import { SEED_STATE } from "../data/seed-data.js";
 import {
+  createSimulationConfirmation,
   createImportPreview,
   applySimulation,
   mapImportRows,
@@ -12,6 +13,7 @@ import {
   userExportJson,
   isDesktopOnlyFeatureAvailable
 } from "../views/users.js";
+import { RULE_EDITOR_MIN_WIDTH, isRuleEditorAvailable } from "../views/scoring.js";
 import { taskExportCsv } from "../views/tasks.js";
 import { dialogContract } from "../ui/components.js";
 
@@ -65,15 +67,35 @@ test("mobile-only capability gating leaves bulk import and rule editing to deskt
   assert.equal(isDesktopOnlyFeatureAvailable(390), false);
   assert.equal(isDesktopOnlyFeatureAvailable(768), false);
   assert.equal(isDesktopOnlyFeatureAvailable(1280), true);
+  assert.equal(RULE_EDITOR_MIN_WIDTH, 900);
+  assert.equal(isRuleEditorAvailable(899), false);
+  assert.equal(isRuleEditorAvailable(900), true);
 });
 
 test("simulation preview remains immutable until the confirmation path applies it", () => {
   const store = createStore(SEED_STATE, memoryStorage());
   const before = store.getState().users.find((user) => user.id === "high-base").report.opened;
   const preview = previewSimulation(store.getState(), "high-base", { reportOpened: !before });
+  let applyCalls = 0;
+  const confirmation = createSimulationConfirmation({
+    store,
+    userId: "high-base",
+    changes: preview.changes,
+    apply: (...args) => {
+      applyCalls += 1;
+      return applySimulation(...args);
+    }
+  });
 
   assert.equal(store.getState().users.find((user) => user.id === "high-base").report.opened, before);
-  applySimulation(store, "high-base", preview.changes);
+  assert.equal(applyCalls, 0);
+  assert.equal(confirmation.cancel(), false);
+  assert.equal(applyCalls, 0);
+  assert.equal(confirmation.confirm(), false);
+  assert.equal(store.getState().users.find((user) => user.id === "high-base").report.opened, before);
+
+  const acceptedConfirmation = createSimulationConfirmation({ store, userId: "high-base", changes: preview.changes });
+  assert.equal(acceptedConfirmation.confirm(), true);
   assert.equal(store.getState().users.find((user) => user.id === "high-base").report.opened, !before);
 });
 

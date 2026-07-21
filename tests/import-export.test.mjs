@@ -157,6 +157,26 @@ test("duplicate skip keeps the first existing user and reports skipped rows", ()
   assert.deepEqual(result.skipped, [{ row: 1, userId: "mid-base", code: "DUPLICATE_SKIPPED" }]);
 });
 
+test("duplicate update imports valid fields while preserving unrelated nested data", () => {
+  const existing = [scenarioUser("mid-base")];
+  const before = structuredClone(existing);
+  const result = importUsers([{
+    user_id: "mid-base",
+    product_type: "monthly",
+    stage_code: "T16",
+    active_learning_days_7d: 7,
+    course_evaluation_score: 96
+  }], existing, "update");
+
+  assert.equal(result.imported, 1);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.users[0].learning.activeDays7, 7);
+  assert.equal(result.users[0].courseEvaluation.normalizedScore, 96);
+  assert.equal(result.users[0].learning.completionRate, before[0].learning.completionRate);
+  assert.deepEqual(result.users[0].parent, before[0].parent);
+  assert.deepEqual(existing, before);
+});
+
 test("CSV export quotes delimiters and prevents spreadsheet formula execution", () => {
   const csv = serializeCsv([
     { user_id: "U1", note: "A,B", formula: "=SUM(A1:A2)", negative: "-10", safe: "plain" }

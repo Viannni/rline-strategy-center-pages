@@ -20,6 +20,12 @@ export const SCORING_TABS = Object.freeze([
   { id: "trial", label: "规则试算" }
 ]);
 
+export const RULE_EDITOR_MIN_WIDTH = 900;
+
+export function isRuleEditorAvailable(viewportWidth) {
+  return Number(viewportWidth) >= RULE_EDITOR_MIN_WIDTH;
+}
+
 const FIELD_PLACEMENTS = Object.freeze({
   F03: "learning-data", F04: "learning-data", F05: "learning-data", F06: "learning-data", F07: "learning-data", F08: "learning-data", F09: "front-entry",
   F10: "activity-uplift", F11: "touch-feedback", F12: "routing-policy", F13: "activity-uplift", F14: "task-queue", F15: "risk-fuse", F16: "touch-feedback"
@@ -73,12 +79,12 @@ function fieldButtons(fieldIds) {
   return fieldIds.map((fieldId) => `<button type="button" class="field-chip" data-field-id="${escapeAttribute(fieldId)}">${escapeHtml(fieldId)}</button>`).join("");
 }
 
-function rulesTable(rows, { editable = false } = {}) {
+function rulesTable(rows, { editable = false, editorAvailable = true } = {}) {
   return renderTable({
     columns: [
       { key: "dimension", label: "维度", className: "col-dimension" },
       { key: "label", label: "指标", className: "col-rule" },
-      { key: "points", label: "分值", className: "col-number", trustedHtml: (value, row) => editable ? `<input class="rule-points-input" data-rule-id="${escapeAttribute(row.id)}" data-rule-group="${escapeAttribute(row.groupId)}" type="number" min="0" max="30" step="1" value="${escapeAttribute(value)}" aria-label="${escapeAttribute(row.label)}分值">` : escapeHtml(value) },
+      { key: "points", label: "分值", className: "col-number", trustedHtml: (value, row) => editable ? `<input class="rule-points-input" data-rule-id="${escapeAttribute(row.id)}" data-rule-group="${escapeAttribute(row.groupId)}" type="number" min="0" max="30" step="1" value="${escapeAttribute(value)}" aria-label="${escapeAttribute(row.label)}分值"${editorAvailable ? "" : " disabled"}>` : escapeHtml(value) },
       { key: "condition", label: "适用条件", className: "col-condition" },
       { key: "fieldIds", label: "字段", className: "col-fields", trustedHtml: (value) => fieldButtons(value) },
       { key: "window", label: "观察窗口", className: "col-window" },
@@ -131,7 +137,8 @@ function updateDraftPoint(groupId, ruleId, points) {
 
 function renderTrial(state) {
   const options = (state?.users ?? []).map((user) => `<option value="${escapeAttribute(user.id)}">${escapeHtml(user.childId)} · ${escapeHtml(user.id)}</option>`).join("");
-  return `<section class="score-toolbar"><div><strong>本地规则草稿</strong><span>只在当前页面内试算，不发布、不修改生产，也不写入用户模拟数据。</span></div><div class="page-actions"><button id="exportRuleDraft" type="button" class="secondary-button">导出草稿 JSON</button><button id="restoreBaselineButton" type="button" class="secondary-button">${icon("rotate-ccw")}恢复线上基准</button></div></section><p class="desktop-guidance" role="note">复杂规则编辑请在桌面端完成；手机端可查看评分与任务回写。</p><div class="trial-layout"><section class="trial-rules"><header class="analysis-panel__header"><div><p class="section-kicker">可编辑草稿</p><h2>基础分分值</h2></div>${renderBadge("warning", "本地草稿")}</header>${rulesTable(buildBaseRuleRows(localDraft), { editable: true })}</section><section class="trial-result"><label class="filter-field"><span>试算用户</span><select id="trialUserSelect">${options}</select></label><button id="previewRuleButton" type="button" class="primary-button">${icon("calculator")}预览规则影响</button><div id="rulePreview" aria-live="polite"><p class="empty-copy">选择用户后预览原始/最终基础分、H层级和信号。独立信号不会因基础分草稿被混入。</p></div></section></div>`;
+  const editorAvailable = isRuleEditorAvailable(typeof window === "undefined" ? RULE_EDITOR_MIN_WIDTH : window.innerWidth);
+  return `<section class="score-toolbar"><div><strong>本地规则草稿</strong><span>只在当前页面内试算，不发布、不修改生产，也不写入用户模拟数据。</span></div><div class="page-actions"><button id="exportRuleDraft" type="button" class="secondary-button">导出草稿 JSON</button><button id="restoreBaselineButton" type="button" class="secondary-button"${editorAvailable ? "" : " disabled"}>${icon("rotate-ccw")}恢复线上基准</button></div></section><p class="desktop-guidance${editorAvailable ? "" : " is-visible"}" role="note">复杂规则编辑请在桌面端完成；手机端可查看评分与任务回写。</p><div class="trial-layout rule-editor${editorAvailable ? "" : " rule-editor--blocked"}"><section class="trial-rules"><header class="analysis-panel__header"><div><p class="section-kicker">可编辑草稿</p><h2>基础分分值</h2></div>${renderBadge("warning", "本地草稿")}</header>${rulesTable(buildBaseRuleRows(localDraft), { editable: true, editorAvailable })}</section><section class="trial-result"><label class="filter-field"><span>试算用户</span><select id="trialUserSelect">${options}</select></label><button id="previewRuleButton" type="button" class="primary-button">${icon("calculator")}预览规则影响</button><div id="rulePreview" aria-live="polite"><p class="empty-copy">选择用户后预览原始/最终基础分、H层级和信号。独立信号不会因基础分草稿被混入。</p></div></section></div>`;
 }
 
 function renderTabContent(state) {
@@ -206,7 +213,7 @@ export function render(container, context) {
   container.onchange = (event) => {
     const input = event.target instanceof HTMLInputElement ? event.target : null;
     if (!input?.matches(".rule-points-input")) return;
-    if (typeof window !== "undefined" && window.innerWidth < 900) {
+    if (!isRuleEditorAvailable(typeof window === "undefined" ? RULE_EDITOR_MIN_WIDTH : window.innerWidth)) {
       toast("复杂规则编辑请在桌面端完成。", "warning");
       rerender();
       return;

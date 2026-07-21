@@ -332,6 +332,23 @@ export function applySimulation(store, userId, changes) {
   return preview;
 }
 
+export function createSimulationConfirmation({ store, userId, changes, apply = applySimulation }) {
+  let settled = false;
+  return {
+    cancel() {
+      if (settled) return false;
+      settled = true;
+      return false;
+    },
+    confirm() {
+      if (settled) return false;
+      settled = true;
+      apply(store, userId, changes);
+      return true;
+    }
+  };
+}
+
 function option(value, label, selected) {
   return `<option value="${escapeAttribute(value)}"${selected === value ? " selected" : ""}>${escapeHtml(label)}</option>`;
 }
@@ -457,13 +474,18 @@ function openSimulation(model, context) {
   });
   document.getElementById("simulationPreview")?.addEventListener("click", (event) => {
     if (!(event.target instanceof Element) || !event.target.closest("#applySimulationButton") || !latestPreview) return;
-    openModal({
+    const confirmation = createSimulationConfirmation({ store: context.store, userId: model.user.id, changes: latestPreview.changes });
+    const close = openModal({
       title: "确认应用模拟变更",
-      trustedHtml: `<p>此次操作只写入当前浏览器的模拟数据，并可通过顶部撤销按钮回退。</p><div class="form-actions"><button id="confirmSimulationButton" type="button" class="danger-button">确认应用</button></div>`
+      trustedHtml: `<p>此次操作只写入当前浏览器的模拟数据，并可通过顶部撤销按钮回退。</p><div class="form-actions"><button id="cancelSimulationButton" type="button" class="secondary-button">取消</button><button id="confirmSimulationButton" type="button" class="danger-button">确认应用</button></div>`
+    });
+    document.getElementById("cancelSimulationButton")?.addEventListener("click", () => {
+      confirmation.cancel();
+      close();
     });
     document.getElementById("confirmSimulationButton")?.addEventListener("click", () => {
-      applySimulation(context.store, model.user.id, latestPreview.changes);
-      document.querySelector("[data-overlay-close]")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      if (!confirmation.confirm()) return;
+      close({ restoreFocus: false });
       toast("模拟行为已应用，评分与路由已重新计算。", "success");
     });
   });
