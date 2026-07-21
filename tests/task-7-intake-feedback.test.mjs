@@ -96,6 +96,37 @@ test("a Sales-assigned renewal H4 task is rendered as repair even when its store
   assert.equal(row.conversionControls, false);
 });
 
+test("H4 and sales-frozen tasks expose restricted repair feedback options in every visible role", () => {
+  const state = freshStore().getState();
+  const learningRow = buildRoleTaskRows(state, "learning").find((row) => row.userId === "high-score-risk");
+  const strategyRow = buildRoleTaskRows(state, "strategy").find((row) => row.userId === "high-score-risk");
+  const agentState = { ...state, tasks: state.tasks.map((task) => task.userId === "high-score-risk" ? { ...task, assigneeTeam: "agent" } : task) };
+  const agentRow = buildRoleTaskRows(agentState, "agent").find((row) => row.userId === "high-score-risk");
+  const salesState = { ...state, tasks: state.tasks.map((task) => task.userId === "high-score-risk" ? { ...task, assigneeTeam: "sales" } : task) };
+  const salesRow = buildRoleTaskRows(salesState, "sales").find((row) => row.userId === "high-score-risk");
+
+  for (const row of [learningRow, strategyRow, agentRow, salesRow]) {
+    assert.equal(row.frozenRepair, true);
+    assert.equal(row.conversionControls, false);
+    assert.deepEqual(row.feedbackOptions.nextAction, ["service-repair"]);
+    assert.deepEqual(row.feedbackOptions.finalResult, ["follow-up", "resolved"]);
+  }
+});
+
+test("frozen after-sales and Strategy feedback cannot submit conversion values but accepts repair feedback", () => {
+  const store = freshStore();
+  const conversionFeedback = { ...feedback, intentStatus: "ready", nextAction: "send-payment-link", finalResult: "converted" };
+
+  assert.throws(() => store.submitTaskFeedback("task-1004", conversionFeedback), /FROZEN_REPAIR_CONVERSION_BLOCKED/);
+  assert.throws(() => store.submitFeedback("task-1004", { ...feedback, nextAction: "offer-coupon", finalResult: "follow-up" }), /FROZEN_REPAIR_CONVERSION_BLOCKED/);
+  assert.throws(() => store.submitFeedback("task-1004", { ...feedback, nextAction: "service-repair", finalResult: "converted" }), /FROZEN_REPAIR_CONVERSION_BLOCKED/);
+  assert.throws(() => store.submitFeedback("task-1004", { ...feedback, nextAction: "service-repair", finalResult: "paid" }), /FROZEN_REPAIR_CONVERSION_BLOCKED/);
+  const accepted = store.submitTaskFeedback("task-1004", { ...feedback, intentStatus: "none", nextAction: "service-repair", finalResult: "resolved" });
+
+  assert.equal(accepted.record.taskId, "task-1004");
+  assert.equal(store.getState().feedbackRecords.at(-1).feedback.nextAction, "service-repair");
+});
+
 test("blocked P0 work requires an explicit exemption and does not change score or H", () => {
   const store = freshStore();
   const before = store.getState();

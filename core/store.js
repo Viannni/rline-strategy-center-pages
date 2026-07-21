@@ -16,6 +16,12 @@ export const FEEDBACK_OPTIONS = Object.freeze({
   finalResult: ["follow-up", "resolved", "converted", "closed-lost"]
 });
 
+const FROZEN_REPAIR_ERROR_CODE = "FROZEN_REPAIR_CONVERSION_BLOCKED";
+const FROZEN_REPAIR_ACTIONS = new Set(["service-repair"]);
+const FROZEN_REPAIR_RESULTS = new Set(["follow-up", "resolved"]);
+const FROZEN_CONVERSION_ACTIONS = new Set(["send-payment-link", "offer-coupon"]);
+const FROZEN_CONVERSION_RESULTS = new Set(["converted", "paid"]);
+
 const clone = (value) => structuredClone(value);
 
 const isRecord = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -102,6 +108,31 @@ function normalizeFeedback(feedback) {
   normalized.learningConclusion = String(feedback.learningConclusion ?? "").trim();
   normalized.notes = String(feedback.notes ?? "").trim();
   return normalized;
+}
+
+function isFrozenRepair(state, userId) {
+  const route = state.routes?.[userId];
+  const score = state.scores?.find((candidate) => candidate.userId === userId);
+  return route?.salesFrozen === true
+    || route?.hLevel === "H4"
+    || score?.hLevel === "H4"
+    || score?.risk?.salesFrozen === true;
+}
+
+function frozenRepairError() {
+  return new RangeError(`${FROZEN_REPAIR_ERROR_CODE}: H4/salesFrozen tasks only accept repair action and follow-up or resolved result`);
+}
+
+function assertNoFrozenConversionValues(feedback) {
+  if (FROZEN_CONVERSION_ACTIONS.has(String(feedback?.nextAction ?? "")) || FROZEN_CONVERSION_RESULTS.has(String(feedback?.finalResult ?? ""))) {
+    throw frozenRepairError();
+  }
+}
+
+function assertFrozenRepairFeedback(feedback) {
+  if (feedback.intentStatus !== "none" || !FROZEN_REPAIR_ACTIONS.has(feedback.nextAction) || !FROZEN_REPAIR_RESULTS.has(feedback.finalResult)) {
+    throw frozenRepairError();
+  }
 }
 
 function feedbackToTaskFeedback(feedback) {
@@ -266,10 +297,13 @@ export function createStore(seedState, storage = defaultStorage()) {
       const user = state.users.find((candidate) => candidate.id === userId);
       if (!user) throw new Error(`Unknown task: ${taskId}`);
       const route = state.routes[userId];
+      const frozenRepair = isFrozenRepair(state, userId);
+      if (frozenRepair) assertNoFrozenConversionValues(feedback);
       if (route?.touchGate?.status === "blocked" && feedback?.contactStatus !== "not-contacted") {
         throw new Error("Blocked F12 task cannot submit a contact result");
       }
       const normalized = normalizeFeedback(feedback);
+      if (frozenRepair) assertFrozenRepairFeedback(normalized);
       const submittedAt = new Date().toISOString();
       const record = {
         id: `F16-${userId}-${(state.feedbackRecords ?? []).length + 1}`,
@@ -288,6 +322,9 @@ export function createStore(seedState, storage = defaultStorage()) {
       };
       commit(next);
       return { record: clone(record), state: clone(state) };
+    },
+    submitTaskFeedback(taskId, feedback) {
+      return this.submitFeedback(taskId, feedback);
     },
     previewNextDay(userId) {
       const user = state.users.find((candidate) => candidate.id === userId);

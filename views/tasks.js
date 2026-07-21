@@ -26,6 +26,14 @@ const ROLE_ASSIGNMENTS = Object.freeze({
   sales: new Set(["sales"])
 });
 
+const FROZEN_REPAIR_FEEDBACK_OPTIONS = Object.freeze({
+  contactStatus: FEEDBACK_OPTIONS.contactStatus,
+  responseStatus: FEEDBACK_OPTIONS.responseStatus,
+  riskChange: FEEDBACK_OPTIONS.riskChange,
+  nextAction: ["service-repair"],
+  finalResult: ["follow-up", "resolved"]
+});
+
 function assignmentValues(task) {
   return [task?.assigneeTeam, task?.subteam, task?.role]
     .filter((value) => typeof value === "string" && value.length > 0);
@@ -49,6 +57,13 @@ function supportOwner(route) {
   return route.supportTeam && route.supportSubteam ? `${route.supportTeam}/${route.supportSubteam}` : null;
 }
 
+function isFrozenRepair(route, score) {
+  return route.salesFrozen === true
+    || route.hLevel === "H4"
+    || score.hLevel === "H4"
+    || score.risk?.salesFrozen === true;
+}
+
 function activeTask(tasks, userId) {
   return tasks.find((task) => task.userId === userId && !["done", "closed", "cancelled"].includes(task.status));
 }
@@ -65,7 +80,7 @@ export function buildRoleTaskRows(state, role) {
     const assignedTask = activeTask(explicitTasks, user.id);
     const assignedOrVirtualTask = assignedTask ? { ...assignedTask, virtual: false } : virtualTask(user, route);
     const score = scoreById.get(user.id) ?? {};
-    const frozenRepair = route.team === "sales" && route.bindingMode === "bound" && score.hLevel === "H4";
+    const frozenRepair = isFrozenRepair(route, score);
     const task = frozenRepair
       ? { ...assignedOrVirtualTask, category: "repair", subtype: route.taskSubtype, priority: route.priority }
       : assignedOrVirtualTask;
@@ -80,7 +95,8 @@ export function buildRoleTaskRows(state, role) {
       channel: task.channel ?? route.channel,
       frozenRepair,
       internalSupportOwner: frozenRepair ? supportOwner(route) : null,
-      conversionControls: !frozenRepair
+      conversionControls: !frozenRepair,
+      feedbackOptions: frozenRepair ? FROZEN_REPAIR_FEEDBACK_OPTIONS : FEEDBACK_OPTIONS
     };
   });
   const scoped = role === "strategy" ? rows
@@ -88,8 +104,8 @@ export function buildRoleTaskRows(state, role) {
   return scoped.sort((left, right) => left.route.priority.localeCompare(right.route.priority) || left.userId.localeCompare(right.userId));
 }
 
-function selectOptions(field, selected) {
-  return FEEDBACK_OPTIONS[field].map((value) => `<option value="${escapeAttribute(value)}"${value === selected ? " selected" : ""}>${escapeHtml(LABELS[field][value])}</option>`).join("");
+function selectOptions(field, selected, options = FEEDBACK_OPTIONS) {
+  return options[field].map((value) => `<option value="${escapeAttribute(value)}"${value === selected ? " selected" : ""}>${escapeHtml(LABELS[field][value])}</option>`).join("");
 }
 
 function previewMarkup(preview) {
@@ -103,11 +119,15 @@ function feedbackForm(row) {
     const exception = row.route.priority === "P0" ? `<form class="p0-exemption-form" data-task-id="${escapeAttribute(row.id)}"><p class="local-notice">F12 阻断：不可提交触达结果。P0 可填写原因申请豁免，系统会标记主管可见并重新校验准入；豁免本身不会改变分数或 H。</p><label class="feedback-field"><span>豁免原因</span><textarea name="reason" required></textarea></label><div class="form-actions"><button type="submit" class="secondary-button">申请 P0 豁免</button></div></form>` : `<p class="local-notice">F12 触达阻断，当前任务不能提交触达结果。</p>`;
     return exception;
   }
+  if (row.frozenRepair) {
+    const options = row.feedbackOptions;
+    return `<form class="feedback-form feedback-form--repair" data-task-id="${escapeAttribute(row.id)}"><div class="feedback-grid"><fieldset><legend>触达状态</legend>${options.contactStatus.map((value, index) => `<label class="radio-field"><input type="radio" name="contactStatus" value="${escapeAttribute(value)}"${index === 0 ? " checked" : ""}><span>${escapeHtml(LABELS.contactStatus[value])}</span></label>`).join("")}</fieldset><label class="feedback-field"><span>回复状态</span><select name="responseStatus">${selectOptions("responseStatus", "replied", options)}</select></label><label class="feedback-field"><span>风险变化</span><select name="riskChange">${selectOptions("riskChange", "unchanged", options)}</select></label><label class="feedback-field"><span>下一动作</span><select name="nextAction">${selectOptions("nextAction", "service-repair", options)}</select></label><label class="feedback-field"><span>最终结果</span><select name="finalResult">${selectOptions("finalResult", "follow-up", options)}</select></label><label class="feedback-field feedback-field--wide"><span>下次跟进（严格 ISO）</span><input name="nextFollowAt" type="text" required value="2026-07-21T10:00:00+08:00" pattern="\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})"></label><label class="feedback-field feedback-field--wide"><span>学情结论补充</span><textarea name="learningConclusion"></textarea></label><label class="feedback-field feedback-field--wide"><span>备注补充</span><textarea name="notes"></textarea></label></div><input type="hidden" name="intentStatus" value="none"><input type="hidden" name="objectionType" value="none"><div class="form-actions"><button type="submit" class="primary-button">${icon("save")}提交修复回写</button></div></form>`;
+  }
   return `<form class="feedback-form" data-task-id="${escapeAttribute(row.id)}"><div class="feedback-grid"><fieldset><legend>触达状态</legend>${FEEDBACK_OPTIONS.contactStatus.map((value, index) => `<label class="radio-field"><input type="radio" name="contactStatus" value="${escapeAttribute(value)}"${index === 0 ? " checked" : ""}><span>${escapeHtml(LABELS.contactStatus[value])}</span></label>`).join("")}</fieldset><label class="feedback-field"><span>回复状态</span><select name="responseStatus">${selectOptions("responseStatus", "replied")}</select></label><label class="feedback-field"><span>意向状态</span><select name="intentStatus">${selectOptions("intentStatus", "considering")}</select></label><label class="feedback-field"><span>异议类型</span><select name="objectionType">${selectOptions("objectionType", "none")}</select></label><label class="feedback-field"><span>风险变化</span><select name="riskChange">${selectOptions("riskChange", "unchanged")}</select></label><label class="feedback-field"><span>下一动作</span><select name="nextAction">${selectOptions("nextAction", "send-report-explanation")}</select></label><label class="feedback-field"><span>最终结果</span><select name="finalResult">${selectOptions("finalResult", "follow-up")}</select></label><label class="feedback-field feedback-field--wide"><span>下次跟进（严格 ISO）</span><input name="nextFollowAt" type="text" required value="2026-07-21T10:00:00+08:00" pattern="\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})"></label><label class="feedback-field feedback-field--wide"><span>学情结论补充</span><textarea name="learningConclusion"></textarea></label><label class="feedback-field feedback-field--wide"><span>备注补充</span><textarea name="notes"></textarea></label></div><div class="form-actions"><button type="submit" class="primary-button">${icon("save")}提交 F16 回写</button></div></form>`;
 }
 
 function frozenRepairMarkup(row) {
-  return `<section class="frozen-repair-state"><header><h3>销售冻结修复</h3><span>不可转化</span></header><p class="local-notice">Sales 保留绑定用户的前台沟通主责；当前为修复任务，销售转化动作已冻结。</p><dl class="field-detail"><div><dt>前台主责</dt><dd>${escapeHtml(`${row.route.team}/${row.route.subteam}`)}</dd></div><div><dt>内部支持</dt><dd>${escapeHtml(row.internalSupportOwner ?? "learning")}</dd></div><div><dt>修复任务</dt><dd>${escapeHtml(row.task.subtype)}</dd></div></dl></section>`;
+  return `<section class="frozen-repair-state"><header><h3>冻结修复</h3><span>不可转化</span></header><p class="local-notice">当前任务处于 H4 或销售冻结状态，只允许记录修复进展，不能提交转化动作。</p><dl class="field-detail"><div><dt>前台主责</dt><dd>${escapeHtml(`${row.route.team}/${row.route.subteam}`)}</dd></div><div><dt>内部支持</dt><dd>${escapeHtml(row.internalSupportOwner ?? "learning")}</dd></div><div><dt>修复任务</dt><dd>${escapeHtml(row.task.subtype)}</dd></div></dl></section>`;
 }
 
 function taskDrawer(row, context) {
@@ -115,7 +135,7 @@ function taskDrawer(row, context) {
   const close = openDrawer({
     title: `任务回写 · ${row.user.childId ?? row.userId}`,
     size: "wide",
-    trustedHtml: `<section class="field-detail"><div><dt>主责 / 绑定</dt><dd>${escapeHtml(`${row.route.team} / ${row.route.bindingMode}`)}</dd></div><div><dt>任务 / 渠道</dt><dd>${escapeHtml(`${row.task.subtype} / ${row.channel}`)}</dd></div><div><dt>F12</dt><dd>${escapeHtml(row.route.touchGate?.status)}</dd></div><div><dt>风险 / H</dt><dd>${escapeHtml(`${row.score.risk?.salesFrozen ? "销售冻结" : "正常"} / ${row.score.hLevel}`)}</dd></div></section>${context.role === "strategy" ? `<form class="reassign-form" data-task-id="${escapeAttribute(row.id)}"><label class="feedback-field"><span>模拟改派</span><select name="assigneeTeam"><option value="agent">Agent</option><option value="learning">学情</option><option value="sales">二销</option><option value="after-sales">售后</option><option value="learning-intervention">学情干预</option><option value="learning-planning">学情规划</option></select></label><div class="form-actions"><button type="submit" class="secondary-button">模拟改派</button></div></form>` : ""}<section class="drawer-section">${row.frozenRepair && context.role === "sales" ? frozenRepairMarkup(row) : `<header><h3>结构化 F16 回写</h3><span>即时信号 + 次日基础分</span></header>${feedbackForm(row)}<div class="drawer-preview">${initialPreview?.appliedRecords ? previewMarkup(initialPreview) : ""}</div>${initialPreview?.appliedRecords ? `<div class="form-actions"><button type="button" class="primary-button" data-simulate-next-day="${escapeAttribute(row.userId)}">模拟次日重算</button></div>` : ""}`}</section>`
+    trustedHtml: `<section class="field-detail"><div><dt>主责 / 绑定</dt><dd>${escapeHtml(`${row.route.team} / ${row.route.bindingMode}`)}</dd></div><div><dt>任务 / 渠道</dt><dd>${escapeHtml(`${row.task.subtype} / ${row.channel}`)}</dd></div><div><dt>F12</dt><dd>${escapeHtml(row.route.touchGate?.status)}</dd></div><div><dt>风险 / H</dt><dd>${escapeHtml(`${row.score.risk?.salesFrozen ? "销售冻结" : "正常"} / ${row.score.hLevel}`)}</dd></div></section>${context.role === "strategy" ? `<form class="reassign-form" data-task-id="${escapeAttribute(row.id)}"><label class="feedback-field"><span>模拟改派</span><select name="assigneeTeam"><option value="agent">Agent</option><option value="learning">学情</option><option value="sales">二销</option><option value="after-sales">售后</option><option value="learning-intervention">学情干预</option><option value="learning-planning">学情规划</option></select></label><div class="form-actions"><button type="submit" class="secondary-button">模拟改派</button></div></form>` : ""}<section class="drawer-section">${row.frozenRepair ? `${frozenRepairMarkup(row)}${feedbackForm(row)}<div class="drawer-preview">${initialPreview?.appliedRecords ? previewMarkup(initialPreview) : ""}</div>${initialPreview?.appliedRecords ? `<div class="form-actions"><button type="button" class="primary-button" data-simulate-next-day="${escapeAttribute(row.userId)}">模拟次日重算</button></div>` : ""}` : `<header><h3>结构化 F16 回写</h3><span>即时信号 + 次日基础分</span></header>${feedbackForm(row)}<div class="drawer-preview">${initialPreview?.appliedRecords ? previewMarkup(initialPreview) : ""}</div>${initialPreview?.appliedRecords ? `<div class="form-actions"><button type="button" class="primary-button" data-simulate-next-day="${escapeAttribute(row.userId)}">模拟次日重算</button></div>` : ""}`}</section>`
   });
   const panel = document.querySelector("#drawerRoot .overlay-panel");
   panel?.querySelector(".feedback-form")?.addEventListener("submit", (event) => {
