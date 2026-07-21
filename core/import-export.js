@@ -40,10 +40,46 @@ const NESTED_NUMERIC_FIELDS = [
   [["learning", "completionRate"], 0, 100],
   [["learning", "activeDays7"], 0, 7],
   [["learning", "consecutiveMissedDays"], 0, 365],
+  [["courseEvaluation", "score"], 0, 100],
+  [["courseEvaluation", "sourceScale"], 0.0001, 100],
   [["courseEvaluation", "normalizedScore"], 0, 100],
+  [["courseEvaluation", "validResponses"], 0, 1000000],
   [["assessment", "score"], 0, 100],
-  [["parent", "replyRate30d"], 0, 1]
+  [["report", "dwellMinutes"], 0, 1000000],
+  [["parent", "replyRate30d"], 0, 1],
+  [["touch", "total7d"], 0, 1000000],
+  [["touch", "globalLimit7d"], 0, 1000000],
+  [["touch", "channels", "text7d"], 0, 1000000],
+  [["touch", "channels", "phone7d"], 0, 1000000],
+  [["risk", "deduction"], 0, 30]
 ];
+
+const NESTED_RECORD_FIELDS = [
+  "learning", "courseEvaluation", "assessment", "report", "activity", "parent",
+  "touch", "marketing", "transaction", "risk", "taskFeedback"
+];
+
+const NESTED_BOOLEAN_FIELDS = [
+  ["learning", "firstLessonCompleted"], ["learning", "onTrack"], ["learning", "negativeFeedback"],
+  ["assessment", "challengeEligible"], ["report", "opened"], ["report", "shared"],
+  ["activity", "participated"], ["parent", "reachable"], ["parent", "messageOpened"],
+  ["touch", "p0Exception"], ["touch", "channelLimit"], ["touch", "channelHardLimit"],
+  ["marketing", "exposureEligible"], ["marketing", "renewalQuestion"], ["marketing", "couponClick"],
+  ["transaction", "unpaid"], ["transaction", "couponUnused"], ["transaction", "paymentFailed"],
+  ["risk", "fuse"], ["risk", "salesFrozen"], ["risk", "resolved"], ["risk", "unresolvedService"],
+  ["taskFeedback", "contacted"]
+];
+
+const NESTED_ENUM_FIELDS = [
+  [["assessment", "status"], new Set(["completed", "not-applicable"])],
+  [["report", "status"], new Set(["opened", "generated", "not-applicable"])],
+  [["activity", "source"], new Set(["IN_APP", "MANUAL"])],
+  [["touch", "status"], new Set(["eligible", "queued", "blocked"])],
+  [["parent", "preferredChannel"], new Set(["text", "phone"])],
+  [["transaction", "status"], new Set(["none", "unpaid", "payment-failed", "pending-payment", "coupon-unused", "coupon-received"])]
+];
+
+const MARKETING_EVENTS = new Set(["appointment", "price-question", "coupon-click", "exposed"]);
 
 function clone(value) {
   return structuredClone(value);
@@ -205,6 +241,12 @@ export function validateUser(row, rowNumber) {
   if (!PRODUCT_STAGES[product]) errors.push({ row: rowNumber, field: "product_type", code: "INVALID_PRODUCT", message: "课程类型必须是monthly或annual" });
   if (!PRODUCT_STAGES[product]?.has(stage)) errors.push({ row: rowNumber, field: "stage_code", code: "INVALID_STAGE", message: "生命周期阶段与课程类型不兼容" });
 
+  for (const field of NESTED_RECORD_FIELDS) {
+    if (row?.[field] != null && !isPlainObject(row[field])) {
+      errors.push({ row: rowNumber, field, code: "INVALID_SHAPE", message: `${field}必须是对象` });
+    }
+  }
+
   for (const [field, value] of dateEntries(row)) {
     if (hasValue(value) && !isIsoDate(value)) errors.push({ row: rowNumber, field, code: "INVALID_DATE", message: "日期必须是有效ISO日期" });
   }
@@ -223,6 +265,28 @@ export function validateUser(row, rowNumber) {
     if (!Number.isFinite(numeric) || numeric < minimum || numeric > maximum) {
       const field = path.join(".");
       errors.push({ row: rowNumber, field, code: "OUT_OF_RANGE", message: `${field}必须在${minimum}到${maximum}之间` });
+    }
+  }
+  for (const path of NESTED_BOOLEAN_FIELDS) {
+    const value = valueAt(row, path);
+    if (value !== undefined && value !== null && typeof value !== "boolean") {
+      const field = path.join(".");
+      errors.push({ row: rowNumber, field, code: "INVALID_BOOLEAN", message: `${field}必须是布尔值` });
+    }
+  }
+  for (const [path, allowed] of NESTED_ENUM_FIELDS) {
+    const value = valueAt(row, path);
+    if (hasValue(value) && !allowed.has(value)) {
+      const field = path.join(".");
+      errors.push({ row: rowNumber, field, code: "INVALID_ENUM", message: `${field}取值不合法` });
+    }
+  }
+  const events = row?.marketing?.events;
+  if (events !== undefined && events !== null) {
+    if (!Array.isArray(events)) {
+      errors.push({ row: rowNumber, field: "marketing.events", code: "INVALID_SHAPE", message: "marketing.events必须是数组" });
+    } else if (events.some((event) => typeof event !== "string" || !MARKETING_EVENTS.has(event))) {
+      errors.push({ row: rowNumber, field: "marketing.events", code: "INVALID_ENUM", message: "marketing.events包含非法事件" });
     }
   }
   return errors;

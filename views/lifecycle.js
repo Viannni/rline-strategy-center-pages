@@ -48,10 +48,10 @@ export function lifecycleNode(product, stage) {
       ? "写入固定续费提示、校验F12；F14命中后生成对应优先级任务"
       : activityNode ? "推送端内活动或学习提醒；IN_APP结果进入F10" : "更新阶段、学习健康和待办提示",
     humanAction: renewal
-      ? "学服完成学情共看；仅窗口内由已绑定二销承接可跟进用户"
+      ? "已绑定二销承接全部文字和电话沟通；学情沟通组按内部支持任务补充专业结论"
       : coView ? "引导家长与孩子共同查看报告/测评里程碑" : "学服按异常学习或体验结论跟进",
-    owner: renewal ? "学服主责，已绑定二销协同" : "学服 / 运营",
-    support: renewal ? "销售运营、CRM、订单支付" : "教务、运营、CRM",
+    owner: renewal ? "已绑定二销主责" : "学服 / 运营",
+    support: renewal ? "学情沟通组、销售运营、CRM、订单支付" : "教务、运营、CRM",
     placementId,
     placementStatus: placementStatus(placementId),
     salesBinding: renewal,

@@ -125,5 +125,6 @@ test("icon fallback, focus, and pinned CDN integrity keep static shell resilient
   assert.match(styles, /outline:\s*3px solid var\(--focus\)/);
   assert.match(styles, /#viewRoot:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--focus\)/s);
   assert.doesNotMatch(styles, /#viewRoot\s*\{[^}]*outline:\s*none/s);
+  assert.doesNotMatch(styles, /var\(--text(?:-muted)?\)/);
   assert.match(ignore, /(?:^|\n)\.playwright-cli\/(?:\n|$)/);
 });

@@ -24,6 +24,10 @@ function unavailableItem(rule, actual = null) {
   return item(rule, actual, false, "not-applicable");
 }
 
+function missingItem(rule, actual = null) {
+  return item(rule, actual, false, "missing");
+}
+
 function trace(ruleId, label, points, actual, window, fieldIds, status) {
   return { ruleId, label, points, actual, window, fieldIds, status };
 }
@@ -51,38 +55,44 @@ function scoreLearningHealth(user, rules, cap) {
   const activeDays = learning.activeDays7;
   const missedDays = learning.consecutiveMissedDays;
   const trend = learning.trend7d;
+  const participates = [learning.firstLessonCompleted, completionRate, activeDays, missedDays, learning.onTrack, trend]
+    .some((value) => value != null);
   const items = [
     learning.firstLessonCompleted == null && completionRate == null
-      ? unavailableItem(pointRules.firstLesson)
+      ? missingItem(pointRules.firstLesson)
       : item(
         pointRules.firstLesson,
         learning.firstLessonCompleted ?? `completion-rate:${completionRate}`,
         learning.firstLessonCompleted === true || (learning.firstLessonCompleted == null && completionRate >= pointRules.firstLesson.inferredCompletionMinimum)
       ),
     completionRate == null
-      ? unavailableItem(pointRules.completionHigh)
+      ? missingItem(pointRules.completionHigh)
       : item(pointRules.completionHigh, completionRate, completionRate >= pointRules.completionHigh.minimum),
-    completionRate == null || completionRate >= pointRules.completionHigh.minimum
-      ? unavailableItem(pointRules.completionMedium, completionRate)
+    completionRate == null
+      ? missingItem(pointRules.completionMedium)
+      : completionRate >= pointRules.completionHigh.minimum
+        ? unavailableItem(pointRules.completionMedium, completionRate)
       : item(pointRules.completionMedium, completionRate, completionRate >= pointRules.completionMedium.minimum),
     activeDays == null
-      ? unavailableItem(pointRules.activeSeven)
+      ? missingItem(pointRules.activeSeven)
       : item(pointRules.activeSeven, activeDays, activeDays >= pointRules.activeSeven.minimum),
-    activeDays == null || activeDays >= pointRules.activeSeven.minimum
-      ? unavailableItem(pointRules.activeThree, activeDays)
+    activeDays == null
+      ? missingItem(pointRules.activeThree)
+      : activeDays >= pointRules.activeSeven.minimum
+        ? unavailableItem(pointRules.activeThree, activeDays)
       : item(pointRules.activeThree, activeDays, activeDays >= pointRules.activeThree.minimum),
     missedDays == null
-      ? unavailableItem(pointRules.missedAtMostOne)
+      ? missingItem(pointRules.missedAtMostOne)
       : item(pointRules.missedAtMostOne, missedDays, missedDays <= pointRules.missedAtMostOne.maximum),
     learning.onTrack == null && completionRate == null
-      ? unavailableItem(pointRules.onTrack)
+      ? missingItem(pointRules.onTrack)
       : item(
         pointRules.onTrack,
         learning.onTrack ?? `completion-rate:${completionRate}`,
         learning.onTrack === true || (learning.onTrack == null && completionRate >= pointRules.onTrack.proxyMinimum)
       ),
     trend == null && activeDays == null
-      ? unavailableItem(pointRules.stableTrend)
+      ? missingItem(pointRules.stableTrend)
       : item(
         pointRules.stableTrend,
         trend ?? `active-days:${activeDays}`,
@@ -90,7 +100,7 @@ function scoreLearningHealth(user, rules, cap) {
       )
   ];
 
-  return finalizeDimension("学习健康", items.reduce((total, entry) => total + entry.points, 0), cap, items);
+  return finalizeDimension("学习健康", items.reduce((total, entry) => total + entry.points, 0), cap, items, participates);
 }
 
 function scoreCourseExperience(user, rules, cap) {
@@ -102,7 +112,7 @@ function scoreCourseExperience(user, rules, cap) {
       "课程体验",
       0,
       cap,
-      Object.values(pointRules).map((rule) => unavailableItem(rule)),
+      Object.values(pointRules).map((rule) => missingItem(rule)),
       false
     );
   }
@@ -121,13 +131,21 @@ function scoreOutcomes(user, rules, cap) {
   const pointRules = rules.pointRules.outcomes;
   const noAssessment = assessment.status === "not-applicable" || assessment.status == null;
   const noReport = report.status === "not-applicable" || report.status == null;
+  const assessmentUnavailable = (rule) => assessment.status == null ? missingItem(rule) : unavailableItem(rule, assessment.status);
+  const reportUnavailable = (rule) => report.status == null ? missingItem(rule) : unavailableItem(rule, report.status);
 
   if (noAssessment && noReport) {
     return finalizeDimension(
       "成果外化",
       0,
       cap,
-      Object.values(pointRules).map((rule) => unavailableItem(rule)),
+      [
+        assessmentUnavailable(pointRules.assessmentCompleted),
+        assessmentUnavailable(pointRules.assessmentStrong),
+        reportUnavailable(pointRules.reportGenerated),
+        reportUnavailable(pointRules.reportOpened),
+        reportUnavailable(pointRules.reportEngaged)
+      ],
       false
     );
   }
@@ -135,19 +153,21 @@ function scoreOutcomes(user, rules, cap) {
   const reportGeneratedOnly = report.status === "generated" && !report.opened && !report.shared && !(report.dwellMinutes > 0);
   const items = [
     noAssessment
-      ? unavailableItem(pointRules.assessmentCompleted)
+      ? assessmentUnavailable(pointRules.assessmentCompleted)
       : item(pointRules.assessmentCompleted, assessment.status, assessment.status === "completed"),
     noAssessment || assessment.score == null
-      ? unavailableItem(pointRules.assessmentStrong)
+      ? assessment.status == null || (assessment.status !== "not-applicable" && assessment.score == null)
+        ? missingItem(pointRules.assessmentStrong)
+        : unavailableItem(pointRules.assessmentStrong, assessment.status)
       : item(pointRules.assessmentStrong, assessment.score, assessment.score >= pointRules.assessmentStrong.minimum),
     report.status === "generated"
       ? item(pointRules.reportGenerated, "generated", false, "not-scored")
-      : unavailableItem(pointRules.reportGenerated, report.status ?? null),
+      : reportUnavailable(pointRules.reportGenerated),
     noReport
-      ? unavailableItem(pointRules.reportOpened)
+      ? reportUnavailable(pointRules.reportOpened)
       : item(pointRules.reportOpened, report.opened === true, report.opened === true),
     noReport
-      ? unavailableItem(pointRules.reportEngaged)
+      ? reportUnavailable(pointRules.reportEngaged)
       : item(
         pointRules.reportEngaged,
         { dwellMinutes: report.dwellMinutes ?? 0, shared: report.shared === true },
@@ -168,17 +188,17 @@ function scoreParentEngagement(user, rules, cap) {
   const items = [
     hasParentData
       ? item(pointRules.replied, parent.replyStatus ?? "unknown", parent.replyStatus === "replied")
-      : unavailableItem(pointRules.replied),
+      : missingItem(pointRules.replied),
     hasParentData
       ? item(pointRules.positiveOrNeutral, parent.replyRate30d ?? null, (parent.replyRate30d ?? 0) >= pointRules.positiveOrNeutral.minimumReplyRate)
-      : unavailableItem(pointRules.positiveOrNeutral),
+      : missingItem(pointRules.positiveOrNeutral),
     hasParentData
       ? item(
         pointRules.messageOpened,
         parent.messageOpened ?? `reply-rate:${parent.replyRate30d ?? 0}`,
         parent.messageOpened === true || (parent.messageOpened == null && (parent.replyRate30d ?? 0) >= pointRules.messageOpened.inferredReplyRate)
       )
-      : unavailableItem(pointRules.messageOpened),
+      : missingItem(pointRules.messageOpened),
     submittedFeedback
       ? item(pointRules.feedback, feedback.replyStatus, true)
       : item(pointRules.feedback, feedback.replyStatus ?? "not-started", false)
@@ -289,7 +309,7 @@ function transactionSignal(user) {
   const transaction = user.transaction ?? {};
   const reasons = [];
   const traces = [];
-  let priority = "P2";
+  let priority = null;
   if (transaction.unpaid === true || transaction.paymentFailed === true || ["unpaid", "payment-failed", "pending-payment"].includes(transaction.status)) {
     priority = "P0";
     const label = transaction.paymentFailed ? "支付失败" : "待付款/下单未付";
@@ -300,6 +320,7 @@ function transactionSignal(user) {
     reasons.push("领券未用");
     traces.push(trace("F14-coupon-unused", "领券未用", 0, transaction.status ?? null, "实时", ["F14"], "matched"));
   } else if (transaction.status === "coupon-received") {
+    priority = "P2";
     reasons.push("已领券提醒");
     traces.push(trace("F14-coupon-received", "已领券提醒", 0, transaction.status, "实时", ["F14"], "not-scored"));
   } else {

@@ -45,7 +45,7 @@ export function buildDashboardMetrics(state) {
       id: "realtime",
       label: "F14实时",
       detail: "待付款与领券",
-      value: scores.filter(({ transactionSignal }) => transactionSignal?.priority !== "P2").length,
+      value: scores.filter(({ transactionSignal }) => Boolean(transactionSignal?.priority)).length,
       preset: "f14-realtime",
       icon: "zap"
     },
@@ -80,7 +80,7 @@ function hDistribution(state) {
 function alertRows(state) {
   const users = new Map((state?.users ?? []).map((user) => [user.id, user]));
   return (state?.scores ?? [])
-    .filter((score) => score.hLevel === "H4" || score.transactionSignal?.priority !== "P2")
+    .filter((score) => score.hLevel === "H4" || Boolean(score.transactionSignal?.priority))
     .map((score) => ({
       id: score.userId,
       childId: users.get(score.userId)?.childId ?? score.userId,

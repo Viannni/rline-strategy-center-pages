@@ -115,7 +115,7 @@ function isAnomaly(user) {
 function signalLabel(score) {
   const labels = [];
   if ((score?.marketingSignal?.strength ?? 0) > 0) labels.push(`F13 ${score.marketingSignal.level}`);
-  if (score?.transactionSignal?.priority !== "P2") labels.push(`F14 ${score.transactionSignal.priority}`);
+  if (score?.transactionSignal?.priority) labels.push(`F14 ${score.transactionSignal.priority}`);
   return labels.join(" / ") || "无独立信号";
 }
 
@@ -137,8 +137,8 @@ export function buildUserRows(state) {
       upliftScore: score.upliftScore,
       f13: score.marketingSignal?.level ?? "L0",
       f13Active: (score.marketingSignal?.strength ?? 0) > 0,
-      f14: score.transactionSignal?.priority ?? "P2",
-      f14Active: score.transactionSignal?.priority !== "P2",
+      f14: score.transactionSignal?.priority ?? "无",
+      f14Active: Boolean(score.transactionSignal?.priority),
       signalLabel: signalLabel(score),
       riskActive: score.risk?.fused === true || (score.risk?.deduction ?? 0) > 0,
       riskLabel: score.risk?.fused ? "熔断" : score.risk?.deduction ? `-${score.risk.deduction}` : "无",
@@ -241,7 +241,7 @@ export function buildUserDetailModel(state, userId) {
     scoreGroups: [
       { id: "base", label: "基础高优分", value: `${score.rawBaseScore} / ${score.baseScore}`, meta: "原始 / 风险调整后", fieldIds: baseFieldIds },
       { id: "f13", label: "F13 营销意向（独立）", value: score.marketingSignal.level, meta: score.marketingSignal.reasons.join("；") || "无营销事件", fieldIds: ["F13"] },
-      { id: "f14", label: "F14 交易状态（独立）", value: score.transactionSignal.priority, meta: score.transactionSignal.reasons.join("；"), fieldIds: ["F14"] },
+      { id: "f14", label: "F14 交易状态（独立）", value: score.transactionSignal.priority ?? "无", meta: score.transactionSignal.reasons.join("；"), fieldIds: ["F14"] },
       { id: "f12", label: "F12 触达准入", value: route.touchGate.status, meta: route.touchGate.reason, fieldIds: ["F12"] },
       { id: "risk", label: "风险与熔断", value: score.risk.fused ? "熔断" : `扣 ${score.risk.deduction} 分`, meta: score.risk.reasons.map(({ label }) => label).join("；") || "未命中风险", fieldIds: ["F15"] }
     ]

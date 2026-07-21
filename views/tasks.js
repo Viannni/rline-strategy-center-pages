@@ -103,7 +103,14 @@ export function buildRoleTaskRows(state, role) {
     };
   });
   const scoped = role === "strategy" ? rows
-    : rows.filter((row) => hasExplicitAssignment(row.task) ? isAssignedToRole(row.task, role) : fallbackMatchesRole(row, role));
+    : rows.filter((row) => {
+      const salesFrontOwner = role === "sales"
+        && row.frozenRepair
+        && row.route.team === "sales"
+        && row.route.bindingMode === "bound";
+      if (salesFrontOwner) return true;
+      return hasExplicitAssignment(row.task) ? isAssignedToRole(row.task, role) : fallbackMatchesRole(row, role);
+    });
   return scoped.sort((left, right) => String(left.route.priority ?? "P9").localeCompare(String(right.route.priority ?? "P9")) || left.userId.localeCompare(right.userId));
 }
 

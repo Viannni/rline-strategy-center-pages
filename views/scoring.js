@@ -113,7 +113,7 @@ function renderUplift() {
 function renderSignals() {
   const rows = [
     { id: "f13", signal: "营销意向（独立）", fieldIds: ["F13"], levels: "L0-L3", behavior: "保留曝光、问价、领券与预约事件；仅同曝光组可排名", placement: "activity-uplift" },
-    { id: "f14", signal: "交易状态（独立）", fieldIds: ["F14"], levels: "P0-P2", behavior: "待付款/支付失败为P0，领券未用为P1；实时覆盖任务优先级", placement: "task-queue" },
+    { id: "f14", signal: "交易状态（独立）", fieldIds: ["F14"], levels: "P0-P2 / 无", behavior: "待付款/支付失败为P0，领券未用为P1，已领券提醒为P2；无事件不生成优先级", placement: "task-queue" },
     { id: "f12", signal: "触达准入", fieldIds: ["F12"], levels: "eligible / queued / blocked", behavior: "派单前即时校验，不进入基础分", placement: "routing-policy" }
   ];
   return `<section class="signal-rule-strip"><div><strong>基础高优分</strong><span>F03-F11 / 0-100</span></div><i aria-hidden="true"></i><div><strong>F13 营销意向</strong><span>独立信号</span></div><div><strong>F14 交易状态</strong><span>独立信号</span></div><div><strong>F12 触达准入</strong><span>独立闸门</span></div></section>${renderTable({ columns: [{ key: "signal", label: "信号" }, { key: "levels", label: "等级" }, { key: "fieldIds", label: "字段", trustedHtml: (value) => fieldButtons(value) }, { key: "behavior", label: "规则" }, { key: "placement", label: "落位", trustedHtml: (value, row) => `<button type="button" class="table-link table-link--inline" data-placement-id="${escapeAttribute(value)}">查看${escapeHtml(row.signal)}落位</button>` }], rows })}`;

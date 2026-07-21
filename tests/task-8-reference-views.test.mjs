@@ -16,6 +16,8 @@ test("Task 8 lifecycle phases cover approved monthly and annual ranges with sale
   assert.equal(lifecycleNode("annual", "M7").salesBinding, false);
   assert.equal(lifecycleNode("annual", "M8").salesBinding, true);
   assert.ok(lifecycleNode("monthly", "T24").acceptanceKpi);
+  assert.match(lifecycleNode("monthly", "T24").owner, /二销主责/);
+  assert.match(lifecycleNode("monthly", "T24").support, /学情沟通组/);
 });
 
 test("Task 8 keeps scholarships outside base scoring and maps click and transaction evidence to F13/F14", () => {

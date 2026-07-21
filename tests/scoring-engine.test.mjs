@@ -10,7 +10,29 @@ test("missing F07 is removed from denominator", () => {
 
   assert.equal(withoutEvaluation.dimensions.courseExperience.status, "not-participating");
   assert.ok(withoutEvaluation.baseScore >= withEvaluation.baseScore - 2);
-  assert.ok(withoutEvaluation.dimensions.courseExperience.items.every((item) => item.status === "not-applicable"));
+  assert.ok(withoutEvaluation.dimensions.courseExperience.items.every((item) => item.status === "missing"));
+});
+
+test("fully missing learning-health inputs are marked missing and removed from the denominator", () => {
+  const user = scenarioUser("high-base");
+  user.learning = {};
+
+  const result = scoreUser(user);
+
+  assert.equal(result.dimensions.learningHealth.status, "not-participating");
+  assert.equal(result.dimensions.learningHealth.cap, 0);
+  assert.ok(result.dimensions.learningHealth.items.every((entry) => entry.status === "missing"));
+  assert.ok(Number.isFinite(result.rawBaseScore));
+});
+
+test("F14 keeps no event distinct from the P2 reminder state", () => {
+  const none = scoreUser(scenarioUser("high-base"));
+  const reminderUser = scenarioUser("high-base");
+  reminderUser.transaction = { status: "coupon-received", observedAt: "2026-07-20T10:00:00+08:00" };
+  const reminder = scoreUser(reminderUser);
+
+  assert.equal(none.transactionSignal.priority, null);
+  assert.equal(reminder.transactionSignal.priority, "P2");
 });
 
 test("refund fuses a high scoring user into H4", () => {

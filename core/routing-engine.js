@@ -25,7 +25,7 @@ function isTemplateIssue(user) {
 
 function taskDetails(user, scoreResult, renewal) {
   const isRisk = scoreResult.hLevel === "H4";
-  const transactionPriority = scoreResult.transactionSignal?.priority ?? "P2";
+  const transactionPriority = scoreResult.transactionSignal?.priority ?? null;
   const couponUnused = user.transaction?.couponUnused === true || user.transaction?.status === "coupon-unused";
 
   if (isRisk && isAfterSalesIssue(user)) {
@@ -133,7 +133,7 @@ export function routeUser(user, scoreResult) {
     trace: [
       { label: "风险", value: scoreResult.hLevel === "H4" ? scoreResult.risk?.fused ? "风险熔断" : "风险修复" : "无风险熔断", decision: detail.isRisk ? "优先进入修复判断" : "继续生命周期判断" },
       { label: "生命周期", value: lifecycle, decision: renewal ? "续费窗口由绑定二销承接前台沟通" : "非续费窗口进入无绑定队列判断" },
-      { label: "H层级/F14", value: `${scoreResult.hLevel}/${scoreResult.transactionSignal?.priority ?? "P2"}`, decision: `${detail.priority} ${detail.taskCategory}` },
+      { label: "H层级/F14", value: `${scoreResult.hLevel}/${scoreResult.transactionSignal?.priority ?? "无"}`, decision: `${detail.priority} ${detail.taskCategory}` },
       { label: "问题类型", value: user.issueType ?? "未标注", decision: detail.taskSubtype },
       { label: "F12触达准入", value: touchGate.status, decision: touchGate.reason },
       { label: "渠道", value: channel, decision: channel === "phone" ? "命中电话条件" : "默认文字" },

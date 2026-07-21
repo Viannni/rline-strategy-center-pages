@@ -114,6 +114,23 @@ test("validator also bounds nested current-contract numeric values", () => {
   ]);
 });
 
+test("validator rejects nested values that can crash or corrupt scoring", () => {
+  const rows = [
+    { id: "bad-risk", productType: "monthly", stageCode: "T1", risk: { deduction: "not-a-number" } },
+    { id: "bad-events", productType: "monthly", stageCode: "T1", marketing: { events: { appointment: true } } },
+    { id: "bad-boolean", productType: "annual", stageCode: "M1", risk: { fuse: "true" } },
+    { id: "bad-enum", productType: "annual", stageCode: "M1", transaction: { status: "made-up" } }
+  ];
+
+  const result = importUsers(rows, [], "update");
+
+  assert.equal(result.imported, 0);
+  assert.ok(result.errors.some(({ field }) => field === "risk.deduction"));
+  assert.ok(result.errors.some(({ field }) => field === "marketing.events"));
+  assert.ok(result.errors.some(({ field }) => field === "risk.fuse"));
+  assert.ok(result.errors.some(({ field }) => field === "transaction.status"));
+});
+
 test("partial imports retain valid rows and never overwrite existing data for invalid rows", () => {
   const existing = [scenarioUser("mid-base")];
   const before = structuredClone(existing);

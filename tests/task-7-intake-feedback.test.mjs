@@ -49,14 +49,16 @@ test("role task rows enforce the four workspace scopes", () => {
   assert.ok(sales.length > 0 && sales.every((row) => row.task.assigneeTeam === "sales" || (row.route.team === "sales" && row.route.bindingMode === "bound")));
 });
 
-test("an explicit after-sales assignment stays in Learning even when the renewal H4 route has Sales front ownership", () => {
+test("a renewal H4 stays visible to Sales as front owner while its explicit after-sales task stays in Learning", () => {
   const state = freshStore().getState();
   const learningRefund = buildRoleTaskRows(state, "learning").find((row) => row.userId === "high-score-risk");
   const salesRefund = buildRoleTaskRows(state, "sales").find((row) => row.userId === "high-score-risk");
 
   assert.equal(learningRefund.task.assigneeTeam, "after-sales");
   assert.equal(learningRefund.task.category, "repair");
-  assert.equal(salesRefund, undefined);
+  assert.equal(salesRefund.route.team, "sales");
+  assert.equal(salesRefund.frozenRepair, true);
+  assert.equal(salesRefund.internalSupportOwner, "learning/after-sales");
 });
 
 test("role task selection recognizes assigneeTeam, subteam, and role assignments", () => {
@@ -215,6 +217,42 @@ test("F15 risk feedback can immediately change the risk-adjusted base score and 
   assert.equal(afterScore.rawBaseScore, beforeScore.rawBaseScore);
   assert.notEqual(afterScore.baseScore, beforeScore.baseScore);
   assert.equal(afterScore.hLevel, "H4");
+});
+
+test("realtime feedback accumulates F13 and F14 signals across consecutive writes", () => {
+  const store = freshStore();
+
+  store.submitFeedback("task-1016", { ...feedback, intentStatus: "ready", nextAction: "send-payment-link" });
+  store.submitFeedback("task-1016", { ...feedback, intentStatus: "considering", nextAction: "learning-plan" });
+  const score = store.getState().scores.find((candidate) => candidate.userId === "annual-h2-outcomes");
+
+  assert.equal(score.marketingSignal.level, "L3");
+  assert.equal(score.transactionSignal.priority, "P0");
+});
+
+test("realtime risk remains frozen through unchanged repair feedback and clears only on resolution", () => {
+  const store = freshStore();
+
+  store.submitFeedback("task-1016", { ...feedback, intentStatus: "none", riskChange: "escalated", nextAction: "service-repair" });
+  store.submitFeedback("task-1016", { ...feedback, intentStatus: "none", riskChange: "unchanged", nextAction: "service-repair" });
+  const frozen = store.getState().scores.find((candidate) => candidate.userId === "annual-h2-outcomes");
+  assert.equal(frozen.hLevel, "H4");
+  assert.equal(frozen.risk.salesFrozen, true);
+
+  store.submitFeedback("task-1016", { ...feedback, intentStatus: "none", riskChange: "resolved", nextAction: "service-repair", finalResult: "resolved" });
+  const resolved = store.getState().scores.find((candidate) => candidate.userId === "annual-h2-outcomes");
+  assert.notEqual(resolved.hLevel, "H4");
+  assert.equal(resolved.risk.salesFrozen, false);
+});
+
+test("a strong objection becomes an immediate F15/H4 risk until explicitly resolved", () => {
+  const store = freshStore();
+
+  store.submitFeedback("task-1016", { ...feedback, intentStatus: "none", objectionType: "difficulty", nextAction: "service-repair" });
+  const score = store.getState().scores.find((candidate) => candidate.userId === "annual-h2-outcomes");
+
+  assert.equal(score.hLevel, "H4");
+  assert.equal(score.risk.salesFrozen, true);
 });
 
 test("monthly T24 P0 remains bound sales through feedback and high-score refund stays H4 repair", () => {

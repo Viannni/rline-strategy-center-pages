@@ -165,42 +165,46 @@ function feedbackToTaskFeedback(feedback) {
   };
 }
 
-function realtimeProjection(user, signal) {
-  if (!signal) return user;
+function signalList(signals) {
+  if (Array.isArray(signals)) return signals;
+  return signals ? [signals] : [];
+}
+
+function realtimeProjection(user, signals) {
   const projected = clone(user);
-  const feedback = signal.feedback;
-  // Only F13/F14/F15 feedback is projected realtime; F16 base-score inputs stay staged.
-  const events = new Set(projected.marketing?.events ?? []);
-  if (feedback.intentStatus === "considering") events.add("price-question");
-  if (feedback.intentStatus === "ready") events.add("appointment");
-  projected.marketing = {
-    ...(projected.marketing ?? {}),
-    events: [...events],
-    renewalQuestion: projected.marketing?.renewalQuestion || ["considering", "ready"].includes(feedback.intentStatus)
-  };
-  if (feedback.nextAction === "send-payment-link") {
-    projected.transaction = { ...(projected.transaction ?? {}), status: "pending-payment", unpaid: true, observedAt: signal.submittedAt };
-  }
-  if (feedback.riskChange === "escalated") {
-    projected.risk = {
-      ...(projected.risk ?? {}),
-      fuse: true,
-      type: "F15风险升级",
-      deduction: Math.max(Number(projected.risk?.deduction) || 0, 20),
-      salesFrozen: true,
-      resolved: false
+  for (const signal of signalList(signals)) {
+    if (!signal?.feedback) continue;
+    const feedback = signal.feedback;
+    // F13/F14/F15 are reduced in event order; F16 base-score inputs stay staged.
+    const events = new Set(projected.marketing?.events ?? []);
+    if (feedback.intentStatus === "considering") events.add("price-question");
+    if (feedback.intentStatus === "ready") events.add("appointment");
+    projected.marketing = {
+      ...(projected.marketing ?? {}),
+      events: [...events],
+      renewalQuestion: projected.marketing?.renewalQuestion || ["considering", "ready"].includes(feedback.intentStatus)
     };
-  } else if (feedback.riskChange === "resolved") {
-    projected.risk = { ...(projected.risk ?? {}), fuse: false, resolved: true, salesFrozen: false };
+    if (feedback.nextAction === "send-payment-link") {
+      projected.transaction = { ...(projected.transaction ?? {}), status: "pending-payment", unpaid: true, observedAt: signal.submittedAt };
+    }
+    if (feedback.riskChange === "escalated" || STRONG_OBJECTIONS.has(feedback.objectionType)) {
+      projected.risk = {
+        ...(projected.risk ?? {}),
+        fuse: true,
+        type: feedback.riskChange === "escalated" ? "F15风险升级" : `F16强异议-${feedback.objectionType}`,
+        deduction: Math.max(Number(projected.risk?.deduction) || 0, 20),
+        salesFrozen: true,
+        resolved: false
+      };
+    } else if (feedback.riskChange === "resolved") {
+      projected.risk = { ...(projected.risk ?? {}), fuse: false, deduction: 0, resolved: true, salesFrozen: false };
+    }
   }
   return projected;
 }
 
-function projectedRealtimeState(user, feedback, submittedAt) {
-  const projectedUser = realtimeProjection(user, { feedback, submittedAt });
-  if (STRONG_OBJECTIONS.has(feedback.objectionType)) {
-    projectedUser.risk = { ...(projectedUser.risk ?? {}), salesFrozen: true };
-  }
+function projectedRealtimeState(user, priorSignals, feedback, submittedAt) {
+  const projectedUser = realtimeProjection(user, [...signalList(priorSignals), { feedback, submittedAt }]);
   const score = scoreUsers([projectedUser])[0];
   return { user: projectedUser, score, route: routeUser(projectedUser, score) };
 }
@@ -332,7 +336,8 @@ export function createStore(seedState, storage = defaultStorage()) {
         throw error;
       }
       const submittedAt = new Date().toISOString();
-      const projected = projectedRealtimeState(user, normalized, submittedAt);
+      const priorSignals = signalList(state.realtimeSignals?.[userId]);
+      const projected = projectedRealtimeState(user, priorSignals, normalized, submittedAt);
       const projectedFrozenRepair = isFrozenRouteScore(projected.route, projected.score);
       if (currentFrozenRepair || projectedFrozenRepair) {
         assertNoFrozenConversionValues(normalized);
@@ -353,7 +358,7 @@ export function createStore(seedState, storage = defaultStorage()) {
       const next = {
         ...state,
         feedbackRecords: [...(state.feedbackRecords ?? []), record],
-        realtimeSignals: { ...(state.realtimeSignals ?? {}), [userId]: { feedback: normalized, submittedAt, recordId: record.id } },
+        realtimeSignals: { ...(state.realtimeSignals ?? {}), [userId]: [...priorSignals, { feedback: normalized, submittedAt, recordId: record.id }] },
         tasks: (state.tasks ?? []).map((task) => task.id === taskId ? { ...task, status: "in-progress" } : task)
       };
       commit(next);
