@@ -102,9 +102,11 @@ export function renderTable(columnsOrConfig, rowsArgument = [], optionsArgument 
       const cells = columns.map((column) => {
         const raw = valueAt(row, column.key);
         const formatted = typeof column.format === "function" ? column.format(raw, row) : raw;
-        const content = column.type === "badge"
-          ? renderBadge(formatted?.status ?? formatted, formatted?.label ?? "")
-          : escapeHtml(formatted ?? column.empty ?? "-");
+        const content = typeof column.trustedHtml === "function"
+          ? String(column.trustedHtml(formatted, row) ?? "")
+          : column.type === "badge"
+            ? renderBadge(formatted?.status ?? formatted, formatted?.label ?? "")
+            : escapeHtml(formatted ?? column.empty ?? "-");
         return `<td data-label="${escapeAttribute(column.label ?? column.key)}" class="${safeClass(column.className)}">${content}</td>`;
       }).join("");
       return `<tr data-row-id="${escapeAttribute(rowId)}">${cells}</tr>`;

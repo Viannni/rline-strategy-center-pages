@@ -12,6 +12,9 @@ import {
   toast
 } from "./ui/components.js";
 import { icon, refreshIcons } from "./ui/icons.js";
+import * as dashboardView from "./views/dashboard.js";
+import * as scoringView from "./views/scoring.js";
+import * as usersView from "./views/users.js";
 
 export const ROLES = Object.freeze([
   { id: "strategy", label: "策略全景", permission: "可查看全部模块；规则变更仅在本地模拟生效" },
@@ -52,7 +55,11 @@ const ROLE_TASK_TEAMS = Object.freeze({
   sales: ["sales"]
 });
 
-const viewModules = new Map();
+const viewModules = new Map([
+  ["dashboard", dashboardView],
+  ["users", usersView],
+  ["scoring", scoringView]
+]);
 const components = Object.freeze({
   iconButton,
   openDrawer,
@@ -141,12 +148,13 @@ function renderPlaceholder(container, item, role, state) {
   container.innerHTML = `<section class="page-header"><div><p class="section-kicker">${escapeHtml(roleLabel)}</p><h1>${escapeHtml(item.label)}</h1><p>${escapeHtml(item.description)}</p></div>${renderBadge("info", "演示数据")}</section><section class="placeholder-band" aria-label="视图状态"><div class="placeholder-band__message">${icon(item.icon)}<div><h2>暂无可展示数据</h2><p>当前演示视图尚未加载业务内容。</p></div></div><dl class="shell-facts"><div><dt>模拟用户</dt><dd>${state.users?.length ?? 0}</dd></div><div><dt>待处理任务</dt><dd>${taskCount}</dd></div><div><dt>当前环节</dt><dd>${escapeHtml(FLOW_STAGES.find((stage) => stage.id === item.stage)?.label)}</dd></div></dl></section>`;
 }
 
-function contextFor(role, state, stage) {
+function contextFor(role, state, stage, routeParams = {}) {
   return {
     store: app.store,
     state,
     role,
     stage,
+    routeParams,
     navigate,
     components
   };
@@ -157,12 +165,14 @@ function renderCurrentView({ focus = false } = {}) {
   const state = app.store.getState();
   const item = itemFor(app.currentView);
   const module = viewModules.get(app.currentView);
+  const routeParams = app.routeParams;
+  app.routeParams = {};
 
   app.viewRoot.setAttribute("aria-label", item.label);
   try {
     if (module && typeof module.render === "function") {
       app.viewRoot.replaceChildren();
-      module.render(app.viewRoot, contextFor(role, state, item.stage));
+      module.render(app.viewRoot, contextFor(role, state, item.stage, routeParams));
     } else {
       renderPlaceholder(app.viewRoot, item, role, state);
     }
@@ -243,19 +253,25 @@ function handleRouteChange({ focus = true } = {}) {
   const role = currentRole();
   const requested = routeFromHash(window.location.hash);
   const nextView = ensureVisibleView(requested, role);
+  const pending = app.pendingRoute?.viewId === nextView ? app.pendingRoute : null;
   app.currentView = nextView;
+  app.routeParams = pending?.params ?? {};
+  app.pendingRoute = null;
   if (nextView !== requested) window.history.replaceState(null, "", `#${nextView}`);
   closeMobileNav({ restoreFocus: false });
   renderShell({ focus });
 }
 
-export function navigate(viewId) {
+export function navigate(viewId, params = {}) {
   if (!app) return;
   const nextView = ensureVisibleView(viewId, currentRole());
+  const routeParams = params && typeof params === "object" && !Array.isArray(params) ? structuredClone(params) : {};
   if (window.location.hash === `#${nextView}`) {
     app.currentView = nextView;
+    app.routeParams = routeParams;
     renderShell({ focus: true });
   } else {
+    app.pendingRoute = { viewId: nextView, params: routeParams };
     window.location.hash = nextView;
   }
 }
@@ -280,7 +296,7 @@ function boot() {
   let currentView = ensureVisibleView(routeFromHash(window.location.hash), role);
   if (window.location.hash !== `#${currentView}`) window.history.replaceState(null, "", `#${currentView}`);
 
-  app = { store, sidebar, topbar, workspace, viewRoot, navOverlay, currentView, menuTrigger: null };
+  app = { store, sidebar, topbar, workspace, viewRoot, navOverlay, currentView, menuTrigger: null, routeParams: {}, pendingRoute: null };
   if (window.matchMedia("(max-width: 900px)").matches) sidebar.setAttribute("aria-hidden", "true");
 
   document.addEventListener("click", (event) => {
