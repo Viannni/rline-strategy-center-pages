@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { scoreUser } from "../core/scoring-engine.js";
+import { TASK_RULES } from "../data/rules.js";
 import { scenarioUser } from "../data/seed-data.js";
 import { evaluateTouchGate, getPlacement, routeUser } from "../core/routing-engine.js";
 
@@ -44,28 +45,33 @@ test("renewal-window F14 coupon-unused routes to bound sales with its declared c
   assert.equal(result.slaHours, 24);
 });
 
-test("non-renewal F14 P0 and P1 stay in the signal while routing from the actual issue context", () => {
-  const p0User = scenarioUser("p0-outside-renewal-window");
-  p0User.issueType = "template-question";
-  const p1User = scenarioUser("p0-outside-renewal-window");
-  p1User.issueType = "template-question";
-  p1User.transaction = {
-    ...p1User.transaction,
-    status: "coupon-unused",
-    paymentFailed: false,
-    couponUnused: true
-  };
+test("non-renewal H1 keeps its F14 P0 signal while routing to unbound learning planning", () => {
+  const user = scenarioUser("p0-outside-renewal-window");
+  const score = scoreUser(user);
+  const result = routeUser(user, score);
 
-  for (const user of [p0User, p1User]) {
-    const score = scoreUser(user);
-    const result = routeUser(user, score);
+  assert.equal(score.hLevel, "H1");
+  assert.equal(score.transactionSignal.priority, "P0");
+  assert.equal(result.team, "learning");
+  assert.equal(result.subteam, "learning-planning");
+  assert.equal(result.bindingMode, "unbound");
+  assert.equal(result.taskCategory, "outcome");
+  assert.equal(result.taskSubtype, "高优学情规划");
+  assert.ok(TASK_RULES.categories.find((category) => category.id === "outcome").subtypes.includes("高优学情规划"));
+  assert.notEqual(result.taskCategory, "conversion");
+  assert.notEqual(result.team, "sales");
+  assert.equal(result.trace[2].value, "H1/P0");
+});
 
-    assert.ok(["P0", "P1"].includes(score.transactionSignal.priority));
-    assert.equal(result.team, "agent");
-    assert.equal(result.taskCategory, "outcome");
-    assert.equal(result.taskSubtype, "模板答疑");
-    assert.notEqual(result.taskCategory, "conversion");
-  }
+test("renewal-window H1 remains a bound sales conversion task", () => {
+  const user = scenarioUser("high-base");
+  const result = routeUser(user, scoreUser(user));
+
+  assert.equal(result.team, "sales");
+  assert.equal(result.bindingMode, "bound");
+  assert.equal(result.taskCategory, "conversion");
+  assert.equal(result.taskSubtype, "H1高优转化");
+  assert.equal(result.priority, "P1");
 });
 
 test("touch limit blocks task without changing score", () => {

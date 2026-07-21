@@ -151,7 +151,7 @@ export const H_LEVEL_RULES = [
 export const TASK_RULES = {
   categories: [
     { id: "conversion", label: "临门转化", subtypes: ["F14待付款/支付失败", "领券未用", "H1高优转化"] },
-    { id: "outcome", label: "成果外化", subtypes: ["H2证据补强", "报告解读", "H3提分活动", "模板答疑"] },
+    { id: "outcome", label: "成果外化", subtypes: ["H2证据补强", "报告解读", "H3提分活动", "模板答疑", "高优学情规划"] },
     { id: "repair", label: "风险/漏学修复", subtypes: ["退款投诉", "难度/时间问题", "连续漏学"] }
   ],
   renewalWindows: {

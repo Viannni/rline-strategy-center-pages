@@ -49,8 +49,11 @@ function taskDetails(user, scoreResult, renewal) {
   if (isPlanningIssue(user)) {
     return { taskCategory: "outcome", taskSubtype: "报告解读", priority: "P1", repairSubteam: null, isRisk: false };
   }
-  if (scoreResult.hLevel === "H1") {
+  if (renewal && scoreResult.hLevel === "H1") {
     return { taskCategory: "conversion", taskSubtype: "H1高优转化", priority: "P1", repairSubteam: null, isRisk: false };
+  }
+  if (scoreResult.hLevel === "H1") {
+    return { taskCategory: "outcome", taskSubtype: "高优学情规划", priority: "P1", repairSubteam: null, isRisk: false };
   }
   if (scoreResult.hLevel === "H3") {
     return { taskCategory: "outcome", taskSubtype: "H3提分活动", priority: "P1", repairSubteam: null, isRisk: false };
