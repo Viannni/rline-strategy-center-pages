@@ -91,16 +91,21 @@ function booleanValue(value) {
 
 function isIsoDate(value) {
   if (typeof value !== "string") return false;
-  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (dateOnly) {
-    const [, year, month, day] = dateOnly;
-    const parsed = new Date(`${value}T00:00:00.000Z`);
-    return !Number.isNaN(parsed.valueOf())
-      && parsed.getUTCFullYear() === Number(year)
-      && parsed.getUTCMonth() + 1 === Number(month)
-      && parsed.getUTCDate() === Number(day);
-  }
-  return /^\d{4}-\d{2}-\d{2}T/.test(value) && !Number.isNaN(Date.parse(value));
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2}))?$/.exec(value);
+  if (!match) return false;
+
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText, offset] = match;
+  const [year, month, day, hour, minute, second] = [yearText, monthText, dayText, hourText, minuteText, secondText]
+    .map((entry) => entry === undefined ? entry : Number(entry));
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const calendarDays = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > calendarDays[month - 1]) return false;
+  if (hour === undefined) return true;
+  if (hour > 23 || minute > 59 || (second !== undefined && second > 59)) return false;
+  if (offset === "Z") return true;
+
+  const [, offsetHour, offsetMinute] = /[+-](\d{2}):(\d{2})/.exec(offset) ?? [];
+  return Number(offsetHour) <= 23 && Number(offsetMinute) <= 59;
 }
 
 function dateEntries(value, prefix = "") {

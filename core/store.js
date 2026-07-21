@@ -1,6 +1,6 @@
 import { scoreUsers } from "./scoring-engine.js";
 import { routeUser } from "./routing-engine.js";
-import { importUsers } from "./import-export.js";
+import { importUsers, normalizeUser, validateUser } from "./import-export.js";
 
 export const STORAGE_KEY = "rline-strategy-center:state";
 export const STORAGE_SCHEMA = "rline-strategy-center-state";
@@ -9,6 +9,56 @@ export const STORAGE_VERSION = 1;
 const clone = (value) => structuredClone(value);
 
 const isRecord = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+
+const USER_RECORD_FIELDS = [
+  "learning",
+  "courseEvaluation",
+  "assessment",
+  "report",
+  "parent",
+  "taskFeedback",
+  "risk",
+  "marketing",
+  "transaction",
+  "activity",
+  "touch"
+];
+
+function hasUsableId(user) {
+  const id = user?.user_id ?? user?.id;
+  return (typeof id === "string" && id.trim() !== "") || (typeof id === "number" && Number.isFinite(id));
+}
+
+function hasScorerAndRouterShapes(user) {
+  if (!USER_RECORD_FIELDS.every((field) => user[field] === undefined || user[field] === null || isRecord(user[field]))) return false;
+  const events = user.marketing?.events;
+  return events === undefined || events === null || Array.isArray(events);
+}
+
+function isValidStoredUser(user, rowNumber) {
+  return isRecord(user)
+    && hasUsableId(user)
+    && hasScorerAndRouterShapes(user)
+    && validateUser(user, rowNumber).length === 0;
+}
+
+function hasValidUsers(users) {
+  if (!Array.isArray(users) || !users.every(isValidStoredUser)) return false;
+  const ids = users.map((user) => user.user_id ?? user.id);
+  return new Set(ids).size === ids.length;
+}
+
+function isValidHistorySnapshot(snapshot) {
+  return isRecord(snapshot) && snapshot.history === undefined && hasValidUsers(snapshot.users);
+}
+
+function normalizeStoredState(state) {
+  return {
+    ...state,
+    users: state.users.map(normalizeUser),
+    ...(state.history === undefined ? {} : { history: state.history.map((snapshot) => ({ ...snapshot, users: snapshot.users.map(normalizeUser) })) })
+  };
+}
 
 function defaultStorage() {
   return typeof window === "undefined" ? null : window.localStorage;
@@ -40,17 +90,25 @@ function readStoredState(seed, storage) {
     const parsed = JSON.parse(raw);
     const storedState = parsed?.state;
     const validHistory = storedState?.history === undefined
-      || (Array.isArray(storedState.history) && storedState.history.every(isRecord));
+      || (Array.isArray(storedState.history) && storedState.history.every(isValidHistorySnapshot));
     if (
       parsed?.schema !== STORAGE_SCHEMA
       || parsed?.version !== STORAGE_VERSION
       || !isRecord(storedState)
-      || !Array.isArray(storedState.users)
+      || !hasValidUsers(storedState.users)
       || !validHistory
     ) {
-      return { state: clone(seed), meta: { ...meta, notice: { code: "STORAGE_INCOMPATIBLE", recoverable: true } } };
+      const invalidCurrentUsers = isRecord(storedState)
+        && Array.isArray(storedState.users)
+        && !hasValidUsers(storedState.users);
+      const invalidHistoryUsers = Array.isArray(storedState?.history)
+        && storedState.history.some((snapshot) => isRecord(snapshot)
+          && Array.isArray(snapshot.users)
+          && !hasValidUsers(snapshot.users));
+      const notice = invalidCurrentUsers || invalidHistoryUsers ? "STORAGE_INVALID_USER" : "STORAGE_INCOMPATIBLE";
+      return { state: clone(seed), meta: { ...meta, notice: { code: notice, recoverable: true } } };
     }
-    return { state: parsed.state, meta };
+    return { state: normalizeStoredState(storedState), meta };
   } catch {
     return { state: clone(seed), meta: { ...meta, notice: { code: "STORAGE_RECOVERED", recoverable: true } } };
   }

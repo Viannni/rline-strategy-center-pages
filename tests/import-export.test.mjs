@@ -62,6 +62,43 @@ test("validator reports missing IDs, invalid products, incompatible stages, date
   ]);
 });
 
+test("validator accepts strict ISO calendar dates and timestamps", () => {
+  for (const learning_observed_at of [
+    "2026-02-28",
+    "2024-02-29",
+    "2026-07-20T10:00Z",
+    "2026-07-20T10:00:00.123Z",
+    "2026-07-20T10:00:00+08:00",
+    "2026-07-20T10:00:00-05:30"
+  ]) {
+    assert.deepEqual(validateUser({
+      user_id: "strict-date",
+      product_type: "monthly",
+      stage_code: "T7",
+      learning_observed_at
+    }, 1), []);
+  }
+});
+
+test("validator rejects impossible ISO calendar timestamps and malformed offsets", () => {
+  for (const learning_observed_at of [
+    "2026-02-30T00:00:00Z",
+    "2025-02-29T00:00:00Z",
+    "2026-01-01T24:00:00Z",
+    "2026-01-01T23:60:00Z",
+    "2026-01-01T23:59:60Z",
+    "2026-01-01T00:00:00+0800",
+    "2026-01-01T00:00:00+08:60"
+  ]) {
+    assert.ok(validateUser({
+      user_id: "invalid-date",
+      product_type: "monthly",
+      stage_code: "T7",
+      learning_observed_at
+    }, 1).some((error) => error.code === "INVALID_DATE"), learning_observed_at);
+  }
+});
+
 test("validator also bounds nested current-contract numeric values", () => {
   const errors = validateUser({
     id: "nested",
@@ -142,6 +179,33 @@ test("store loads corrupt or incompatible storage safely with a recoverable noti
   assert.equal(incompatible.getState().storage.notice.code, "STORAGE_INCOMPATIBLE");
   assert.equal(malformedHistory.getState().users.length, SEED_STATE.users.length);
   assert.equal(malformedHistory.getState().storage.notice.code, "STORAGE_INCOMPATIBLE");
+});
+
+test("store recovers version-compatible persisted states with corrupt users before derivation", () => {
+  for (const users of [
+    [null],
+    [{ id: "bad-events", productType: "monthly", stageCode: "T7", marketing: { events: {} } }]
+  ]) {
+    const store = createStore(SEED_STATE, memoryStorage({
+      [STORAGE_KEY]: JSON.stringify({ schema: STORAGE_SCHEMA, version: STORAGE_VERSION, state: { users } })
+    }));
+
+    assert.deepEqual(store.getState().users, SEED_STATE.users);
+    assert.deepEqual(store.getState().storage.notice, { code: "STORAGE_INVALID_USER", recoverable: true });
+  }
+});
+
+test("store rejects corrupt persisted users in history snapshots", () => {
+  const store = createStore(SEED_STATE, memoryStorage({
+    [STORAGE_KEY]: JSON.stringify({
+      schema: STORAGE_SCHEMA,
+      version: STORAGE_VERSION,
+      state: { users: [], history: [{ users: [null] }] }
+    })
+  }));
+
+  assert.deepEqual(store.getState().users, SEED_STATE.users);
+  assert.deepEqual(store.getState().storage.notice, { code: "STORAGE_INVALID_USER", recoverable: true });
 });
 
 test("store recomputes scores and routes after user changes, keeps non-recursive history, and supports undo and reset", () => {
