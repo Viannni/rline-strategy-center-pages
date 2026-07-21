@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { FIELD_DEFINITIONS, SCORING_RULES } from "../data/rules.js";
+import { FIELD_DEFINITIONS, H_LEVEL_RULES, SCORING_RULES } from "../data/rules.js";
 import * as systemMap from "../data/system-capabilities.js";
 import { scenarioUser, SEED_STATE } from "../data/seed-data.js";
 
@@ -18,8 +18,26 @@ test("scoring contract keeps F13 and F14 independent of the base score", () => {
   assert.deepEqual(SCORING_RULES.baseDimensions.map((item) => item.id), [
     "learningHealth", "courseExperience", "outcomes", "parentEngagement", "fit"
   ]);
-  assert.ok(!SCORING_RULES.baseDimensions.flatMap((item) => item.fields).includes("F13"));
-  assert.ok(!SCORING_RULES.baseDimensions.flatMap((item) => item.fields).includes("F14"));
+  const baseFields = SCORING_RULES.baseDimensions.flatMap((item) => item.fields);
+  assert.deepEqual(baseFields.filter((id) => ["F12", "F13", "F14"].includes(id)), []);
+});
+
+test("risk fuse evaluates H4 first and suppresses downstream priorities", () => {
+  const h4 = H_LEVEL_RULES.find((item) => item.id === "H4");
+
+  assert.equal(H_LEVEL_RULES[0].id, "H4");
+  assert.equal(h4.order, 1);
+  assert.deepEqual(SCORING_RULES.riskPrecedence, {
+    evaluatedBy: "H4",
+    field: "F15",
+    trigger: "fuse",
+    supersedes: [
+      "score-ordering",
+      "F13-marketing-priority",
+      "F14-transaction-priority",
+      "sales-task-routing"
+    ]
+  });
 });
 
 test("scoring contract defines F03 fallback and F07 normalized input semantics", () => {

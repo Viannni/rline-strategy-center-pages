@@ -10,6 +10,17 @@ export const SCORING_RULES = {
   independentSignals: ["F13", "F14"],
   touchGate: "F12",
   riskField: "F15",
+  riskPrecedence: {
+    evaluatedBy: "H4",
+    field: "F15",
+    trigger: "fuse",
+    supersedes: [
+      "score-ordering",
+      "F13-marketing-priority",
+      "F14-transaction-priority",
+      "sales-task-routing"
+    ]
+  },
   missingScoreDefaults: {
     F03: 60
   },

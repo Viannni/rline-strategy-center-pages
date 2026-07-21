@@ -48,8 +48,8 @@ const systemCapabilities = [
   },
   {
     id: "crm-segments", name: "CRM分群", path: "userGroupIdList", status: "entry-confirmed", confirmedAt: "2026-06-24",
-    existing: ["页面搜索", "多选"], reuse: ["生命周期、分数和活动行为的复杂组合人群"],
-    changes: ["修复/admin-api/gravity/user-group-tasks读取权限"], gaps: ["历史实读接口返回403，字段和读取权限未确认"],
+    existing: [], reuse: ["生命周期、分数和活动行为的复杂组合人群"],
+    changes: ["修复/admin-api/gravity/user-group-tasks读取权限"], gaps: ["历史实读接口返回403，未确认CRM用户组端点、字段或读取权限"],
     fallback: "多个CRM标签交集或离线名单"
   },
   {
