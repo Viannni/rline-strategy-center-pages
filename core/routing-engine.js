@@ -23,9 +23,10 @@ function isTemplateIssue(user) {
   return hasText(user.issueType, /template-question/);
 }
 
-function taskDetails(user, scoreResult) {
+function taskDetails(user, scoreResult, renewal) {
   const isRisk = scoreResult.hLevel === "H4";
   const transactionPriority = scoreResult.transactionSignal?.priority ?? "P2";
+  const couponUnused = user.transaction?.couponUnused === true || user.transaction?.status === "coupon-unused";
 
   if (isRisk && isAfterSalesIssue(user)) {
     return { taskCategory: "repair", taskSubtype: "退款投诉", priority: scoreResult.risk?.fused ? "P0" : "P1", repairSubteam: "after-sales", isRisk: true };
@@ -36,8 +37,11 @@ function taskDetails(user, scoreResult) {
   if (isRisk || isLearningInterventionIssue(user)) {
     return { taskCategory: "repair", taskSubtype: "连续漏学", priority: "P1", repairSubteam: "learning-intervention", isRisk };
   }
-  if (transactionPriority === "P0") {
+  if (renewal && transactionPriority === "P0") {
     return { taskCategory: "conversion", taskSubtype: "F14待付款/支付失败", priority: "P0", repairSubteam: null, isRisk: false };
+  }
+  if (renewal && transactionPriority === "P1" && couponUnused) {
+    return { taskCategory: "conversion", taskSubtype: "领券未用", priority: "P1", repairSubteam: null, isRisk: false };
   }
   if (isTemplateIssue(user)) {
     return { taskCategory: "outcome", taskSubtype: "模板答疑", priority: "P2", repairSubteam: null, isRisk: false };
@@ -72,24 +76,24 @@ function repairSupport(detail) {
 
 export function evaluateTouchGate(user, taskType) {
   const touch = user.touch ?? {};
-  const reason = touch.p0ExemptionReason ?? touch.exceptionReason ?? null;
-  const supervisorVisible = taskType === "P0" && Boolean(reason);
-  if (supervisorVisible) {
-    return { status: "allowed-with-exception", reason, supervisorVisible: true };
+  const exceptionReason = typeof touch.exceptionReason === "string" ? touch.exceptionReason.trim() : "";
+  const exceptionApplied = taskType === "P0" && touch.p0Exception === true && exceptionReason.length > 0;
+  if (exceptionApplied) {
+    return { status: "eligible", reason: exceptionReason, exceptionApplied: true, supervisorVisible: true };
   }
 
   if (touch.channelLimit === true || touch.channelHardLimit === true) {
-    return { status: "blocked", reason: "渠道硬上限", supervisorVisible: false };
+    return { status: "blocked", reason: "渠道硬上限", exceptionApplied: false, supervisorVisible: false };
   }
 
   const globalLimit = touch.globalLimit7d ?? TASK_RULES.touchGate.parentGlobalLimit7d;
   if (touch.status === "blocked" || (Number.isFinite(touch.total7d) && touch.total7d >= globalLimit)) {
-    return { status: "blocked", reason: touch.reason ?? "家长全局频控", supervisorVisible: false };
+    return { status: "blocked", reason: touch.reason ?? "家长全局频控", exceptionApplied: false, supervisorVisible: false };
   }
   if (touch.status === "queued") {
-    return { status: "queued", reason: touch.reason ?? "家长全局频控等待窗口", supervisorVisible: false };
+    return { status: "queued", reason: touch.reason ?? "家长全局频控等待窗口", exceptionApplied: false, supervisorVisible: false };
   }
-  return { status: "allowed", reason: touch.reason ?? "未命中触达限制", supervisorVisible: false };
+  return { status: "eligible", reason: touch.reason ?? "未命中触达限制", exceptionApplied: false, supervisorVisible: false };
 }
 
 export function getPlacement(featureId) {
@@ -98,8 +102,8 @@ export function getPlacement(featureId) {
 }
 
 export function routeUser(user, scoreResult) {
-  const detail = taskDetails(user, scoreResult);
   const renewal = isRenewalWindow(user);
+  const detail = taskDetails(user, scoreResult, renewal);
   const touchGate = evaluateTouchGate(user, detail.priority);
   const channel = chooseChannel(user, detail);
   const support = repairSupport(detail);

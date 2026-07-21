@@ -25,6 +25,49 @@ test("annual M9 H1 with P0 transaction routes to bound sales", () => {
   assert.equal(result.taskSubtype, "F14待付款/支付失败");
 });
 
+test("renewal-window F14 coupon-unused routes to bound sales with its declared conversion subtype", () => {
+  const user = scenarioUser("annual-renewal-p0");
+  user.transaction = {
+    ...user.transaction,
+    status: "coupon-unused",
+    unpaid: false,
+    paymentFailed: false,
+    couponUnused: true
+  };
+  const result = routeUser(user, scoreUser(user));
+
+  assert.equal(result.team, "sales");
+  assert.equal(result.bindingMode, "bound");
+  assert.equal(result.taskCategory, "conversion");
+  assert.equal(result.taskSubtype, "领券未用");
+  assert.equal(result.priority, "P1");
+  assert.equal(result.slaHours, 24);
+});
+
+test("non-renewal F14 P0 and P1 stay in the signal while routing from the actual issue context", () => {
+  const p0User = scenarioUser("p0-outside-renewal-window");
+  p0User.issueType = "template-question";
+  const p1User = scenarioUser("p0-outside-renewal-window");
+  p1User.issueType = "template-question";
+  p1User.transaction = {
+    ...p1User.transaction,
+    status: "coupon-unused",
+    paymentFailed: false,
+    couponUnused: true
+  };
+
+  for (const user of [p0User, p1User]) {
+    const score = scoreUser(user);
+    const result = routeUser(user, score);
+
+    assert.ok(["P0", "P1"].includes(score.transactionSignal.priority));
+    assert.equal(result.team, "agent");
+    assert.equal(result.taskCategory, "outcome");
+    assert.equal(result.taskSubtype, "模板答疑");
+    assert.notEqual(result.taskCategory, "conversion");
+  }
+});
+
 test("touch limit blocks task without changing score", () => {
   const user = scenarioUser("touch-blocked");
   const score = scoreUser(user);
@@ -87,19 +130,60 @@ test("complex learning issue escalates to a phone task", () => {
   assert.equal(result.placementId, "phone-task");
 });
 
-test("P0 exception requires a reason and stays supervisor-visible", () => {
+test("P0 exception requires an explicit flag and nonblank reason while remaining supervisor-visible", () => {
   const user = scenarioUser("touch-queued-p0-exemption");
+  user.touch.p0Exception = true;
+  user.touch.exceptionReason = "支付失败需在付款窗口内确认";
   const score = scoreUser(user);
   const before = structuredClone(user);
   const result = routeUser(user, score);
 
   assert.deepEqual(result.touchGate, {
-    status: "allowed-with-exception",
+    status: "eligible",
     reason: "支付失败需在付款窗口内确认",
+    exceptionApplied: true,
     supervisorVisible: true
   });
   assert.equal(result.priority, "P0");
   assert.deepEqual(user, before);
+});
+
+test("P0 hard limits remain blocked without the explicit exception flag", () => {
+  const user = scenarioUser("touch-queued-p0-exemption");
+  user.touch = {
+    ...user.touch,
+    status: "blocked",
+    channelHardLimit: true,
+    p0Exception: false,
+    exceptionReason: "过期豁免原因"
+  };
+
+  assert.deepEqual(evaluateTouchGate(user, "P0"), {
+    status: "blocked",
+    reason: "渠道硬上限",
+    exceptionApplied: false,
+    supervisorVisible: false
+  });
+});
+
+test("P0 exception ignores blank reasons", () => {
+  const user = scenarioUser("touch-queued-p0-exemption");
+  user.touch = {
+    ...user.touch,
+    status: "blocked",
+    globalLimit7d: 6,
+    total7d: 6,
+    p0ExemptionReason: null,
+    p0Exception: true,
+    exceptionReason: "   "
+  };
+
+  assert.deepEqual(evaluateTouchGate(user, "P0"), {
+    status: "blocked",
+    reason: "近7日接近频控上限",
+    exceptionApplied: false,
+    supervisorVisible: false
+  });
 });
 
 test("touch gate blocks channel hard limits and queues ordinary soft limits", () => {
@@ -110,11 +194,13 @@ test("touch gate blocks channel hard limits and queues ordinary soft limits", ()
   assert.deepEqual(evaluateTouchGate(hardLimited, "P1"), {
     status: "blocked",
     reason: "渠道硬上限",
+    exceptionApplied: false,
     supervisorVisible: false
   });
   assert.deepEqual(evaluateTouchGate(queued, "P1"), {
     status: "queued",
     reason: "近7日接近频控上限",
+    exceptionApplied: false,
     supervisorVisible: false
   });
 });
