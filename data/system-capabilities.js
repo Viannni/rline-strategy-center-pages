@@ -1,4 +1,37 @@
-export const SYSTEM_CAPABILITIES = [
+export const CAPABILITY_STATUSES = Object.freeze({
+  "confirmed-reusable": Object.freeze({
+    code: "confirmed-reusable",
+    label: "已确认可复用",
+    liveFieldSupport: "documented"
+  }),
+  "entry-confirmed": Object.freeze({
+    code: "entry-confirmed",
+    label: "已有入口待核对",
+    liveFieldSupport: "unverified"
+  }),
+  "needs-adaptation": Object.freeze({
+    code: "needs-adaptation",
+    label: "需要改造",
+    liveFieldSupport: "requires-adaptation"
+  }),
+  "must-add": Object.freeze({
+    code: "must-add",
+    label: "必须新增",
+    liveFieldSupport: "unavailable"
+  }),
+  degradable: Object.freeze({
+    code: "degradable",
+    label: "可降级",
+    liveFieldSupport: "not-required"
+  })
+});
+
+const withStatusMetadata = (item) => ({
+  ...item,
+  statusMeta: CAPABILITY_STATUSES[item.status]
+});
+
+const systemCapabilities = [
   {
     id: "marketing", name: "营销中心", path: "/m/marketing/operation/activity", status: "confirmed-reusable", confirmedAt: "2026-06-24",
     existing: ["活动筛选", "活动列表", "新建活动", "act code", "生效对象", "推广", "数据入口"],
@@ -76,8 +109,10 @@ export const SYSTEM_CAPABILITIES = [
   }
 ];
 
-export const FEATURE_PLACEMENTS = [
-  { id: "activity-uplift", feature: "中心化提分活动", capabilityId: "marketing", status: "confirmed-reusable", dependency: "用户级活动结果回写", fallback: "每日导入活动结果" },
+export const SYSTEM_CAPABILITIES = systemCapabilities.map(withStatusMetadata);
+
+const featurePlacements = [
+  { id: "activity-uplift", feature: "中心化提分活动", capabilityId: "marketing", status: "needs-adaptation", dependency: "用户级活动结果回写", fallback: "每日导入活动结果" },
   { id: "simple-segmentation", feature: "H层级与风险基础分群", capabilityId: "crm-tags", status: "confirmed-reusable", dependency: "标签字典和刷新周期", fallback: "标签优先" },
   { id: "complex-segmentation", feature: "复杂组合分群", capabilityId: "crm-segments", status: "entry-confirmed", dependency: "读取权限和字段确认", fallback: "CRM标签交集或离线名单" },
   { id: "task-queue", feature: "三类R线任务队列", capabilityId: "sales-ops", status: "entry-confirmed", dependency: "任务字段与结果回写确认", fallback: "现有任务和天眼模板" },
@@ -86,7 +121,9 @@ export const FEATURE_PLACEMENTS = [
   { id: "risk-fuse", feature: "投诉退款风险熔断", capabilityId: "tickets", status: "entry-confirmed", dependency: "用户ID实时回写和解除权限", fallback: "每日风险名单人工冻结" },
   { id: "phone-task", feature: "电话任务与频控", capabilityId: "call-center", status: "entry-confirmed", dependency: "任务分配、回写和频控字段", fallback: "电话名单加模板回写" },
   { id: "front-entry", feature: "用户侧报告和续费入口", capabilityId: "front-card", status: "entry-confirmed", dependency: "人群展示和曝光/点击/兑换回传", fallback: "固定节点全量卡片" },
-  { id: "ai-assist", feature: "情绪与异议辅助", capabilityId: "ai-platform", status: "entry-confirmed", dependency: "可解释性、置信度和人工复核", fallback: "规则关键词和人工枚举" },
+  { id: "ai-assist", feature: "情绪与异议辅助", capabilityId: "ai-platform", status: "degradable", dependency: "可解释性、置信度和人工复核", fallback: "规则关键词和人工枚举" },
   { id: "review-dashboard", feature: "H迁移与效果复盘", capabilityId: "analytics", status: "entry-confirmed", dependency: "用户级下钻和关联快照", fallback: "固定宽表首版报表" },
   { id: "scoring-routing", feature: "统一计分、路由与快照", capabilityId: "rules-engine", status: "must-add", dependency: "跨系统数据与事件契约", fallback: "离线规则加定时导入" }
 ];
+
+export const FEATURE_PLACEMENTS = featurePlacements.map(withStatusMetadata);

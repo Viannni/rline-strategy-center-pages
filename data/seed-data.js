@@ -3,7 +3,7 @@ const baseUser = {
   stageCode: "T18",
   issueType: "stage-planning",
   learning: { completionRate: 82, activeDays7: 5, consecutiveMissedDays: 0, negativeFeedback: false, observedAt: "2026-07-20" },
-  courseEvaluation: { score: 4.6, validResponses: 2, window: "最近课程节点", source: "course-evaluation" },
+  courseEvaluation: { score: 4.6, sourceScale: 5, normalizedScore: 92, validResponses: 2, window: "最近课程节点", source: "course-evaluation" },
   assessment: { status: "completed", score: 82, challengeEligible: true, observedAt: "2026-07-18" },
   report: { status: "opened", opened: true, dwellMinutes: 6, shared: false, generatedAt: "2026-07-18" },
   activity: { source: "IN_APP", activityId: "ACT-RLINE-CHALLENGE-07", type: "challenge", participated: true, response: "completed", observedAt: "2026-07-19" },
@@ -15,6 +15,16 @@ const baseUser = {
   taskFeedback: { contacted: false, replyStatus: "not-started", learningConclusion: null, marketingIntent: null, objectionType: null, riskChange: null, nextAction: "待生成任务", nextFollowUpAt: null, finalResult: null }
 };
 
+function normalizedCourseEvaluation(overrides) {
+  if (overrides === null) return null;
+
+  const evaluation = { ...baseUser.courseEvaluation, ...overrides };
+  return {
+    ...evaluation,
+    normalizedScore: Math.round((evaluation.score / evaluation.sourceScale) * 10000) / 100
+  };
+}
+
 function createUser(id, childId, overrides = {}) {
   return {
     ...baseUser,
@@ -22,7 +32,7 @@ function createUser(id, childId, overrides = {}) {
     childId,
     ...overrides,
     learning: { ...baseUser.learning, ...overrides.learning },
-    courseEvaluation: overrides.courseEvaluation === null ? null : { ...baseUser.courseEvaluation, ...overrides.courseEvaluation },
+    courseEvaluation: normalizedCourseEvaluation(overrides.courseEvaluation),
     assessment: { ...baseUser.assessment, ...overrides.assessment },
     report: { ...baseUser.report, ...overrides.report },
     activity: { ...baseUser.activity, ...overrides.activity },

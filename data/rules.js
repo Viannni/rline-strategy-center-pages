@@ -9,7 +9,13 @@ export const SCORING_RULES = {
   ],
   independentSignals: ["F13", "F14"],
   touchGate: "F12",
-  riskField: "F15"
+  riskField: "F15",
+  missingScoreDefaults: {
+    F03: 60
+  },
+  scoreInputs: {
+    F07: { field: "normalizedScore", scale: 100, omitWhenMissing: true }
+  }
 };
 
 export const H_LEVEL_RULES = [
@@ -41,11 +47,11 @@ export const TASK_RULES = {
 export const FIELD_DEFINITIONS = [
   { id: "F01", name: "用户统一ID", technicalField: "user_id", scoreRole: "foundation", source: "学习/订单/CRM主键", refresh: "实时", availability: "required", missing: "无法映射时不进入自动评分，进入数据异常池", owner: "数据" },
   { id: "F02", name: "课程与生命周期阶段", technicalField: "product_type, stage_code", scoreRole: "foundation", source: "教务中心", refresh: "每日", availability: "required", missing: "非法或与产品类型冲突时停止路由", owner: "教务" },
-  { id: "F03", name: "课程级别与用户适配", technicalField: "course_fit", scoreRole: "base", source: "教务中心", refresh: "每日", availability: "needs-validation", missing: "缺失时显示待补齐，不以默认高分替代", owner: "教研" },
+  { id: "F03", name: "课程级别与用户适配", technicalField: "course_fit", scoreRole: "base", source: "教务中心", refresh: "每日", availability: "needs-validation", missingScore: 60, missing: "缺失时按默认60分参与评分并标记待补齐", owner: "教研" },
   { id: "F04", name: "有效完课率", technicalField: "effective_completion_rate", scoreRole: "base", source: "教务中心", refresh: "每日", availability: "entry-confirmed", missing: "缺失时不自动判为未完成", owner: "教务" },
   { id: "F05", name: "近7天活跃学习天数", technicalField: "active_learning_days_7d", scoreRole: "base", source: "教务中心", refresh: "每日", availability: "entry-confirmed", missing: "缺失时标记数据异常", owner: "教务" },
   { id: "F06", name: "连续漏学天数", technicalField: "consecutive_missed_days", scoreRole: "base-and-routing", source: "教务中心", refresh: "每日", availability: "entry-confirmed", missing: "缺失时不触发漏学任务", owner: "教务" },
-  { id: "F07", name: "课程评价分", technicalField: "course_evaluation_score", scoreRole: "base", source: "课程评价", refresh: "课程节点后", availability: "needs-validation", missing: "无有效评价时课程体验不参与分母", owner: "教务" },
+  { id: "F07", name: "课程评价分", technicalField: "course_evaluation_score", scoreRole: "base", source: "课程评价", refresh: "课程节点后", availability: "needs-validation", scoreInput: "normalizedScore", normalizedScale: 100, missing: "无有效评价时课程体验不参与分母", owner: "教务" },
   { id: "F08", name: "测评/挑战结果", technicalField: "assessment_result", scoreRole: "base-and-uplift", source: "教务中心", refresh: "节点后", availability: "needs-validation", missing: "节点未到时显示不适用", owner: "教研" },
   { id: "F09", name: "成长报告行为", technicalField: "report_open, report_dwell, report_share", scoreRole: "base-and-routing", source: "报告服务", refresh: "实时", availability: "needs-validation", missing: "仅生成未打开不加分，只生成报告提醒", owner: "产品" },
   { id: "F10", name: "端内活动参与", technicalField: "in_app_activity_event", scoreRole: "uplift", source: "营销中心", refresh: "每日", availability: "confirmed-reusable", missing: "MANUAL外部活动仅复盘，不进入自动计算", owner: "运营" },
