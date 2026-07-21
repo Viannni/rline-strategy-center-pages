@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { scoreUser, scoreUsers } from "../core/scoring-engine.js";
+import { H_LEVEL_RULES } from "../data/rules.js";
 import { scenarioUser } from "../data/seed-data.js";
 
 test("missing F07 is removed from denominator", () => {
@@ -100,4 +101,56 @@ test("F16 strong difficulty objections add risk without mutating the user", () =
   assert.equal(result.risk.deduction, 15);
   assert.ok(result.risk.reasons.some((reason) => reason.ruleId === "F16-difficulty-objection"));
   assert.deepEqual(user, before);
+});
+
+test("F13, F14, and F12 do not change either base score", () => {
+  const user = scenarioUser("mid-base");
+  const baseline = scoreUser(user);
+  const signaled = scoreUser({
+    ...user,
+    touch: { ...user.touch, status: "blocked", total7d: 10 },
+    marketing: { exposureEligible: true, cohortId: "test-cohort", renewalQuestion: true, events: ["price-question"] },
+    transaction: { unpaid: true, status: "unpaid" }
+  });
+
+  assert.equal(typeof baseline.rawBaseScore, "number");
+  assert.equal(signaled.rawBaseScore, baseline.rawBaseScore);
+  assert.equal(signaled.baseScore, baseline.baseScore);
+});
+
+test("risk changes only the final risk-adjusted base score", () => {
+  const user = scenarioUser("high-base");
+  const baseline = scoreUser(user);
+  const withRisk = scoreUser({ ...user, risk: { deduction: 10 } });
+
+  assert.equal(typeof baseline.rawBaseScore, "number");
+  assert.equal(withRisk.rawBaseScore, baseline.rawBaseScore);
+  assert.equal(withRisk.baseScore, baseline.baseScore - 10);
+});
+
+test("F13 and F14 retain public reasons and expose complete trace entries", () => {
+  const result = scoreUser({
+    ...scenarioUser("mid-base"),
+    marketing: { exposureEligible: true, cohortId: "test-cohort", renewalQuestion: true, events: ["price-question"] },
+    transaction: { unpaid: true, status: "unpaid" }
+  });
+  const expectedKeys = ["ruleId", "label", "points", "actual", "window", "fieldIds", "status"];
+
+  assert.ok(result.marketingSignal.reasons.every((reason) => typeof reason === "string"));
+  assert.ok(result.transactionSignal.reasons.every((reason) => typeof reason === "string"));
+  assert.deepEqual(Object.keys(result.marketingSignal.traces[0]), expectedKeys);
+  assert.deepEqual(Object.keys(result.transactionSignal.traces[0]), expectedKeys);
+  assert.ok(result.reasons.some((reason) => reason.fieldIds.includes("F13")));
+  assert.ok(result.reasons.some((reason) => reason.fieldIds.includes("F14")));
+});
+
+test("H classification follows H_LEVEL_RULES criteria in their declared order", () => {
+  const defaultResult = scoreUser(scenarioUser("high-base"));
+  const hLevelRules = structuredClone(H_LEVEL_RULES);
+  hLevelRules.find((rule) => rule.id === "H1").criteria.allOf[0].value = 101;
+  const ruleDrivenResult = scoreUser(scenarioUser("high-base"), undefined, hLevelRules);
+
+  assert.equal(defaultResult.hLevel, "H1");
+  assert.equal(ruleDrivenResult.hLevel, "H2");
+  assert.deepEqual(H_LEVEL_RULES.map((rule) => rule.id), ["H4", "H1", "H2", "H3", "L"]);
 });

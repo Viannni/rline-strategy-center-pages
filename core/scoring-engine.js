@@ -1,4 +1,4 @@
-import { SCORING_RULES } from "../data/rules.js";
+import { H_LEVEL_RULES, SCORING_RULES } from "../data/rules.js";
 
 export function normalize(earned, cap) {
   return cap > 0 ? Math.round((earned / cap) * 100) : null;
@@ -22,6 +22,10 @@ function item(rule, actual, matched, status = matched ? "matched" : "not-met") {
 
 function unavailableItem(rule, actual = null) {
   return item(rule, actual, false, "not-applicable");
+}
+
+function trace(ruleId, label, points, actual, window, fieldIds, status) {
+  return { ruleId, label, points, actual, window, fieldIds, status };
 }
 
 function finalizeDimension(label, earned, cap, items, participates = true) {
@@ -258,40 +262,51 @@ function marketingSignal(user) {
   const events = new Set(marketing.events ?? []);
   let strength = 0;
   const reasons = [];
-  const add = (condition, points, label) => {
+  const traces = [];
+  const add = (condition, points, label, ruleId, actual) => {
     if (condition) {
       strength += points;
       reasons.push(label);
+      traces.push(trace(ruleId, label, 0, actual, "实时", ["F13"], "matched"));
     }
   };
 
-  add(events.has("appointment"), 3, "预约规划");
-  add(marketing.renewalQuestion === true || events.has("price-question"), 2, "主动问价/续费");
-  add(marketing.couponClick === true || events.has("coupon-click"), 1, "点击优惠券");
-  add(events.has("exposed"), 0, "已曝光");
+  add(events.has("appointment"), 3, "预约规划", "F13-appointment", "appointment");
+  add(marketing.renewalQuestion === true || events.has("price-question"), 2, "主动问价/续费", "F13-renewal-question", "renewal-question");
+  add(marketing.couponClick === true || events.has("coupon-click"), 1, "点击优惠券", "F13-coupon-click", "coupon-click");
+  add(events.has("exposed"), 0, "已曝光", "F13-exposed", "exposed");
   const level = strength >= 5 ? "L3" : strength >= 2 ? "L2" : strength >= 1 ? "L1" : "L0";
   const eligible = marketing.exposureEligible === true && Boolean(marketing.cohortId);
 
-  if (!eligible && reasons.length > 0) reasons.push("缺少同曝光组，不参与横向排名");
-  return { level, comparable: false, cohortId: eligible ? marketing.cohortId : null, rank: null, strength, reasons };
+  if (!eligible && reasons.length > 0) {
+    reasons.push("缺少同曝光组，不参与横向排名");
+    traces.push(trace("F13-not-comparable", "缺少同曝光组，不参与横向排名", 0, marketing.cohortId ?? null, "实时", ["F13"], "not-applicable"));
+  }
+  return { level, comparable: false, cohortId: eligible ? marketing.cohortId : null, rank: null, strength, reasons, traces };
 }
 
 function transactionSignal(user) {
   const transaction = user.transaction ?? {};
   const reasons = [];
+  const traces = [];
   let priority = "P2";
   if (transaction.unpaid === true || transaction.paymentFailed === true || ["unpaid", "payment-failed", "pending-payment"].includes(transaction.status)) {
     priority = "P0";
-    reasons.push(transaction.paymentFailed ? "支付失败" : "待付款/下单未付");
+    const label = transaction.paymentFailed ? "支付失败" : "待付款/下单未付";
+    reasons.push(label);
+    traces.push(trace(transaction.paymentFailed ? "F14-payment-failed" : "F14-unpaid", label, 0, transaction.status ?? null, "实时", ["F14"], "matched"));
   } else if (transaction.couponUnused === true || transaction.status === "coupon-unused") {
     priority = "P1";
     reasons.push("领券未用");
+    traces.push(trace("F14-coupon-unused", "领券未用", 0, transaction.status ?? null, "实时", ["F14"], "matched"));
   } else if (transaction.status === "coupon-received") {
     reasons.push("已领券提醒");
+    traces.push(trace("F14-coupon-received", "已领券提醒", 0, transaction.status, "实时", ["F14"], "not-scored"));
   } else {
     reasons.push("无交易优先级事件");
+    traces.push(trace("F14-no-priority-event", "无交易优先级事件", 0, transaction.status ?? null, "实时", ["F14"], "not-met"));
   }
-  return { priority, reasons };
+  return { priority, reasons, traces };
 }
 
 function activityResponse(user) {
@@ -316,19 +331,37 @@ function upliftScore(user, dimensions, risk, rules) {
   return Math.round(bounded(score, 0, 100));
 }
 
-function classifyHLevel({ baseScore, learningHealthNormalized, outcomeNormalized, upliftScore: uplift, risk }) {
-  if (risk.fused || risk.deduction >= 20 || (learningHealthNormalized < 35 && risk.negativeFeedback)) return "H4";
-  if (baseScore >= 75) return "H1";
-  if (baseScore >= 65 || (baseScore >= 60 && outcomeNormalized >= 70)) return "H2";
-  if (baseScore >= 40 && baseScore <= 64 && uplift >= 65) return "H3";
-  return "L";
+function matchesHCriteria(criteria, metrics) {
+  if (criteria.default === true) return true;
+  const groups = criteria.anyOf ?? [criteria];
+  return groups.some(({ allOf }) => allOf.every(({ metric, operator, value }) => {
+    const actual = metrics[metric];
+    if (operator === "eq") return actual === value;
+    if (operator === "gte") return actual >= value;
+    if (operator === "lte") return actual <= value;
+    if (operator === "lt") return actual < value;
+    return false;
+  }));
+}
+
+function classifyHLevel({ baseScore, learningHealthNormalized, outcomeNormalized, upliftScore: uplift, risk }, hLevelRules) {
+  const metrics = {
+    baseScore,
+    learningHealthNormalized,
+    outcomeNormalized,
+    upliftScore: uplift,
+    riskFused: risk.fused,
+    riskDeduction: risk.deduction,
+    negativeFeedback: risk.negativeFeedback
+  };
+  return hLevelRules.find((rule) => matchesHCriteria(rule.criteria, metrics))?.id ?? hLevelRules.at(-1)?.id ?? "L";
 }
 
 function dimensionCap(rules, id) {
   return rules.baseDimensions.find((dimension) => dimension.id === id).cap;
 }
 
-export function scoreUser(user, rules = SCORING_RULES) {
+export function scoreUser(user, rules = SCORING_RULES, hLevelRules = H_LEVEL_RULES) {
   const dimensions = {
     learningHealth: scoreLearningHealth(user, rules, dimensionCap(rules, "learningHealth")),
     courseExperience: scoreCourseExperience(user, rules, dimensionCap(rules, "courseExperience")),
@@ -348,19 +381,22 @@ export function scoreUser(user, rules = SCORING_RULES) {
     outcomeNormalized: dimensions.outcomes.normalized ?? 0,
     upliftScore: uplift,
     risk: { ...risk, negativeFeedback: user.learning?.negativeFeedback === true }
-  });
+  }, hLevelRules);
   const finalizedRisk = { ...risk, salesFrozen: risk.salesFrozen || hLevel === "H4" };
   const marketing = marketingSignal(user);
   const transaction = transactionSignal(user);
   const reasons = [
     ...Object.values(dimensions).flatMap((dimension) => dimension.items.filter((entry) => entry.status === "matched" || entry.status === "not-scored")),
     ...risk.reasons,
+    ...marketing.traces.filter((entry) => entry.status === "matched" || entry.status === "not-scored"),
+    ...transaction.traces.filter((entry) => entry.status === "matched" || entry.status === "not-scored"),
     ...(user.activity?.source === "MANUAL" ? [{ ruleId: "F10-manual-review-only", label: "MANUAL活动仅复盘", points: 0, actual: user.activity.activityId ?? null, window: "活动回写", fieldIds: ["F10"], status: "not-scored" }] : []),
     { ruleId: `H-${hLevel}`, label: `分层结果 ${hLevel}`, points: 0, actual: hLevel, window: "当前计算", fieldIds: ["F15"], status: "matched" }
   ];
 
   return {
     userId: user.id ?? null,
+    rawBaseScore,
     baseScore,
     dimensions,
     upliftScore: uplift,

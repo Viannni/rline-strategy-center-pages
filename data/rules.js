@@ -79,11 +79,73 @@ export const SCORING_RULES = {
 };
 
 export const H_LEVEL_RULES = [
-  { id: "H4", order: 1, label: "风险修复", when: "风险熔断、风险扣分>=20，或学习健康<35且有负向反馈", action: "停止销售强推，进入体验修复" },
-  { id: "H1", order: 2, label: "高优转化", when: "基础高优分>=75且无风险", action: "续费窗口内二销24小时跟进" },
-  { id: "H2", order: 3, label: "成果外化", when: "基础高优分>=65，或基础分>=60且成果外化标准化分>=70", action: "报告解读、规划、讲座或复习内容铺垫" },
-  { id: "H3", order: 4, label: "中心化提分", when: "基础高优分40-64且运营提分潜力>=65且无风险", action: "中心化活动和低成本提分" },
-  { id: "L", order: 5, label: "低频维护", when: "基础分<40且提分潜力<65且无风险", action: "产品化低频维护" }
+  {
+    id: "H4",
+    order: 1,
+    label: "风险修复",
+    when: "风险熔断、风险扣分>=20，或学习健康<35且有负向反馈",
+    action: "停止销售强推，进入体验修复",
+    criteria: {
+      anyOf: [
+        { allOf: [{ metric: "riskFused", operator: "eq", value: true }] },
+        { allOf: [{ metric: "riskDeduction", operator: "gte", value: 20 }] },
+        {
+          allOf: [
+            { metric: "learningHealthNormalized", operator: "lt", value: 35 },
+            { metric: "negativeFeedback", operator: "eq", value: true }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: "H1",
+    order: 2,
+    label: "高优转化",
+    when: "基础高优分>=75且无风险",
+    action: "续费窗口内二销24小时跟进",
+    criteria: { allOf: [{ metric: "baseScore", operator: "gte", value: 75 }] }
+  },
+  {
+    id: "H2",
+    order: 3,
+    label: "成果外化",
+    when: "基础高优分>=65，或基础分>=60且成果外化标准化分>=70",
+    action: "报告解读、规划、讲座或复习内容铺垫",
+    criteria: {
+      anyOf: [
+        { allOf: [{ metric: "baseScore", operator: "gte", value: 65 }] },
+        {
+          allOf: [
+            { metric: "baseScore", operator: "gte", value: 60 },
+            { metric: "outcomeNormalized", operator: "gte", value: 70 }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: "H3",
+    order: 4,
+    label: "中心化提分",
+    when: "基础高优分40-64且运营提分潜力>=65且无风险",
+    action: "中心化活动和低成本提分",
+    criteria: {
+      allOf: [
+        { metric: "baseScore", operator: "gte", value: 40 },
+        { metric: "baseScore", operator: "lte", value: 64 },
+        { metric: "upliftScore", operator: "gte", value: 65 }
+      ]
+    }
+  },
+  {
+    id: "L",
+    order: 5,
+    label: "低频维护",
+    when: "基础分<40且提分潜力<65且无风险",
+    action: "产品化低频维护",
+    criteria: { default: true }
+  }
 ];
 
 export const TASK_RULES = {
