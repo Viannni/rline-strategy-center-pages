@@ -1,5 +1,10 @@
 const SAFE_ICON = /^[a-z0-9-]+$/;
 const SAFE_CLASS = /^[a-zA-Z0-9_ -]*$/;
+const FALLBACK_GLYPHS = Object.freeze({
+  menu: "≡",
+  x: "×",
+  "undo-2": "↶"
+});
 
 function escape(value) {
   return String(value ?? "")
@@ -38,11 +43,12 @@ export function iconButton({
   const controlsAttribute = controls ? ` aria-controls="${escape(controls)}"` : "";
   const expandedAttribute = typeof expanded === "boolean" ? ` aria-expanded="${expanded}"` : "";
   const disabledAttribute = disabled ? " disabled" : "";
+  const buttonClass = `icon-button${text ? " icon-button--text" : ""}${safeClass ? ` ${safeClass}` : ""}`;
   const visibleText = text
     ? `<span class="icon-button__text">${escape(text)}</span>`
-    : `<span class="icon-button__fallback">${safeLabel}</span>`;
+    : `<span class="icon-button__fallback" aria-hidden="true">${FALLBACK_GLYPHS[iconName] || "•"}</span><span class="sr-only">${safeLabel}</span>`;
 
-  return `<button${safeId} class="icon-button${safeClass ? ` ${safeClass}` : ""}" type="${safeType}" aria-label="${safeLabel}" title="${safeLabel}"${pressedAttribute}${controlsAttribute}${expandedAttribute}${disabledAttribute}>${icon(iconName)}${visibleText}</button>`;
+  return `<button${safeId} class="${buttonClass}" type="${safeType}" aria-label="${safeLabel}" title="${safeLabel}"${pressedAttribute}${controlsAttribute}${expandedAttribute}${disabledAttribute}>${icon(iconName)}${visibleText}</button>`;
 }
 
 export function refreshIcons() {

@@ -135,20 +135,25 @@ export function renderPlacementPanel(featureId) {
   const status = CAPABILITY_STATUSES[placement.status];
   const owner = OWNER_BY_CAPABILITY[placement.capabilityId] || "产品 / 数据负责人待确认";
   const acceptance = ACCEPTANCE_BY_FEATURE[placement.id] || "入口、字段、状态与结果均可按用户追溯";
-  const additions = capability?.gaps ?? [];
+  const additions = [
+    ...(placement.status === "must-add" ? [placement.feature] : []),
+    ...(Array.isArray(placement.additions) ? placement.additions : []),
+    ...(Array.isArray(capability?.additions) ? capability.additions : [])
+  ];
 
   const fields = [
     evidenceField("现有系统", escapeHtml(capability?.name || "待确认")),
     evidenceField("路径", `<code>${escapeHtml(capability?.path || "待确认")}</code>`),
     evidenceField("状态", renderBadge(placement.status, status?.label || placement.status)),
     evidenceField("已有能力", renderEvidenceList(capability?.existing, "尚无已确认字段"), "placement-field--wide"),
-    evidenceField("复用", renderEvidenceList(capability?.reuse, "暂无直接复用项"), "placement-field--wide"),
-    evidenceField("改造", renderEvidenceList(capability?.changes, "无需额外改造"), "placement-field--wide"),
-    evidenceField("新增", renderEvidenceList(additions, "无新增缺口"), "placement-field--wide"),
+    evidenceField("可复用", renderEvidenceList(capability?.reuse, "暂无直接复用项"), "placement-field--wide"),
+    evidenceField("需要改造", renderEvidenceList(capability?.changes, "无需额外改造"), "placement-field--wide"),
+    evidenceField("待核对/能力缺口", renderEvidenceList(capability?.gaps, "无待核对能力缺口"), "placement-field--wide"),
+    evidenceField("必须新增", renderEvidenceList(additions, "无已确认必须新增项"), "placement-field--wide"),
     evidenceField("依赖", escapeHtml(placement.dependency || "无")),
     evidenceField("负责人", escapeHtml(owner)),
     evidenceField("验收", escapeHtml(acceptance), "placement-field--wide"),
-    evidenceField("降级方案", escapeHtml(placement.fallback || capability?.fallback || "无"), "placement-field--wide")
+    evidenceField("降级", escapeHtml(placement.fallback || capability?.fallback || "无"), "placement-field--wide")
   ].join("");
 
   return `<section class="placement-panel" aria-labelledby="placement-${escapeAttribute(placement.id)}"><header class="placement-panel__header"><div><p class="section-kicker">产研落位</p><h2 id="placement-${escapeAttribute(placement.id)}">${escapeHtml(placement.feature)}</h2></div>${renderBadge(placement.status, status?.label || placement.status)}</header><dl class="placement-grid">${fields}</dl></section>`;

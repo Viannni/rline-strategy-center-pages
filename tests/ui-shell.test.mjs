@@ -63,7 +63,7 @@ test("HTML and attribute escaping protects component output", () => {
   assert.doesNotMatch(html, /<script>/);
 });
 
-test("placement panel renders every evidence field with textual status", () => {
+test("placement panel keeps gaps separate from explicit must-add evidence", () => {
   const html = renderPlacementPanel("activity-uplift");
 
   for (const label of [
@@ -71,20 +71,27 @@ test("placement panel renders every evidence field with textual status", () => {
     "路径",
     "状态",
     "已有能力",
-    "复用",
-    "改造",
-    "新增",
+    "可复用",
+    "需要改造",
+    "待核对/能力缺口",
+    "必须新增",
     "依赖",
     "负责人",
     "验收",
-    "降级方案"
+    "降级"
   ]) assert.match(html, new RegExp(label));
 
   assert.match(html, /需要改造/);
   assert.match(html, /data-lucide="wrench"/);
+  assert.match(html, /报名、到场、完赛、分享、领奖和支付是否可按用户回写待核对/);
+  assert.match(html, /无已确认必须新增项/);
+
+  const explicitMustAdd = renderPlacementPanel("scoring-routing");
+  assert.match(explicitMustAdd, /必须新增/);
+  assert.match(explicitMustAdd, /统一计分、路由与快照/);
 });
 
-test("icon helpers retain an accessible text fallback", () => {
+test("icon helpers retain compact glyph and accessible label fallbacks", () => {
   assert.equal(icon('menu" onclick="boom'), "");
   const html = iconButton({
     icon: "menu",
@@ -96,18 +103,27 @@ test("icon helpers retain an accessible text fallback", () => {
   assert.match(html, /title="打开导航"/);
   assert.match(html, /aria-controls="appSidebar"/);
   assert.match(html, /aria-expanded="false"/);
-  assert.match(html, />打开导航<\/span>/);
+  assert.match(html, /class="icon-button__fallback" aria-hidden="true">≡<\/span>/);
+  assert.match(html, /class="sr-only">打开导航<\/span>/);
   assert.match(html, /data-lucide="menu"/);
 });
 
-test("no-build asset paths stay relative and generated browser output stays ignored", async () => {
-  const [index, ignore] = await Promise.all([
+test("icon fallback, focus, and pinned CDN integrity keep static shell resilient", async () => {
+  const [index, styles, ignore] = await Promise.all([
     readFile(new URL("../index.html", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
     readFile(new URL("../.gitignore", import.meta.url), "utf8")
   ]);
 
   assert.match(index, /href="\.\/styles\.css"/);
   assert.match(index, /src="\.\/app\.js"/);
-  assert.match(index, /lucide@0\.468\.0/);
+  assert.match(index, /src="https:\/\/unpkg\.com\/lucide@0\.468\.0\/dist\/umd\/lucide\.min\.js"/);
+  assert.match(index, /integrity="sha384-uTYyvsSSUZeaPhb5RbKlQa0zY\/WpX\/QHfvg2mczXyBQOpkWPEDy9lczyp\+w7SKXu"/);
+  assert.match(index, /crossorigin="anonymous"/);
+  assert.match(styles, /\.icon-button\s*\{[^}]*width:\s*34px;[^}]*height:\s*34px;[^}]*overflow:\s*hidden;/s);
+  assert.match(styles, /\.icon-button__fallback\s*\{[^}]*white-space:\s*nowrap;/s);
+  assert.match(styles, /outline:\s*3px solid var\(--focus\)/);
+  assert.match(styles, /#viewRoot:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--focus\)/s);
+  assert.doesNotMatch(styles, /#viewRoot\s*\{[^}]*outline:\s*none/s);
   assert.match(ignore, /(?:^|\n)\.playwright-cli\/(?:\n|$)/);
 });

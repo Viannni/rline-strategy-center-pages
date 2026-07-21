@@ -73,8 +73,20 @@ select:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--focus) 34%, transparent);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .skip-link {
@@ -380,17 +392,29 @@ textarea:focus-visible,
 
 .icon-button {
   display: inline-flex;
+  width: 34px;
+  height: 34px;
+  overflow: hidden;
   min-width: 34px;
   min-height: 34px;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 0 8px;
+  flex: 0 0 34px;
+  gap: 0;
+  padding: 0;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   color: #39433b;
   background: var(--surface);
   cursor: pointer;
+}
+
+.icon-button--text {
+  width: auto;
+  overflow: visible;
+  flex-basis: auto;
+  gap: 6px;
+  padding: 0 8px;
 }
 
 .icon-button:hover:not(:disabled) {
@@ -412,24 +436,34 @@ textarea:focus-visible,
   stroke-width: 2;
 }
 
+.icon-button__fallback {
+  display: inline-flex;
+  width: 17px;
+  height: 17px;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .icon-button.sidebar__close,
 .icon-button.menu-button {
   display: none;
 }
 
 .icons-ready .icon-button__fallback {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+  display: none;
 }
 
 #viewRoot {
   min-height: calc(100vh - var(--topbar-height));
   padding: 22px 24px 40px;
-  outline: none;
+}
+
+#viewRoot:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
 }
 
 .page-header {
