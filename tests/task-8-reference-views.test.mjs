@@ -4,7 +4,7 @@ import { FIELD_DEFINITIONS } from "../data/rules.js";
 import { serializeCsv } from "../core/import-export.js";
 import { LIFECYCLE_PHASES, lifecycleNode } from "../views/lifecycle.js";
 import { SCHOLARSHIP_POLICY, buildOperationAssets } from "../views/operations.js";
-import { buildFieldRows } from "../views/data-foundation.js";
+import { buildFieldRows, render as renderDataFoundation } from "../views/data-foundation.js";
 import { buildSystemRows } from "../views/system-map.js";
 import { buildReviewTables } from "../views/review.js";
 import { DEMAND_ROWS, demandCsvRows } from "../views/demands.js";
@@ -36,6 +36,57 @@ test("Task 8 exposes every F01-F16 contract and separates gate, independent sign
   assert.match(rows.find((row) => row.id === "F14").semantic, /独立交易状态/);
   assert.match(rows.find((row) => row.id === "F16").semantic, /结构化回写/);
   assert.ok(rows.every((row) => row.window && row.downstream && row.placement));
+});
+
+test("Task 8 data foundation renders before its filter form exists and filters on a later change", () => {
+  const originalFormData = globalThis.FormData;
+  const select = {
+    addEventListener(type, listener) {
+      if (type === "change") this.onChange = listener;
+    }
+  };
+  const form = { formDataEntries: [["role", "base"]] };
+  let hasRendered = false;
+  const container = {
+    querySelector(selector) {
+      return selector === "#fieldFilters" && hasRendered ? form : null;
+    },
+    querySelectorAll(selector) {
+      return selector === "#fieldFilters select" ? [select] : [];
+    },
+    set innerHTML(value) {
+      hasRendered = true;
+      this.html = value;
+    },
+    get innerHTML() {
+      return this.html;
+    }
+  };
+
+  globalThis.FormData = class FakeFormData {
+    constructor(value) {
+      if (value === undefined) {
+        this.values = [];
+      } else if (value?.formDataEntries) {
+        this.values = value.formDataEntries;
+      } else {
+        throw new TypeError("FormData requires a form");
+      }
+    }
+
+    entries() {
+      return this.values[Symbol.iterator]();
+    }
+  };
+
+  try {
+    assert.doesNotThrow(() => renderDataFoundation(container));
+    assert.match(container.innerHTML, /id="fieldFilters"/);
+    select.onChange();
+    assert.match(container.innerHTML, new RegExp(`字段契约 ${buildFieldRows().filter((row) => row.scoreRole === "base").length} 条`));
+  } finally {
+    globalThis.FormData = originalFormData;
+  }
 });
 
 test("Task 8 system topology retains source evidence and CRM 403 tag-first fallback", () => {
