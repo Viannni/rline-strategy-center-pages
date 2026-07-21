@@ -151,7 +151,7 @@ export const H_LEVEL_RULES = [
 export const TASK_RULES = {
   categories: [
     { id: "conversion", label: "临门转化", subtypes: ["F14待付款/支付失败", "领券未用", "H1高优转化"] },
-    { id: "outcome", label: "成果外化", subtypes: ["H2证据补强", "报告解读", "H3提分活动"] },
+    { id: "outcome", label: "成果外化", subtypes: ["H2证据补强", "报告解读", "H3提分活动", "模板答疑"] },
     { id: "repair", label: "风险/漏学修复", subtypes: ["退款投诉", "难度/时间问题", "连续漏学"] }
   ],
   renewalWindows: {
@@ -160,10 +160,20 @@ export const TASK_RULES = {
   },
   touchGate: {
     statuses: ["eligible", "queued", "blocked"],
-    p0Exemption: "P0可豁免，但必须填写原因并对主管可见"
+    p0Exemption: "P0可豁免，但必须填写原因并对主管可见",
+    parentGlobalLimit7d: 6
   },
   defaultChannel: "text",
-  phoneTriggers: ["risk", "complex-learning", "text-unresolved", "phone-request", "high-density-explanation"]
+  phoneTriggers: ["risk", "complex-learning", "text-unresolved", "phone-request", "high-density-explanation"],
+  routing: {
+    teams: {
+      agent: { bindingMode: "unbound", subteam: "guidance" },
+      learning: { bindingMode: "unbound", subteams: ["learning-intervention", "learning-planning", "after-sales"] },
+      sales: { bindingMode: "bound", subteam: "renewal" }
+    },
+    slaHours: { P0: 4, P1: 24, P2: 72 },
+    placements: { text: "task-queue", phone: "phone-task" }
+  }
 };
 
 export const FIELD_DEFINITIONS = [

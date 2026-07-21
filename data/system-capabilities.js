@@ -123,7 +123,8 @@ const featurePlacements = [
   { id: "front-entry", feature: "用户侧报告和续费入口", capabilityId: "front-card", status: "entry-confirmed", dependency: "人群展示和曝光/点击/兑换回传", fallback: "固定节点全量卡片" },
   { id: "ai-assist", feature: "情绪与异议辅助", capabilityId: "ai-platform", status: "degradable", dependency: "可解释性、置信度和人工复核", fallback: "规则关键词和人工枚举" },
   { id: "review-dashboard", feature: "H迁移与效果复盘", capabilityId: "analytics", status: "entry-confirmed", dependency: "用户级下钻和关联快照", fallback: "固定宽表首版报表" },
-  { id: "scoring-routing", feature: "统一计分、路由与快照", capabilityId: "rules-engine", status: "must-add", dependency: "跨系统数据与事件契约", fallback: "离线规则加定时导入" }
+  { id: "scoring-routing", feature: "统一计分、路由与快照", capabilityId: "rules-engine", status: "must-add", dependency: "跨系统数据与事件契约", fallback: "离线规则加定时导入" },
+  { id: "routing-policy", feature: "触达准入、角色路由和任务派发", capabilityId: "rules-engine", status: "must-add", dependency: "F12频控、绑定关系和派单字段", fallback: "离线规则加任务表" }
 ];
 
 export const FEATURE_PLACEMENTS = featurePlacements.map(withStatusMetadata);
