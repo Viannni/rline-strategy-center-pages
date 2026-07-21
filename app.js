@@ -15,6 +15,8 @@ import { icon, refreshIcons } from "./ui/icons.js";
 import * as dashboardView from "./views/dashboard.js";
 import * as scoringView from "./views/scoring.js";
 import * as usersView from "./views/users.js";
+import * as intakeView from "./views/intake.js";
+import * as tasksView from "./views/tasks.js";
 
 export const ROLES = Object.freeze([
   { id: "strategy", label: "策略全景", permission: "可查看全部模块；规则变更仅在本地模拟生效" },
@@ -58,7 +60,9 @@ const ROLE_TASK_TEAMS = Object.freeze({
 const viewModules = new Map([
   ["dashboard", dashboardView],
   ["users", usersView],
-  ["scoring", scoringView]
+  ["scoring", scoringView],
+  ["intake", intakeView],
+  ["tasks", tasksView]
 ]);
 const components = Object.freeze({
   iconButton,

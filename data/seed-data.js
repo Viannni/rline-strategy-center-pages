@@ -52,6 +52,13 @@ const users = [
     report: { opened: true, dwellMinutes: 14, shared: true }, parent: { replyRate30d: 0.9 },
     touch: { parentId: "parent-1001" }, taskFeedback: { nextAction: "准备续费学情卡" }
   }),
+  createUser("monthly-t24-p0", "child-1025", {
+    stageCode: "T24", issueType: "renewal-consultation",
+    learning: { completionRate: 89, activeDays7: 6 }, courseEvaluation: { score: 4.6 }, assessment: { score: 86 },
+    report: { opened: true, dwellMinutes: 10, shared: true }, parent: { replyRate30d: 0.82 },
+    transaction: { status: "unpaid", unpaid: true, observedAt: "2026-07-20T10:00:00+08:00" },
+    touch: { parentId: "parent-1025" }, taskFeedback: { nextAction: "绑定二销处理待付款" }
+  }),
   createUser("mid-base", "child-1002", {
     stageCode: "T16", issueType: "report-interpretation", learning: { completionRate: 72, activeDays7: 4 },
     courseEvaluation: { score: 4.1 }, assessment: { score: 68 }, report: { dwellMinutes: 3, shared: false },
@@ -172,6 +179,7 @@ export const SEED_STATE = {
   generatedAt: "2026-07-20T10:00:00+08:00",
   users,
   tasks: [
+    { id: "task-1025", userId: "monthly-t24-p0", category: "conversion", subtype: "F14待付款/支付失败", priority: "P0", status: "open", assigneeTeam: "sales", channel: "text" },
     { id: "task-1004", userId: "high-score-risk", category: "repair", subtype: "退款投诉", priority: "P0", status: "open", assigneeTeam: "after-sales", channel: "phone" },
     { id: "task-1009", userId: "annual-renewal-p0", category: "conversion", subtype: "F14待付款/支付失败", priority: "P0", status: "open", assigneeTeam: "sales", channel: "text" },
     { id: "task-1011", userId: "h3-uplift", category: "outcome", subtype: "H3提分活动", priority: "P1", status: "open", assigneeTeam: "operations", channel: "text" },

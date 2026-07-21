@@ -1619,6 +1619,121 @@ textarea:focus-visible,
   color: var(--muted);
 }
 
+.intake-statuses {
+  display: flex;
+  min-height: 42px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.intake-statuses button {
+  min-width: 88px;
+  padding: 0 12px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.intake-statuses button[aria-selected="true"] {
+  color: var(--accent-hover);
+  background: var(--accent-soft);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+#intakeResults .data-table,
+.task-workspace .data-table {
+  min-width: 1180px;
+}
+
+.task-workspace {
+  border-top: 1px solid var(--line);
+}
+
+.feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  padding: 14px;
+}
+
+.feedback-grid fieldset,
+.feedback-field {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.feedback-grid legend,
+.feedback-field > span {
+  padding: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.feedback-grid select,
+.feedback-grid input,
+.feedback-grid textarea,
+.p0-exemption-form textarea,
+.reassign-form select {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: 7px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font: inherit;
+  font-size: 12px;
+}
+
+.feedback-grid textarea,
+.p0-exemption-form textarea {
+  min-height: 62px;
+  resize: vertical;
+}
+
+.feedback-field--wide {
+  grid-column: 1 / -1;
+}
+
+.radio-field {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 6px;
+  margin-right: 12px;
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.radio-field input {
+  width: 16px;
+  min-height: 16px;
+  margin: 0;
+}
+
+.p0-exemption-form,
+.reassign-form {
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.drawer-preview > .simulation-preview {
+  margin: 14px;
+}
+
 .nav-overlay {
   display: none;
 }
@@ -2049,6 +2164,20 @@ textarea:focus-visible,
 
   .overlay-panel__body {
     padding: 14px;
+  }
+
+  .feedback-grid {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .feedback-field--wide {
+    grid-column: auto;
+  }
+
+  .radio-field {
+    display: flex;
+    margin-right: 0;
   }
 
   .toast-root {
