@@ -501,6 +501,25 @@ textarea:focus-visible,
   font-size: 13px;
 }
 
+.page-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.storage-notice {
+  max-width: 180px;
+  overflow: hidden;
+  color: #8b550e;
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .placeholder-band {
   display: grid;
   grid-template-columns: minmax(240px, 1fr) auto;
@@ -612,6 +631,27 @@ textarea:focus-visible,
   overflow: auto;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+#userResults .data-table th:first-child,
+#userResults .data-table td:first-child,
+.task-workspace .data-table th:first-child,
+.task-workspace .data-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  box-shadow: 1px 0 0 var(--line);
+}
+
+#userResults .data-table th:first-child,
+.task-workspace .data-table th:first-child {
+  z-index: 2;
+  background: var(--surface-muted);
+}
+
+#userResults .data-table td:first-child,
+.task-workspace .data-table td:first-child {
   background: var(--surface);
 }
 
@@ -1098,6 +1138,144 @@ textarea:focus-visible,
   margin: 0 0 8px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.import-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.import-steps li {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.import-steps li span {
+  display: grid;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.import-steps li.is-current,
+.import-steps li.is-complete {
+  color: #176645;
+}
+
+.import-steps li.is-current span,
+.import-steps li.is-complete span {
+  border-color: var(--accent);
+  color: #ffffff;
+  background: var(--accent);
+}
+
+.import-warning,
+.desktop-guidance {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid #e5c384;
+  border-radius: var(--radius);
+  color: #70480e;
+  background: var(--warning-soft);
+  font-size: 12px;
+}
+
+.import-wizard__body {
+  min-height: 210px;
+}
+
+.file-dropzone {
+  display: grid;
+  min-height: 142px;
+  align-content: center;
+  justify-items: start;
+  gap: 9px;
+  padding: 18px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  font-weight: 700;
+}
+
+.file-dropzone small,
+.import-errors li,
+.local-notice {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.import-mapping {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.import-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--line);
+}
+
+.import-summary > div {
+  display: grid;
+  gap: 2px;
+  padding: 14px;
+  border-right: 1px solid var(--line);
+}
+
+.import-summary > div:last-child {
+  border-right: 0;
+}
+
+.import-summary strong {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.import-summary span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.import-errors {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--danger);
+  background: var(--danger-soft);
+}
+
+.import-errors h3,
+.import-errors ul {
+  margin: 0;
+}
+
+.import-errors ul {
+  padding-left: 18px;
+}
+
+.form-error {
+  margin: 8px 0 0;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.desktop-guidance {
+  display: none;
 }
 
 .detail-toolbar {
@@ -2035,6 +2213,16 @@ textarea:focus-visible,
 }
 
 @media (max-width: 600px) {
+  .topbar__tools {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  .storage-notice {
+    display: none;
+  }
+
   .topbar__tools > .icon-button {
     margin-right: auto;
   }
@@ -2075,6 +2263,37 @@ textarea:focus-visible,
   .workbench-header p:not(.section-kicker),
   .workbench-meta > span {
     display: none;
+  }
+
+  .page-header,
+  .workbench-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .page-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .page-actions .badge {
+    margin-right: auto;
+  }
+
+  .import-steps {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .import-mapping {
+    grid-template-columns: 1fr;
+  }
+
+  .import-wizard__body {
+    min-height: 0;
+  }
+
+  .desktop-guidance {
+    display: block;
   }
 
   .kpi-strip {

@@ -1,0 +1,88 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import { createStore } from "../core/store.js";
+import { SEED_STATE } from "../data/seed-data.js";
+import {
+  createImportPreview,
+  applySimulation,
+  mapImportRows,
+  previewSimulation,
+  userExportCsv,
+  userExportJson,
+  isDesktopOnlyFeatureAvailable
+} from "../views/users.js";
+import { taskExportCsv } from "../views/tasks.js";
+import { dialogContract } from "../ui/components.js";
+
+const memoryStorage = (setItem = () => {}) => ({
+  getItem() { return null; },
+  setItem,
+  removeItem() {}
+});
+
+test("import mapping preserves source rows and previews valid, skipped, and failed rows", () => {
+  const source = [
+    { external_id: "new-user", kind: "monthly", stage: "T1", note: "new" },
+    { external_id: "bad-user", kind: "annual", stage: "T1" },
+    { external_id: "mid-base", kind: "monthly", stage: "T16" }
+  ];
+  const before = structuredClone(source);
+  const mapping = { user_id: "external_id", product_type: "kind", stage_code: "stage" };
+  const mapped = mapImportRows(source, mapping);
+  const preview = createImportPreview(source, mapping, SEED_STATE.users, "skip");
+
+  assert.equal(mapped[0].user_id, "new-user");
+  assert.equal(mapped[0].note, "new");
+  assert.deepEqual(source, before);
+  assert.deepEqual(preview.counts, { success: 1, warning: 1, failure: 1 });
+  assert.equal(preview.result.errors[0].row, 2);
+  assert.equal(preview.result.skipped[0].userId, "mid-base");
+});
+
+test("export helpers serialize user and role-task content with formula protection", () => {
+  const state = structuredClone(SEED_STATE);
+  state.users[0].childId = "=unsafe";
+  const json = userExportJson(state.users);
+  const csv = userExportCsv([{ id: "u1", childId: "=unsafe", hLevel: "H1" }]);
+  const taskCsv = taskExportCsv(state, "sales");
+
+  assert.equal(JSON.parse(json)[0].childId, "=unsafe");
+  assert.match(csv, /"'=unsafe"/);
+  assert.match(taskCsv, /用户ID/);
+  assert.match(taskCsv, /二销|sales/);
+});
+
+test("quota failures keep the in-memory state usable and mark storage as recoverable", () => {
+  const store = createStore(SEED_STATE, memoryStorage(() => { throw new DOMException("quota", "QuotaExceededError"); }));
+  store.update((state) => ({ ...state, generatedAt: "2026-07-21T00:00:00+08:00" }));
+
+  assert.equal(store.getState().generatedAt, "2026-07-21T00:00:00+08:00");
+  assert.deepEqual(store.getState().storage.notice, { code: "STORAGE_UNAVAILABLE", recoverable: true });
+});
+
+test("mobile-only capability gating leaves bulk import and rule editing to desktop", () => {
+  assert.equal(isDesktopOnlyFeatureAvailable(390), false);
+  assert.equal(isDesktopOnlyFeatureAvailable(768), false);
+  assert.equal(isDesktopOnlyFeatureAvailable(1280), true);
+});
+
+test("simulation preview remains immutable until the confirmation path applies it", () => {
+  const store = createStore(SEED_STATE, memoryStorage());
+  const before = store.getState().users.find((user) => user.id === "high-base").report.opened;
+  const preview = previewSimulation(store.getState(), "high-base", { reportOpened: !before });
+
+  assert.equal(store.getState().users.find((user) => user.id === "high-base").report.opened, before);
+  applySimulation(store, "high-base", preview.changes);
+  assert.equal(store.getState().users.find((user) => user.id === "high-base").report.opened, !before);
+});
+
+test("dialog contract exposes title focus, tab containment, escape, overlay close, and trigger restoration", () => {
+  assert.deepEqual(dialogContract(), {
+    initialFocus: "title",
+    trapTab: true,
+    closeOnEscape: true,
+    closeOnOverlay: true,
+    restoreTrigger: true
+  });
+});

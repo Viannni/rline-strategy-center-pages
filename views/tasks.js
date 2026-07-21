@@ -1,6 +1,7 @@
 import { FEEDBACK_OPTIONS } from "../core/store.js";
 import { selectTasksForRole } from "../core/selectors.js";
-import { escapeAttribute, escapeHtml, iconButton, openDrawer, renderBadge, renderTable, toast } from "../ui/components.js";
+import { serializeCsv } from "../core/import-export.js";
+import { downloadFile, escapeAttribute, escapeHtml, iconButton, openDrawer, renderBadge, renderTable, toast } from "../ui/components.js";
 import { icon, refreshIcons } from "../ui/icons.js";
 
 const ROLE_COPY = Object.freeze({
@@ -101,7 +102,21 @@ export function buildRoleTaskRows(state, role) {
   });
   const scoped = role === "strategy" ? rows
     : rows.filter((row) => hasExplicitAssignment(row.task) ? isAssignedToRole(row.task, role) : fallbackMatchesRole(row, role));
-  return scoped.sort((left, right) => left.route.priority.localeCompare(right.route.priority) || left.userId.localeCompare(right.userId));
+  return scoped.sort((left, right) => String(left.route.priority ?? "P9").localeCompare(String(right.route.priority ?? "P9")) || left.userId.localeCompare(right.userId));
+}
+
+export function taskExportCsv(state, role) {
+  return serializeCsv(buildRoleTaskRows(state, role).map((row) => ({
+    "用户ID": row.userId,
+    "孩子ID": row.user.childId ?? row.userId,
+    "角色范围": role,
+    "任务": row.task.subtype,
+    "优先级": row.task.priority,
+    "状态": row.task.status,
+    "主责团队": row.route.team,
+    "渠道": row.channel,
+    "风险状态": row.frozenRepair ? "冻结修复" : "正常"
+  })));
 }
 
 function selectOptions(field, selected, options = FEEDBACK_OPTIONS) {
@@ -185,7 +200,11 @@ function renderTaskTable(rows) {
 
 export function render(container, context) {
   const rows = buildRoleTaskRows(context.state, context.role);
-  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">${escapeHtml(context.role)}</p><h1>角色任务台</h1><p>${escapeHtml(ROLE_COPY[context.role] ?? ROLE_COPY.strategy)}</p></div>${renderBadge("info", `${rows.length} 条`)}</section><section class="task-workspace">${renderTaskTable(rows)}</section>`;
+  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">${escapeHtml(context.role)}</p><h1>角色任务台</h1><p>${escapeHtml(ROLE_COPY[context.role] ?? ROLE_COPY.strategy)}</p></div><div class="page-actions">${renderBadge("info", `${rows.length} 条`)}<button id="exportRoleTasks" type="button" class="secondary-button">导出任务 CSV</button></div></section><section class="task-workspace">${renderTaskTable(rows)}</section>`;
+  container.querySelector("#exportRoleTasks")?.addEventListener("click", () => {
+    downloadFile({ content: `\uFEFF${taskExportCsv(context.state, context.role)}`, filename: `rline-${context.role}-tasks.csv`, type: "text/csv;charset=utf-8" });
+    toast(`已导出 ${rows.length} 条当前角色任务。`, "success");
+  });
   container.querySelectorAll("[data-task-id]").forEach((button) => button.addEventListener("click", () => {
     const row = rows.find((item) => item.id === button.dataset.taskId);
     if (row) taskDrawer(row, context);

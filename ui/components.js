@@ -116,6 +116,31 @@ export function renderTable(columnsOrConfig, rowsArgument = [], optionsArgument 
   return `<div class="table-scroll"><table class="data-table">${caption}<thead><tr>${headers}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
+export function downloadFile({ content, filename, type = "application/octet-stream" } = {}) {
+  if (typeof document === "undefined" || typeof URL === "undefined" || typeof Blob === "undefined") return false;
+  const blob = new Blob([content ?? ""], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = String(filename || "rline-export");
+  link.hidden = true;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  return true;
+}
+
+export function dialogContract() {
+  return Object.freeze({
+    initialFocus: "title",
+    trapTab: true,
+    closeOnEscape: true,
+    closeOnOverlay: true,
+    restoreTrigger: true
+  });
+}
+
 function renderEvidenceList(items, emptyText) {
   if (!Array.isArray(items) || items.length === 0) {
     return `<p class="evidence-empty">${escapeHtml(emptyText)}</p>`;
@@ -182,7 +207,7 @@ function openLayer(kind, options = {}) {
   const closeLabel = kind === "drawer" ? "关闭抽屉" : "关闭弹窗";
   const widthClass = options.size ? ` overlay-panel--${safeClass(options.size)}` : "";
 
-  root.innerHTML = `<div class="overlay-layer overlay-layer--${kind}" data-layer="${kind}"><div class="overlay-layer__backdrop" data-overlay-close></div><section class="overlay-panel${widthClass}" role="dialog" aria-modal="true" aria-labelledby="${titleId}" tabindex="-1"><header class="overlay-panel__header"><h2 id="${titleId}">${escapeHtml(options.title || "详情")}</h2>${iconButton({ icon: "x", label: closeLabel, className: "overlay-close" })}</header><div class="overlay-panel__body">${body}</div></section></div>`;
+  root.innerHTML = `<div class="overlay-layer overlay-layer--${kind}" data-layer="${kind}"><div class="overlay-layer__backdrop" data-overlay-close></div><section class="overlay-panel${widthClass}" role="dialog" aria-modal="true" aria-labelledby="${titleId}" tabindex="-1"><header class="overlay-panel__header"><h2 id="${titleId}" tabindex="-1">${escapeHtml(options.title || "详情")}</h2>${iconButton({ icon: "x", label: closeLabel, className: "overlay-close" })}</header><div class="overlay-panel__body">${body}</div></section></div>`;
 
   const layer = root.firstElementChild;
   const panel = layer.querySelector(".overlay-panel");
@@ -248,7 +273,7 @@ function openLayer(kind, options = {}) {
   }
   activeLayer = { close, restoreTarget: previousFocus, sequence };
   refreshIcons();
-  queueMicrotask(() => (panel.querySelector("[autofocus]") || closeButton || panel).focus());
+  queueMicrotask(() => (panel.querySelector("[autofocus]") || panel.querySelector("h2") || closeButton || panel).focus());
   return close;
 }
 

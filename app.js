@@ -3,6 +3,7 @@ import { createStore } from "./core/store.js";
 import {
   escapeAttribute,
   escapeHtml,
+  downloadFile,
   iconButton,
   openDrawer,
   openModal,
@@ -154,8 +155,30 @@ function renderTopbar() {
   const stage = itemFor(app.currentView).stage;
   const permission = ROLES.find((item) => item.id === role)?.permission || "仅用于模拟信息范围";
   const options = ROLES.map((item) => `<option value="${item.id}"${item.id === role ? " selected" : ""}>${escapeHtml(item.label)}</option>`).join("");
+  const storageNotice = state.storage?.notice;
+  const storageTools = storageNotice
+    ? `<span class="storage-notice" role="status">本地存储异常，当前仍在内存中运行。</span>${iconButton({ icon: "download", label: "导出当前快照", id: "exportSnapshotButton" })}${iconButton({ icon: "rotate-ccw", label: "恢复种子数据", id: "recoverStorageButton" })}`
+    : "";
 
-  app.topbar.innerHTML = `<div class="topbar__flow">${iconButton({ icon: "menu", label: "打开导航", id: "navMenuButton", className: "menu-button", controls: "appSidebar", expanded: document.body.classList.contains("nav-open") })}${renderFlowRail(stage)}</div><div class="topbar__tools">${iconButton({ icon: "undo-2", label: "撤销最近一次更改", id: "undoButton", disabled: (state.history?.length ?? 0) === 0 })}<label class="role-switch" for="roleSelect"><span>演示视图</span><select id="roleSelect" aria-describedby="roleHint">${options}</select></label><span id="roleHint" class="role-hint">${escapeHtml(permission)}</span></div>`;
+  app.topbar.innerHTML = `<div class="topbar__flow">${iconButton({ icon: "menu", label: "打开导航", id: "navMenuButton", className: "menu-button", controls: "appSidebar", expanded: document.body.classList.contains("nav-open") })}${renderFlowRail(stage)}</div><div class="topbar__tools">${storageTools}${iconButton({ icon: "undo-2", label: "撤销最近一次更改", id: "undoButton", disabled: (state.history?.length ?? 0) === 0 })}${iconButton({ icon: "rotate-ccw", label: "重置本地演示数据", id: "resetButton" })}<label class="role-switch" for="roleSelect"><span>演示视图</span><select id="roleSelect" aria-describedby="roleHint">${options}</select></label><span id="roleHint" class="role-hint">${escapeHtml(permission)}</span></div>`;
+}
+
+function exportSnapshot(store) {
+  downloadFile({ content: `${JSON.stringify(store.getState(), null, 2)}\n`, filename: "rline-local-demo-snapshot.json", type: "application/json;charset=utf-8" });
+  toast("已导出当前本地快照。", "success");
+}
+
+function confirmReset(store) {
+  const close = openModal({
+    title: "重置本地演示数据",
+    trustedHtml: `<p>此操作会清除本地演示修改，并恢复 SEED_STATE 种子数据。当前修改可先导出快照留存。</p><div class="form-actions"><button id="resetCancelButton" type="button" class="secondary-button">取消</button><button id="confirmResetButton" type="button" class="danger-button">清除并恢复</button></div>`
+  });
+  document.getElementById("resetCancelButton")?.addEventListener("click", () => close());
+  document.getElementById("confirmResetButton")?.addEventListener("click", () => {
+    store.reset();
+    close({ restoreFocus: false });
+    toast("已清除本地演示修改并恢复种子数据。", "success");
+  });
 }
 
 function renderPlaceholder(container, item, role, state) {
@@ -193,7 +216,7 @@ function renderCurrentView({ focus = false } = {}) {
       renderPlaceholder(app.viewRoot, item, role, state);
     }
   } catch (error) {
-    app.viewRoot.innerHTML = `<section class="page-header"><div><p class="section-kicker">视图异常</p><h1>${escapeHtml(item.label)}</h1><p>该视图暂时无法加载。</p></div>${renderBadge("danger", "加载失败")}</section>`;
+    app.viewRoot.innerHTML = `<section class="page-header"><div><p class="section-kicker">视图异常</p><h1>${escapeHtml(item.label)}</h1><p>该视图暂时无法加载。</p></div>${renderBadge("danger", "加载失败")}</section><section class="empty-state"><div>${icon("rotate-cw")}</div><h2>暂时无法加载此视图</h2><p>当前数据没有被清除，可以重试或恢复种子数据。</p><div class="form-actions"><button id="retryViewButton" type="button" class="secondary-button">重试</button><button id="recoverViewButton" type="button" class="danger-button">恢复种子数据</button></div></section>`;
     console.error(error);
     toast("视图加载失败，请检查控制台。", "danger");
   }
@@ -325,6 +348,10 @@ function boot() {
       if (store.undo()) toast("已撤销最近一次数据变更。", "success");
       else toast("没有可撤销的数据变更。", "info");
     }
+    if (target.closest("#resetButton")) confirmReset(store);
+    if (target.closest("#exportSnapshotButton")) exportSnapshot(store);
+    if (target.closest("#recoverStorageButton, #recoverViewButton")) confirmReset(store);
+    if (target.closest("#retryViewButton")) renderCurrentView({ focus: true });
   });
 
   document.addEventListener("change", (event) => {

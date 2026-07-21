@@ -1,5 +1,5 @@
 import { serializeCsv } from "../core/import-export.js";
-import { escapeAttribute, escapeHtml, openDrawer, renderBadge, renderTable, toast } from "../ui/components.js";
+import { downloadFile, escapeAttribute, escapeHtml, openDrawer, renderBadge, renderTable, toast } from "../ui/components.js";
 
 export const DEMAND_ROWS = Object.freeze([
   { id: "unified-id", priority: "P0", department: "数据", existing: "跨系统主键待映射", add: "统一用户ID与映射表", change: "学习/订单/CRM按user_id关联", dependencies: "主数据、教务、CRM", owner: "数据产品", acceptance: "同一用户跨系统可追溯", status: "待排期", fallback: "离线映射宽表" },
@@ -22,13 +22,7 @@ function openDemand(row) {
 }
 
 function downloadCsv(rows) {
-  const blob = new Blob([`\uFEFF${serializeCsv(demandCsvRows(rows))}`], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "rline-cross-department-demands.csv";
-  link.click();
-  URL.revokeObjectURL(url);
+  downloadFile({ content: `\uFEFF${serializeCsv(demandCsvRows(rows))}`, filename: "rline-cross-department-demands.csv", type: "text/csv;charset=utf-8" });
 }
 
 export function render(container) {

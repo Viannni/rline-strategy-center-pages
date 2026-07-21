@@ -6,6 +6,12 @@ export const STORAGE_KEY = "rline-strategy-center:state";
 export const STORAGE_SCHEMA = "rline-strategy-center-state";
 export const STORAGE_VERSION = 1;
 
+const UNAVAILABLE_STORAGE = Object.freeze({
+  getItem() { throw new Error("STORAGE_UNAVAILABLE"); },
+  setItem() { throw new Error("STORAGE_UNAVAILABLE"); },
+  removeItem() { throw new Error("STORAGE_UNAVAILABLE"); }
+});
+
 export const FEEDBACK_OPTIONS = Object.freeze({
   contactStatus: ["reached", "unreached", "not-contacted"],
   responseStatus: ["replied", "unresolved", "no-response", "not-applicable"],
@@ -78,7 +84,12 @@ function normalizeStoredState(state) {
 }
 
 function defaultStorage() {
-  return typeof window === "undefined" ? null : window.localStorage;
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage;
+  } catch {
+    return UNAVAILABLE_STORAGE;
+  }
 }
 
 function snapshot(state) {
@@ -229,6 +240,7 @@ function derive(base, history, storageMeta) {
 function readStoredState(seed, storage) {
   const meta = { key: STORAGE_KEY, schema: STORAGE_SCHEMA, version: STORAGE_VERSION, notice: null };
   if (!storage) return { state: clone(seed), meta };
+  if (storage === UNAVAILABLE_STORAGE) return { state: clone(seed), meta: { ...meta, notice: { code: "STORAGE_UNAVAILABLE", recoverable: true } } };
   try {
     const raw = storage.getItem(STORAGE_KEY);
     if (raw === null) return { state: clone(seed), meta };

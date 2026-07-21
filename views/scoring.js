@@ -1,6 +1,7 @@
 import { scoreUser } from "../core/scoring-engine.js";
 import { FIELD_DEFINITIONS, SCORING_RULES } from "../data/rules.js";
 import {
+  downloadFile,
   escapeAttribute,
   escapeHtml,
   openDrawer,
@@ -33,6 +34,10 @@ export function createRuleDraft() {
 
 export function restoreOnlineBaseline() {
   return structuredClone(SCORING_RULES);
+}
+
+export function ruleDraftJson(draft = localDraft) {
+  return `${JSON.stringify(structuredClone(draft), null, 2)}\n`;
 }
 
 function flattenRules(groupId, rules = SCORING_RULES) {
@@ -126,7 +131,7 @@ function updateDraftPoint(groupId, ruleId, points) {
 
 function renderTrial(state) {
   const options = (state?.users ?? []).map((user) => `<option value="${escapeAttribute(user.id)}">${escapeHtml(user.childId)} · ${escapeHtml(user.id)}</option>`).join("");
-  return `<section class="score-toolbar"><div><strong>本地规则草稿</strong><span>只在当前页面内试算，不发布、不修改生产，也不写入用户模拟数据。</span></div><button id="restoreBaselineButton" type="button" class="secondary-button">${icon("rotate-ccw")}恢复线上基准</button></section><div class="trial-layout"><section class="trial-rules"><header class="analysis-panel__header"><div><p class="section-kicker">可编辑草稿</p><h2>基础分分值</h2></div>${renderBadge("warning", "本地草稿")}</header>${rulesTable(buildBaseRuleRows(localDraft), { editable: true })}</section><section class="trial-result"><label class="filter-field"><span>试算用户</span><select id="trialUserSelect">${options}</select></label><button id="previewRuleButton" type="button" class="primary-button">${icon("calculator")}预览规则影响</button><div id="rulePreview" aria-live="polite"><p class="empty-copy">选择用户后预览原始/最终基础分、H层级和信号。独立信号不会因基础分草稿被混入。</p></div></section></div>`;
+  return `<section class="score-toolbar"><div><strong>本地规则草稿</strong><span>只在当前页面内试算，不发布、不修改生产，也不写入用户模拟数据。</span></div><div class="page-actions"><button id="exportRuleDraft" type="button" class="secondary-button">导出草稿 JSON</button><button id="restoreBaselineButton" type="button" class="secondary-button">${icon("rotate-ccw")}恢复线上基准</button></div></section><p class="desktop-guidance" role="note">复杂规则编辑请在桌面端完成；手机端可查看评分与任务回写。</p><div class="trial-layout"><section class="trial-rules"><header class="analysis-panel__header"><div><p class="section-kicker">可编辑草稿</p><h2>基础分分值</h2></div>${renderBadge("warning", "本地草稿")}</header>${rulesTable(buildBaseRuleRows(localDraft), { editable: true })}</section><section class="trial-result"><label class="filter-field"><span>试算用户</span><select id="trialUserSelect">${options}</select></label><button id="previewRuleButton" type="button" class="primary-button">${icon("calculator")}预览规则影响</button><div id="rulePreview" aria-live="polite"><p class="empty-copy">选择用户后预览原始/最终基础分、H层级和信号。独立信号不会因基础分草稿被混入。</p></div></section></div>`;
 }
 
 function renderTabContent(state) {
@@ -186,6 +191,11 @@ export function render(container, context) {
       rerender();
       return;
     }
+    if (target?.closest("#exportRuleDraft")) {
+      downloadFile({ content: ruleDraftJson(), filename: "rline-local-rule-draft.json", type: "application/json;charset=utf-8" });
+      toast("已导出本地规则草稿。", "success");
+      return;
+    }
     if (target?.closest("#previewRuleButton")) {
       const userId = container.querySelector("#trialUserSelect")?.value;
       const root = container.querySelector("#rulePreview");
@@ -196,6 +206,11 @@ export function render(container, context) {
   container.onchange = (event) => {
     const input = event.target instanceof HTMLInputElement ? event.target : null;
     if (!input?.matches(".rule-points-input")) return;
+    if (typeof window !== "undefined" && window.innerWidth < 900) {
+      toast("复杂规则编辑请在桌面端完成。", "warning");
+      rerender();
+      return;
+    }
     updateDraftPoint(input.dataset.ruleGroup, input.dataset.ruleId, input.value);
     toast("分值已更新到本地草稿。", "info", 1800);
   };
