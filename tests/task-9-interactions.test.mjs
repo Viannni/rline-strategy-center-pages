@@ -14,7 +14,7 @@ import {
   isDesktopOnlyFeatureAvailable
 } from "../views/users.js";
 import { RULE_EDITOR_MIN_WIDTH, isRuleEditorAvailable } from "../views/scoring.js";
-import { taskExportCsv } from "../views/tasks.js";
+import { STRICT_ISO_HTML_PATTERN, taskExportCsv } from "../views/tasks.js";
 import { dialogContract } from "../ui/components.js";
 
 const memoryStorage = (setItem = () => {}) => ({
@@ -107,4 +107,12 @@ test("dialog contract exposes title focus, tab containment, escape, overlay clos
     closeOnOverlay: true,
     restoreTrigger: true
   });
+});
+
+test("strict ISO input pattern is valid under the HTML v-mode regexp rules", () => {
+  const browserPattern = new RegExp(`^(?:${STRICT_ISO_HTML_PATTERN})$`, "v");
+
+  assert.equal(browserPattern.test("2026-07-21T10:00:00+08:00"), true);
+  assert.equal(browserPattern.test("2026-07-21T02:00:00Z"), true);
+  assert.equal(browserPattern.test("2026-07-21 10:00:00"), false);
 });
