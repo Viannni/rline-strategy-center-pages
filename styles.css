@@ -1530,6 +1530,34 @@ textarea:focus-visible,
   overflow-wrap: anywhere;
 }
 
+.frozen-repair-state {
+  border: 1px solid #e8b7b4;
+  background: var(--danger-soft);
+}
+
+.frozen-repair-state > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e8b7b4;
+  color: #9c302d;
+}
+
+.frozen-repair-state h3,
+.frozen-repair-state p {
+  margin: 0;
+}
+
+.frozen-repair-state > p {
+  padding: 10px 12px 0;
+}
+
+.frozen-repair-state .field-detail {
+  margin: 10px 12px 12px;
+}
+
 .placement-panel {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);

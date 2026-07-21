@@ -122,6 +122,7 @@ function realtimeProjection(user, signal) {
   if (!signal) return user;
   const projected = clone(user);
   const feedback = signal.feedback;
+  // Only F13/F14/F15 feedback is projected realtime; F16 base-score inputs stay staged.
   const events = new Set(projected.marketing?.events ?? []);
   if (feedback.intentStatus === "considering") events.add("price-question");
   if (feedback.intentStatus === "ready") events.add("appointment");
@@ -134,7 +135,14 @@ function realtimeProjection(user, signal) {
     projected.transaction = { ...(projected.transaction ?? {}), status: "pending-payment", unpaid: true, observedAt: signal.submittedAt };
   }
   if (feedback.riskChange === "escalated") {
-    projected.risk = { ...(projected.risk ?? {}), fuse: true, type: "F16风险升级", salesFrozen: true, resolved: false };
+    projected.risk = {
+      ...(projected.risk ?? {}),
+      fuse: true,
+      type: "F15风险升级",
+      deduction: Math.max(Number(projected.risk?.deduction) || 0, 20),
+      salesFrozen: true,
+      resolved: false
+    };
   } else if (feedback.riskChange === "resolved") {
     projected.risk = { ...(projected.risk ?? {}), fuse: false, resolved: true, salesFrozen: false };
   }

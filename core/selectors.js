@@ -2,6 +2,17 @@ import { scoreUsers } from "./scoring-engine.js";
 
 const clone = (value) => structuredClone(value);
 
+const ROLE_ASSIGNMENTS = Object.freeze({
+  agent: new Set(["agent"]),
+  learning: new Set(["learning", "after-sales", "learning-intervention", "learning-planning"]),
+  sales: new Set(["sales"])
+});
+
+function assignmentValues(task) {
+  return [task?.assigneeTeam, task?.subteam, task?.role]
+    .filter((value) => typeof value === "string" && value.length > 0);
+}
+
 export function selectUsers(state, filters = {}) {
   const scores = new Map((state?.scores ?? []).map((score) => [score.userId, score]));
   return (state?.users ?? [])
@@ -29,8 +40,9 @@ export function selectDashboardMetrics(state) {
 
 export function selectTasksForRole(state, role) {
   const team = typeof role === "string" ? role : role?.team;
+  const allowedAssignments = ROLE_ASSIGNMENTS[team];
   return (state?.tasks ?? [])
-    .filter((task) => !team || task.assigneeTeam === team)
+    .filter((task) => !team || (allowedAssignments ?? new Set([team])).has(task.assigneeTeam) || assignmentValues(task).some((value) => (allowedAssignments ?? new Set([team])).has(value)))
     .map(clone);
 }
 
