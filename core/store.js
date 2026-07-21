@@ -187,17 +187,30 @@ function realtimeProjection(user, signals) {
     if (feedback.nextAction === "send-payment-link") {
       projected.transaction = { ...(projected.transaction ?? {}), status: "pending-payment", unpaid: true, observedAt: signal.submittedAt };
     }
-    if (feedback.riskChange === "escalated" || STRONG_OBJECTIONS.has(feedback.objectionType)) {
+    const strongObjection = STRONG_OBJECTIONS.has(feedback.objectionType);
+    if (strongObjection) {
+      projected.taskFeedback = { ...(projected.taskFeedback ?? {}), objectionType: feedback.objectionType };
+    }
+    if (feedback.riskChange === "escalated") {
       projected.risk = {
         ...(projected.risk ?? {}),
         fuse: true,
-        type: feedback.riskChange === "escalated" ? "F15风险升级" : `F16强异议-${feedback.objectionType}`,
+        type: "F15风险升级",
         deduction: Math.max(Number(projected.risk?.deduction) || 0, 20),
+        salesFrozen: true,
+        resolved: false
+      };
+    } else if (strongObjection) {
+      projected.risk = {
+        ...(projected.risk ?? {}),
+        fuse: true,
+        type: `F16强异议-${feedback.objectionType}`,
         salesFrozen: true,
         resolved: false
       };
     } else if (feedback.riskChange === "resolved") {
       projected.risk = { ...(projected.risk ?? {}), fuse: false, deduction: 0, resolved: true, salesFrozen: false };
+      projected.taskFeedback = { ...(projected.taskFeedback ?? {}), objectionType: "none" };
     }
   }
   return projected;

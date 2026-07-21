@@ -255,6 +255,24 @@ test("a strong objection becomes an immediate F15/H4 risk until explicitly resol
   assert.equal(score.risk.salesFrozen, true);
 });
 
+test("a strong objection is counted once across next-day application and explicit resolution clears it immediately", () => {
+  const store = freshStore();
+
+  store.submitFeedback("task-1016", { ...feedback, intentStatus: "none", objectionType: "difficulty", nextAction: "service-repair" });
+  const immediate = store.getState().scores.find((candidate) => candidate.userId === "annual-h2-outcomes");
+  store.simulateNextDay("annual-h2-outcomes");
+  const nextDay = store.getState().scores.find((candidate) => candidate.userId === "annual-h2-outcomes");
+
+  assert.equal(immediate.risk.deduction, 15);
+  assert.equal(nextDay.risk.deduction, 15);
+  assert.equal(nextDay.hLevel, "H4");
+
+  store.submitFeedback("task-1016", { ...feedback, intentStatus: "none", objectionType: "none", riskChange: "resolved", nextAction: "service-repair", finalResult: "resolved" });
+  const resolved = store.getState().scores.find((candidate) => candidate.userId === "annual-h2-outcomes");
+  assert.equal(resolved.risk.deduction, 0);
+  assert.equal(resolved.risk.salesFrozen, false);
+});
+
 test("monthly T24 P0 remains bound sales through feedback and high-score refund stays H4 repair", () => {
   const store = freshStore();
   const monthly = store.getState().routes["monthly-t24-p0"];

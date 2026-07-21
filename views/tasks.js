@@ -1,7 +1,7 @@
 import { FEEDBACK_OPTIONS } from "../core/store.js";
 import { selectTasksForRole } from "../core/selectors.js";
 import { serializeCsv } from "../core/import-export.js";
-import { downloadFile, escapeAttribute, escapeHtml, iconButton, openDrawer, renderBadge, renderTable, toast } from "../ui/components.js";
+import { downloadFile, escapeAttribute, escapeHtml, formatDisplayValue, iconButton, openDrawer, renderBadge, renderTable, toast } from "../ui/components.js";
 import { icon, refreshIcons } from "../ui/icons.js";
 
 const ROLE_COPY = Object.freeze({
@@ -134,7 +134,11 @@ function selectOptions(field, selected, options = FEEDBACK_OPTIONS) {
 
 function previewMarkup(preview) {
   const keys = [["原始基础分", "rawBaseScore"], ["最终基础分", "baseScore"], ["H", "hLevel"], ["F13", "f13"], ["F14", "f14"], ["F12", "f12"], ["主责", "team"], ["任务", "task"]];
-  return `<section class="simulation-preview"><h3>次日重算预览</h3><p class="local-notice">预览不写入状态；F16 已审计，实时信号已经生效，基础分字段待次日应用。</p><div class="diff-grid"><strong>字段</strong><strong>当前</strong><strong>模拟次日</strong>${keys.map(([label, key]) => `<span>${escapeHtml(label)}</span><span class="${preview.before[key] !== preview.after[key] ? "is-changed" : ""}">${escapeHtml(preview.before[key])}</span><span class="${preview.before[key] !== preview.after[key] ? "is-changed" : ""}">${escapeHtml(preview.after[key])}</span>`).join("")}</div></section>`;
+  return `<section class="simulation-preview"><h3>次日重算预览</h3><p class="local-notice">预览不写入状态；F16 已审计，实时信号已经生效，基础分字段待次日应用。</p><div class="diff-grid"><strong>字段</strong><strong>当前</strong><strong>模拟次日</strong>${keys.map(([label, key]) => {
+    const before = key === "f14" ? formatDisplayValue(preview.before[key]) : preview.before[key];
+    const after = key === "f14" ? formatDisplayValue(preview.after[key]) : preview.after[key];
+    return `<span>${escapeHtml(label)}</span><span class="${before !== after ? "is-changed" : ""}">${escapeHtml(before)}</span><span class="${before !== after ? "is-changed" : ""}">${escapeHtml(after)}</span>`;
+  }).join("")}</div></section>`;
 }
 
 function feedbackForm(row) {

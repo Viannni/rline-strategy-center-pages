@@ -4,6 +4,7 @@ import {
   downloadFile,
   escapeAttribute,
   escapeHtml,
+  formatDisplayValue,
   openDrawer,
   renderBadge,
   renderPlacementPanel,
@@ -165,7 +166,7 @@ function previewMarkup(preview) {
     ["最终基础分", preview.before.baseScore, preview.after.baseScore],
     ["H层级", preview.before.hLevel, preview.after.hLevel],
     ["F13（独立）", preview.before.marketingSignal.level, preview.after.marketingSignal.level],
-    ["F14（独立）", preview.before.transactionSignal.priority, preview.after.transactionSignal.priority]
+    ["F14（独立）", formatDisplayValue(preview.before.transactionSignal.priority), formatDisplayValue(preview.after.transactionSignal.priority)]
   ];
   return `<div class="rule-preview-grid"><span>指标</span><strong>线上基准</strong><strong>本地草稿</strong>${rows.map(([label, before, after]) => `<span>${escapeHtml(label)}</span><span>${escapeHtml(before)}</span><span class="${before === after ? "" : "is-changed"}">${escapeHtml(after)}</span>`).join("")}</div>`;
 }

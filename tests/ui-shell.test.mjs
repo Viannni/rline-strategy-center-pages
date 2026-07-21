@@ -12,6 +12,7 @@ import {
 import {
   escapeAttribute,
   escapeHtml,
+  formatDisplayValue,
   renderPlacementPanel,
   renderTable
 } from "../ui/components.js";
@@ -61,6 +62,12 @@ test("HTML and attribute escaping protects component output", () => {
   assert.match(html, /row&quot; onclick=&quot;boom/);
   assert.match(html, /&lt;script&gt;boom&lt;\/script&gt;/);
   assert.doesNotMatch(html, /<script>/);
+});
+
+test("nullable signals use an explicit fallback in preview surfaces", () => {
+  assert.equal(formatDisplayValue(null), "无");
+  assert.equal(formatDisplayValue(undefined), "无");
+  assert.equal(formatDisplayValue("P2"), "P2");
 });
 
 test("placement panel keeps gaps separate from explicit must-add evidence", () => {

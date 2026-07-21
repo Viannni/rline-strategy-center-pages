@@ -5,6 +5,7 @@ import {
   downloadFile,
   escapeAttribute,
   escapeHtml,
+  formatDisplayValue,
   openDrawer,
   openModal,
   renderBadge,
@@ -448,7 +449,7 @@ function diffMarkup(preview) {
     ["最终基础分", preview.before.score.baseScore, preview.after.score.baseScore],
     ["H层级", preview.before.score.hLevel, preview.after.score.hLevel],
     ["F13", preview.before.score.marketingSignal.level, preview.after.score.marketingSignal.level],
-    ["F14", preview.before.score.transactionSignal.priority, preview.after.score.transactionSignal.priority],
+    ["F14", formatDisplayValue(preview.before.score.transactionSignal.priority), formatDisplayValue(preview.after.score.transactionSignal.priority)],
     ["F12", preview.before.route.touchGate.status, preview.after.route.touchGate.status],
     ["主责", `${preview.before.route.team}/${preview.before.route.subteam}`, `${preview.after.route.team}/${preview.after.route.subteam}`],
     ["任务", preview.before.route.taskSubtype, preview.after.route.taskSubtype]

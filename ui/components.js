@@ -65,6 +65,10 @@ export function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#096;");
 }
 
+export function formatDisplayValue(value, fallback = "无") {
+  return value === null || value === undefined || value === "" ? fallback : String(value);
+}
+
 function safeClass(value) {
   return String(value ?? "")
     .split(/\s+/)
