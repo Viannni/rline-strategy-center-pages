@@ -26,6 +26,55 @@ export const SCORING_RULES = {
   },
   scoreInputs: {
     F07: { field: "normalizedScore", scale: 100, omitWhenMissing: true }
+  },
+  pointRules: {
+    learningHealth: {
+      firstLesson: { id: "F04-first-lesson", label: "首课完成", points: 4, fieldIds: ["F04"], window: "当前课程", sourceField: "firstLessonCompleted", inferredCompletionMinimum: 80 },
+      completionHigh: { id: "F04-completion-80", label: "近7天完课率80%及以上", points: 8, fieldIds: ["F04"], window: "近7天", minimum: 80 },
+      completionMedium: { id: "F04-completion-60", label: "近7天完课率60%-79%", points: 5, fieldIds: ["F04"], window: "近7天", minimum: 60 },
+      activeSeven: { id: "F05-active-7", label: "近7天有效学习7天", points: 5, fieldIds: ["F05"], window: "近7天", minimum: 7 },
+      activeThree: { id: "F05-active-3", label: "近7天有效学习3天", points: 3, fieldIds: ["F05"], window: "近7天", minimum: 3 },
+      missedAtMostOne: { id: "F06-missed-at-most-1", label: "连续漏学不超过1天", points: 4, fieldIds: ["F06"], window: "当前", maximum: 1 },
+      onTrack: { id: "F04-on-track", label: "当前进度不落后应学进度", points: 4, fieldIds: ["F04", "F02"], window: "当前阶段", proxyMinimum: 50 },
+      stableTrend: { id: "F04-F05-stable-trend", label: "近7天学习趋势持平或上升", points: 3, fieldIds: ["F04", "F05"], window: "近7天", sourceField: "trend7d", inferredActiveDaysMinimum: 7 }
+    },
+    courseExperience: {
+      excellent: { id: "F07-score-90", label: "课程评价分90分及以上", points: 15, fieldIds: ["F07"], window: "最近课程节点", minimum: 90 },
+      good: { id: "F07-score-80", label: "课程评价分80-89分", points: 12, fieldIds: ["F07"], window: "最近课程节点", minimum: 80 },
+      fair: { id: "F07-score-70", label: "课程评价分70-79分", points: 8, fieldIds: ["F07"], window: "最近课程节点", minimum: 70 },
+      low: { id: "F07-score-60", label: "课程评价分60-69分", points: 4, fieldIds: ["F07"], window: "最近课程节点", minimum: 60 }
+    },
+    outcomes: {
+      assessmentCompleted: { id: "F08-assessment-completed", label: "完成阶段测评/挑战", points: 5, fieldIds: ["F08"], window: "当前生命周期节点" },
+      assessmentStrong: { id: "F08-assessment-80", label: "测评/挑战成绩达到80分及以上", points: 3, fieldIds: ["F08"], window: "最近一次", minimum: 80 },
+      reportGenerated: { id: "F09-report-generated", label: "报告仅生成", points: 0, fieldIds: ["F09"], window: "报告节点" },
+      reportOpened: { id: "F09-report-opened", label: "家长打开成长报告", points: 5, fieldIds: ["F09"], window: "报告节点" },
+      reportEngaged: { id: "F09-report-engaged", label: "报告有效停留或分享", points: 3, fieldIds: ["F09"], window: "报告节点", minimumDwellMinutes: 0.5 }
+    },
+    parentEngagement: {
+      replied: { id: "F11-parent-replied", label: "家长近7天有有效回复", points: 5, fieldIds: ["F11"], window: "近7天" },
+      positiveOrNeutral: { id: "F11-parent-positive-neutral", label: "家长回复为正向或中性", points: 4, fieldIds: ["F11"], window: "近30天", minimumReplyRate: 0.5 },
+      messageOpened: { id: "F11-message-opened", label: "家长打开服务消息", points: 2, fieldIds: ["F11"], window: "近30天", inferredReplyRate: 0.8 },
+      feedback: { id: "F16-learning-feedback", label: "提交学习反馈", points: 3, fieldIds: ["F11", "F16"], window: "最近任务" }
+    },
+    fit: {
+      courseFit: { id: "F03-course-fit", label: "课程级别与定级结果适配", points: 3, fieldIds: ["F03"], window: "当前课程", defaultScore: 60 },
+      ageGradeFit: { id: "F03-age-grade-fit", label: "年龄/年级与当前R级别适配", points: 1, fieldIds: ["F03"], window: "当前课程", minimum: 80 },
+      noDifficultyFeedback: { id: "F03-no-difficulty-feedback", label: "无明显难度负向反馈", points: 1, fieldIds: ["F03", "F15", "F16"], window: "当前" }
+    },
+    risk: {
+      objectionDeduction: 15,
+      unresolvedServiceDeduction: 10,
+      noResponseSaturationDeduction: 10,
+      missedSevenDaysDeduction: 10,
+      maximumDeduction: 30
+    },
+    uplift: {
+      learningRepairWeight: 0.3,
+      outcomesGapWeight: 0.3,
+      parentReachabilityWeight: 0.2,
+      activityResponseWeight: 0.2
+    }
   }
 };
 
