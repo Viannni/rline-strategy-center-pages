@@ -127,6 +127,33 @@ test("frozen after-sales and Strategy feedback cannot submit conversion values b
   assert.equal(store.getState().feedbackRecords.at(-1).feedback.nextAction, "service-repair");
 });
 
+test("projected H4 feedback atomically rejects escalation or strong objection paired with conversion", () => {
+  const attempts = [
+    { ...feedback, intentStatus: "none", riskChange: "escalated", nextAction: "send-payment-link", finalResult: "follow-up" },
+    { ...feedback, intentStatus: "none", objectionType: "difficulty", nextAction: "send-payment-link", finalResult: "converted" }
+  ];
+
+  for (const attempt of attempts) {
+    const store = freshStore();
+    const before = store.getState();
+
+    assert.throws(() => store.submitTaskFeedback("task-1016", attempt), /FROZEN_REPAIR_CONVERSION_BLOCKED/);
+    assert.deepEqual(store.getState(), before);
+  }
+});
+
+test("projected risk escalation accepts a legitimate repair follow-up", () => {
+  const store = freshStore();
+  const before = store.getState();
+
+  const accepted = store.submitTaskFeedback("task-1016", { ...feedback, intentStatus: "none", riskChange: "escalated", nextAction: "service-repair", finalResult: "follow-up" });
+  const after = store.getState();
+
+  assert.equal(accepted.record.taskId, "task-1016");
+  assert.equal(after.feedbackRecords.length, (before.feedbackRecords ?? []).length + 1);
+  assert.equal(after.scores.find((score) => score.userId === "annual-h2-outcomes").hLevel, "H4");
+});
+
 test("blocked P0 work requires an explicit exemption and does not change score or H", () => {
   const store = freshStore();
   const before = store.getState();
@@ -182,7 +209,7 @@ test("F15 risk feedback can immediately change the risk-adjusted base score and 
   const before = store.getState();
   const beforeScore = scoreSnapshot(before, "annual-h2-outcomes");
 
-  store.submitFeedback("task-1016", { ...feedback, intentStatus: "none", nextAction: "learning-plan", riskChange: "escalated" });
+  store.submitFeedback("task-1016", { ...feedback, intentStatus: "none", nextAction: "service-repair", riskChange: "escalated" });
   const afterScore = scoreSnapshot(store.getState(), "annual-h2-outcomes");
 
   assert.equal(afterScore.rawBaseScore, beforeScore.rawBaseScore);

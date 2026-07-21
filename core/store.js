@@ -21,6 +21,7 @@ const FROZEN_REPAIR_ACTIONS = new Set(["service-repair"]);
 const FROZEN_REPAIR_RESULTS = new Set(["follow-up", "resolved"]);
 const FROZEN_CONVERSION_ACTIONS = new Set(["send-payment-link", "offer-coupon"]);
 const FROZEN_CONVERSION_RESULTS = new Set(["converted", "paid"]);
+const STRONG_OBJECTIONS = new Set(["difficulty", "time", "price"]);
 
 const clone = (value) => structuredClone(value);
 
@@ -110,13 +111,17 @@ function normalizeFeedback(feedback) {
   return normalized;
 }
 
-function isFrozenRepair(state, userId) {
-  const route = state.routes?.[userId];
-  const score = state.scores?.find((candidate) => candidate.userId === userId);
+function isFrozenRouteScore(route, score) {
   return route?.salesFrozen === true
     || route?.hLevel === "H4"
     || score?.hLevel === "H4"
     || score?.risk?.salesFrozen === true;
+}
+
+function isFrozenRepair(state, userId) {
+  const route = state.routes?.[userId];
+  const score = state.scores?.find((candidate) => candidate.userId === userId);
+  return isFrozenRouteScore(route, score);
 }
 
 function frozenRepairError() {
@@ -178,6 +183,15 @@ function realtimeProjection(user, signal) {
     projected.risk = { ...(projected.risk ?? {}), fuse: false, resolved: true, salesFrozen: false };
   }
   return projected;
+}
+
+function projectedRealtimeState(user, feedback, submittedAt) {
+  const projectedUser = realtimeProjection(user, { feedback, submittedAt });
+  if (STRONG_OBJECTIONS.has(feedback.objectionType)) {
+    projectedUser.risk = { ...(projectedUser.risk ?? {}), salesFrozen: true };
+  }
+  const score = scoreUsers([projectedUser])[0];
+  return { user: projectedUser, score, route: routeUser(projectedUser, score) };
 }
 
 function nextDayState(base, userId, appliedAt = null) {
@@ -297,14 +311,24 @@ export function createStore(seedState, storage = defaultStorage()) {
       const user = state.users.find((candidate) => candidate.id === userId);
       if (!user) throw new Error(`Unknown task: ${taskId}`);
       const route = state.routes[userId];
-      const frozenRepair = isFrozenRepair(state, userId);
-      if (frozenRepair) assertNoFrozenConversionValues(feedback);
+      const currentFrozenRepair = isFrozenRepair(state, userId);
+      let normalized;
+      try {
+        normalized = normalizeFeedback(feedback);
+      } catch (error) {
+        if (currentFrozenRepair) assertNoFrozenConversionValues(feedback);
+        throw error;
+      }
+      const submittedAt = new Date().toISOString();
+      const projected = projectedRealtimeState(user, normalized, submittedAt);
+      const projectedFrozenRepair = isFrozenRouteScore(projected.route, projected.score);
+      if (currentFrozenRepair || projectedFrozenRepair) {
+        assertNoFrozenConversionValues(normalized);
+        assertFrozenRepairFeedback(normalized);
+      }
       if (route?.touchGate?.status === "blocked" && feedback?.contactStatus !== "not-contacted") {
         throw new Error("Blocked F12 task cannot submit a contact result");
       }
-      const normalized = normalizeFeedback(feedback);
-      if (frozenRepair) assertFrozenRepairFeedback(normalized);
-      const submittedAt = new Date().toISOString();
       const record = {
         id: `F16-${userId}-${(state.feedbackRecords ?? []).length + 1}`,
         fieldId: "F16",
