@@ -17,6 +17,12 @@ import * as scoringView from "./views/scoring.js";
 import * as usersView from "./views/users.js";
 import * as intakeView from "./views/intake.js";
 import * as tasksView from "./views/tasks.js";
+import * as lifecycleView from "./views/lifecycle.js";
+import * as operationsView from "./views/operations.js";
+import * as dataFoundationView from "./views/data-foundation.js";
+import * as systemMapView from "./views/system-map.js";
+import * as reviewView from "./views/review.js";
+import * as demandsView from "./views/demands.js";
 
 export const ROLES = Object.freeze([
   { id: "strategy", label: "策略全景", permission: "可查看全部模块；规则变更仅在本地模拟生效" },
@@ -62,7 +68,13 @@ const viewModules = new Map([
   ["users", usersView],
   ["scoring", scoringView],
   ["intake", intakeView],
-  ["tasks", tasksView]
+  ["tasks", tasksView],
+  ["lifecycle", lifecycleView],
+  ["operations", operationsView],
+  ["data-foundation", dataFoundationView],
+  ["system-map", systemMapView],
+  ["review", reviewView],
+  ["demands", demandsView]
 ]);
 const components = Object.freeze({
   iconButton,

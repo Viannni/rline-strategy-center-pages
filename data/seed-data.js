@@ -193,6 +193,14 @@ export const SEED_STATE = {
     { id: "ACT-RLINE-REVIEW-07", source: "IN_APP", type: "review", status: "active" },
     { id: "LIVE-EXTERNAL-202607", source: "MANUAL", type: "external-live", status: "review-only" }
   ],
+  scholarship: {
+    policyStatus: "discussion-configurable",
+    annualRedemptionCap: 200,
+    perRedemptionCap: 50,
+    balanceExpires: false,
+    expiredCouponReturn: "scholarship-account",
+    sampleAccount: { userId: "annual-h2-outcomes", balance: 86, redeemed: 40, coViewMilestones: ["M4报告", "M7测评"] }
+  },
   demands: []
 };
 
