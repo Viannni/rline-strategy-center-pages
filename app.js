@@ -29,20 +29,20 @@ import {
 import { icon, refreshIcons } from "./ui/icons.js";
 
 export const ROLES = Object.freeze([
-  { id: "strategy", label: "策略团队", permission: "查看英语全线策略配置、下发、回写和复盘；不展示一线个人作业权限。" }
+  { id: "strategy", label: "策略团队", permission: "查看各级别英语业务策略配置、下发、回写和复盘；不展示一线个人作业权限。" }
 ]);
 
 export const NAV_ITEMS = Object.freeze([
-  { id: "dashboard", label: "全线总控", icon: "layout-dashboard", stage: "strategy", description: "英语各业务线策略健康、覆盖、执行和风险总览" },
-  { id: "business-lines", label: "业务线下钻", icon: "network", stage: "strategy", description: "R线、K线、E线、级别与班期策略明细" },
-  { id: "lifecycle", label: "生命周期", icon: "route", stage: "strategy", description: "月课、年课和各业务线节点策略密度、空白和过密风险" },
+  { id: "dashboard", label: "总控台", icon: "layout-dashboard", stage: "strategy", description: "各级别策略健康、覆盖、执行和风险总览" },
+  { id: "business-lines", label: "业务拆解", icon: "network", stage: "strategy", description: "级别、班期、策略组和SOP配置明细" },
+  { id: "lifecycle", label: "生命周期", icon: "route", stage: "strategy", description: "各业务生命周期节点策略密度、空白和过密风险" },
   { id: "strategy-assets", label: "策略资产库", icon: "folder-kanban", stage: "strategy", description: "策略、SOP、模型、内容、权益和版本统一管理" },
   { id: "content", label: "内容策略", icon: "calendar-range", stage: "strategy", description: "活动、讲座、PK、月测、报告和权益内容配置" },
   { id: "applications", label: "应用策略", icon: "bot", stage: "strategy", description: "AI场景、Agent知识库、解决率和兜底问题" },
   { id: "execution", label: "执行策略", icon: "send", stage: "strategy", description: "中心化触达、频控、冲突和动作包配置" },
   { id: "models", label: "模型策略", icon: "calculator", stage: "strategy", description: "高优识别、续费窗口、关单SOP和模型校准" },
   { id: "insights", label: "用户洞察", icon: "scan-search", stage: "strategy", description: "画像、评分、信号、权益和行为归因" },
-  { id: "audiences", label: "人群圈选", icon: "users", stage: "audience", description: "按业务域、标签、分数、风险和行为生成人群包" },
+  { id: "audiences", label: "人群圈选", icon: "users", stage: "audience", description: "按级别、分层、标签、风险和行为生成人群包" },
   { id: "dispatch", label: "下发追踪", icon: "list-checks", stage: "dispatch", description: "策略包下发、执行状态、失败原因和回写完整度" },
   { id: "effectiveness", label: "有效性看板", icon: "chart-no-axes-combined", stage: "review", description: "策略覆盖、触达周期、SOP效果和实验校准" },
   { id: "inbound-review", label: "进线复盘", icon: "git-pull-request-arrow", stage: "review", description: "策略归因、进线质量、问题反哺和修正建议" },
@@ -126,11 +126,11 @@ function renderSidebar() {
     return `<a class="nav-item${isCurrent ? " is-current" : ""}" href="#${escapeAttribute(item.id)}"${isCurrent ? ' aria-current="page"' : ""}>${icon(item.icon, { className: "nav-item__icon" })}<span>${escapeHtml(item.label)}</span></a>`;
   }).join("");
 
-  app.sidebar.innerHTML = `<div class="sidebar__header"><a class="brand" href="#dashboard" aria-label="英语业务策略经营中台"><span class="brand__mark" aria-hidden="true">英</span><span class="brand__text"><strong>英语策略中台</strong><small>R线首发样板</small></span></a>${iconButton({ icon: "x", label: "关闭导航", id: "navCloseButton", className: "sidebar__close" })}</div><nav class="nav-list" aria-label="策略中台视图">${links}</nav><div class="sidebar__foot"><strong>策略团队</strong><span>全线经营视角</span><small>仅展示策略配置、下发、回写和复盘，不是一线作业台。</small></div>`;
+  app.sidebar.innerHTML = `<div class="sidebar__header"><a class="brand" href="#dashboard" aria-label="英语策略运营中台"><span class="brand__mark" aria-hidden="true">策</span><span class="brand__text"><strong>英语策略中台</strong><small>K2模拟样例</small></span></a>${iconButton({ icon: "x", label: "关闭导航", id: "navCloseButton", className: "sidebar__close" })}</div><nav class="nav-list" aria-label="策略中台视图">${links}</nav><div class="sidebar__foot"><strong>策略团队</strong><span>多级别经营视角</span><small>仅展示策略配置、下发、回写和复盘，不是一线作业台。</small></div>`;
 }
 
 function renderFlowRail(stageId) {
-  return `<ol class="flow-rail" aria-label="英语全线策略流程">${FLOW_STAGES.map((stage, index) => {
+  return `<ol class="flow-rail" aria-label="策略流程">${FLOW_STAGES.map((stage, index) => {
     const current = stage.id === stageId;
     const arrow = index < FLOW_STAGES.length - 1 ? '<span class="flow-rail__arrow" aria-hidden="true">-&gt;</span>' : "";
     return `<li class="flow-rail__stage${current ? " is-current" : ""}"${current ? ' aria-current="step"' : ""}><span>${escapeHtml(stage.label)}</span>${arrow}</li>`;
@@ -145,7 +145,7 @@ function renderTopbar() {
     ? `<span class="storage-notice" role="status">本地存储异常，当前仍在内存中运行。</span>${iconButton({ icon: "download", label: "导出当前快照", id: "exportSnapshotButton" })}${iconButton({ icon: "rotate-ccw", label: "恢复种子数据", id: "recoverStorageButton" })}`
     : "";
 
-  app.topbar.innerHTML = `<div class="topbar__flow">${iconButton({ icon: "menu", label: "打开导航", id: "navMenuButton", className: "menu-button", controls: "appSidebar", expanded: document.body.classList.contains("nav-open") })}${renderFlowRail(stage)}</div><div class="topbar__tools">${storageTools}${iconButton({ icon: "undo-2", label: "撤销最近一次更改", id: "undoButton", disabled: (state.history?.length ?? 0) === 0 })}${iconButton({ icon: "rotate-ccw", label: "重置本地演示数据", id: "resetButton" })}<span class="role-hint">英语全线策略视角 · R线首发样板</span></div>`;
+  app.topbar.innerHTML = `<div class="topbar__flow">${iconButton({ icon: "menu", label: "打开导航", id: "navMenuButton", className: "menu-button", controls: "appSidebar", expanded: document.body.classList.contains("nav-open") })}${renderFlowRail(stage)}</div><div class="topbar__tools">${storageTools}${iconButton({ icon: "undo-2", label: "撤销最近一次更改", id: "undoButton", disabled: (state.history?.length ?? 0) === 0 })}${iconButton({ icon: "rotate-ccw", label: "重置本地演示数据", id: "resetButton" })}<span class="role-hint">策略视角 · K2模拟样例</span></div>`;
 }
 
 function exportSnapshot(store) {

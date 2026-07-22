@@ -148,13 +148,14 @@ test("strategy operations views expose cohort, action, failure, and window contr
 
   assert.match(businessLines, /产品类型/);
   assert.match(businessLines, /班期/);
-  assert.match(businessLines, /R-Annual-M8M12-202607/);
+  assert.match(businessLines, /K2-SOP-Sim-202607/);
+  assert.match(businessLines, /DSP-E1-FAQ-PLAN/);
 
   assert.match(audiences, /圈选规则/);
   assert.match(audiences, /可执行动作/);
   assert.match(audiences, /排除原因/);
   assert.match(audiences, /观察窗/);
-  assert.match(audiences, /奖学金抵扣提醒/);
+  assert.match(audiences, /E1课程QA模板/);
   for (const pack of SEED_STATE.audiencePacks) {
     assert.match(audiences, new RegExp(pack.id));
     assert.match(audiences, new RegExp(pack.businessLine));
@@ -165,7 +166,7 @@ test("strategy operations views expose cohort, action, failure, and window contr
   assert.match(dispatch, /失败原因/);
   assert.match(dispatch, /阻断原因/);
   assert.match(dispatch, /观察窗口/);
-  assert.match(dispatch, /v2026\.07\.22-r1/);
+  assert.match(dispatch, /v2026\.07\.22-k2-wechat-v0/);
   assert.match(dispatch, /字段缺失/);
-  assert.match(dispatch, /全局频控96/);
+  assert.match(dispatch, /全局频控18/);
 });

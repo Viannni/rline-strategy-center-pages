@@ -318,8 +318,8 @@ export function renderMetricStrip(items = []) {
 
 export function renderStrategyCard(asset = {}) {
   const target = asset.target || {};
-  const lines = Array.isArray(target.businessLines) ? target.businessLines.join(" / ") : "全线";
-  const scopeLabel = asset.reusable ? "全线复用" : "单线配置";
+  const lines = Array.isArray(target.businessLines) ? target.businessLines.join(" / ") : "多级别";
+  const scopeLabel = asset.reusable ? "跨级别复用" : "单级别配置";
   const lifecycleNodes = Array.isArray(target.lifecycleNodes) && target.lifecycleNodes.length
     ? target.lifecycleNodes.join(" / ")
     : "-";

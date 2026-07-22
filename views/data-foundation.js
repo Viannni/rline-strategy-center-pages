@@ -3,7 +3,7 @@ import { renderBadge, renderTable } from "../ui/components.js";
 export function render(container, { state }) {
   const rows = (state.dataRequirements || []).map((requirement) => ({
     ...requirement,
-    businessDomain: requirement.businessLine || "全线"
+    businessDomain: requirement.businessLine || "总控"
   }));
   container.innerHTML = `<section class="page-header"><div><p class="section-kicker">数据底座</p><h1>数据底座与产研提需</h1><p>让产研一眼看清楚已有能力、缺口、刷新周期、取数口径、替代方案和验收标准。</p></div>${renderBadge("warning", "需回填")}</section><section class="panel"><header class="panel__header"><h2>字段与系统能力</h2></header>${renderTable({ columns: [
     { key: "id", label: "需求ID" },

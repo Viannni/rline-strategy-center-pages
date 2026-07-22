@@ -12,34 +12,35 @@ import {
 } from "../core/strategy-domain.js";
 
 test("business domain seed data supports English-wide strategy management", () => {
-  assert.deepEqual(getBusinessLines(SEED_STATE).map((line) => line.id), ["english-all", "r-line", "k-line", "e-line"]);
-  assert.equal(getBusinessLines(SEED_STATE).find((line) => line.id === "r-line").sampleDepth, "full");
-  assert.equal(getBusinessLines(SEED_STATE).find((line) => line.id === "k-line").sampleDepth, "structure");
+  assert.deepEqual(getBusinessLines(SEED_STATE).map((line) => line.id), ["english-all", "k-line", "e-line"]);
+  assert.equal(getBusinessLines(SEED_STATE).find((line) => line.id === "k-line").sampleDepth, "full");
+  assert.equal(getBusinessLines(SEED_STATE).find((line) => line.id === "e-line").sampleDepth, "structure");
 });
 
-test("strategy assets can be reused across lines while keeping R-line differences", () => {
-  const assets = strategyAssetsForDomain(SEED_STATE, { businessLine: "r-line" });
+test("strategy assets can be reused across K2 and E1 with level differences", () => {
+  const assets = strategyAssetsForDomain(SEED_STATE, { businessLine: "k-line" });
   const reusable = assets.find((asset) => asset.id === "ES-OUTCOME-REPORT-001");
 
   assert.equal(reusable.scope, "line-reusable");
   assert.equal(reusable.reusable, true);
-  assert.equal(reusable.differenceConfig["r-line"].valueHook, "阅读成长 + 奖学金提醒");
+  assert.equal(reusable.differenceConfig["k-line"].valueHook, "K2能力成长路径 + 中心化SOP");
+  assert.equal(reusable.differenceConfig["e-line"].valueHook, "升阶规划 + 长期学习目标");
   assert.ok(reusable.target.businessLines.includes("k-line"));
 });
 
-test("coverage summary compares R, K, and E lines", () => {
+test("coverage summary compares K2 and E1 strategy domains", () => {
   const coverage = coverageByBusinessLine(SEED_STATE);
-  assert.deepEqual(coverage.map((item) => item.businessLine), ["r-line", "k-line", "e-line"]);
-  assert.equal(coverage.find((item) => item.businessLine === "r-line").coverageStatus, "healthy");
+  assert.deepEqual(coverage.map((item) => item.businessLine), ["k-line", "e-line"]);
+  assert.equal(coverage.find((item) => item.businessLine === "k-line").coverageStatus, "healthy");
   const eLine = coverage.find((item) => item.businessLine === "e-line");
-  assert.equal(eLine.assetCount, 3);
+  assert.equal(eLine.assetCount, 4);
   assert.equal(eLine.onlineCount, 3);
-  assert.equal(eLine.coverageStatus, "needs-setup");
+  assert.equal(eLine.coverageStatus, "healthy");
 });
 
 test("dashboard and dispatch summaries expose strategy-level operations", () => {
   const summary = strategyDashboardSummary(SEED_STATE);
-  assert.equal(summary.businessLineCount, 3);
+  assert.equal(summary.businessLineCount, 2);
   assert.ok(summary.onlineAssetCount >= 3);
   assert.ok(summary.strategyHealthRate > 0);
 
@@ -52,26 +53,26 @@ test("dashboard and dispatch summaries expose strategy-level operations", () => 
 });
 
 test("audience pack summary explains target, exclusions, and freshness", () => {
-  const summary = audienceSummary(SEED_STATE, "AUD-RLINE-HIGH-RENEWAL");
-  assert.equal(summary.id, "AUD-RLINE-HIGH-RENEWAL");
-  assert.equal(summary.businessLine, "r-line");
+  const summary = audienceSummary(SEED_STATE, "AUD-K2-SA-STABLE");
+  assert.equal(summary.id, "AUD-K2-SA-STABLE");
+  assert.equal(summary.businessLine, "k-line");
   assert.ok(summary.excludedCount > 0);
-  assert.equal(summary.dataFreshness, "T+1");
-  assert.deepEqual(summary.cohortIds, ["R-Annual-M8M12-202607"]);
-  assert.ok(summary.availableActions.includes("奖学金抵扣提醒"));
+  assert.equal(summary.dataFreshness, "每周一T+1");
+  assert.deepEqual(summary.cohortIds, ["K2-SOP-Sim-202607"]);
+  assert.ok(summary.availableActions.includes("首月学习复盘"));
 });
 
-test("structural E-line records are placeholders until execution evidence exists", () => {
-  assert.equal(SEED_STATE.audiencePacks.find((pack) => pack.businessLine === "e-line").targetCount, 0);
-  assert.equal(SEED_STATE.dispatchBatches.some((batch) => batch.businessLine === "e-line"), false);
+test("E1 records are template-backed until product data is fully connected", () => {
+  assert.ok(SEED_STATE.audiencePacks.find((pack) => pack.businessLine === "e-line").targetCount > 0);
+  assert.equal(SEED_STATE.dispatchBatches.some((batch) => batch.businessLine === "e-line"), true);
 
   const effectiveness = SEED_STATE.effectivenessMetrics.find((metric) => metric.businessLine === "e-line");
   const inbound = SEED_STATE.inboundReviews.find((review) => review.businessLine === "e-line");
 
-  assert.equal(effectiveness.evidenceStatus, "结构占位");
-  assert.equal(effectiveness.value, null);
-  assert.equal(inbound.evidenceStatus, "结构占位");
-  assert.equal(inbound.inboundCount, 0);
+  assert.equal(effectiveness.evidenceStatus, "模板模拟");
+  assert.ok(effectiveness.value > 0);
+  assert.equal(inbound.evidenceStatus, "模板模拟");
+  assert.ok(inbound.inboundCount > 0);
 });
 
 test("dispatch batches keep strategy lineage and completed count reconciliation", () => {

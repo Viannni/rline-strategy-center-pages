@@ -2,7 +2,7 @@ import { renderStrategyWorkspace } from "./strategy-workspace.js";
 
 const rows = [
   { module: "内容日历", example: "活动、节日比赛、单词PK、复习直播、讲座、月测、成长报告", metric: "参与率 / 完成率 / 报告打开" },
-  { module: "内容资产库", example: "R线奖学金、K线能力路径、E线升阶规划", metric: "资产复用率 / 缺口数" },
+  { module: "内容资产库", example: "K2主题活动、K2能力路径、E1课程QA和升阶规划", metric: "资产复用率 / 缺口数" },
   { module: "内容效果复盘", example: "报告打开后是否产生下一步点击和续费信号", metric: "行为提升 / 进线质量 / 转化信号" }
 ];
 

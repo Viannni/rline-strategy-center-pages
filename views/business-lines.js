@@ -50,13 +50,13 @@ export function render(container, { state }) {
     };
   });
 
-  container.innerHTML = `<section class="page-header" aria-label="业务线下钻"><div><p class="section-kicker">业务域下钻</p><h1>业务线 / 级别 / 班期</h1><p>全线先看结构，单线再看节点、策略、人群、执行和数据缺口。R线是当前完整样板，K2已补充中心化SOP模拟，可作为产研字段和页面落地参照。</p></div>${renderBadge("info", "全线可复用")}</section><section class="line-grid">${rows.map((line) => `<article class="line-card"><header><p class="section-kicker">${escapeHtml(line.businessLine)}</p><h2>${escapeHtml(line.name)}${line.businessLine === "r-line" ? "首发样板" : line.businessLine === "k-line" ? "K2模拟样板" : ""}</h2>${renderBadge(line.coverageStatus === "healthy" ? "success" : line.coverageStatus === "partial" ? "warning" : "danger", line.sampleDepth === "full" ? "完整样本" : line.businessLine === "k-line" ? "K2模拟" : "结构样例")}</header>${renderMetricStrip([
+  container.innerHTML = `<section class="page-header" aria-label="业务线下钻"><div><p class="section-kicker">业务域下钻</p><h1>业务拆解：业务线 / 级别 / 班期</h1><p>先看各级别接入结构，再看节点、策略、人群、执行和数据缺口。当前K2作为完整模拟样例，E1基于产品介绍和客服QA沉淀待接入策略。</p></div>${renderBadge("info", "可扩展后台")}</section><section class="line-grid">${rows.map((line) => `<article class="line-card"><header><p class="section-kicker">${escapeHtml(line.businessLine)}</p><h2>${escapeHtml(line.name)}${line.businessLine === "k-line" ? " · 完整模拟" : line.businessLine === "e-line" ? " · 待接入" : ""}</h2>${renderBadge(line.coverageStatus === "healthy" ? "success" : line.coverageStatus === "partial" ? "warning" : "danger", line.sampleDepth === "full" ? "完整模拟" : line.businessLine === "k-line" ? "K2模拟" : "待接入样例")}</header>${renderMetricStrip([
     { label: "策略资产", value: `${line.assetCount}` },
     { label: "在线", value: `${line.onlineCount}` },
     { label: "样本", value: line.sampleDepth === "full" ? "完整 / 全量" : line.businessLine === "k-line" ? "SOP / 模拟" : "结构 / 待接入" }
   ])}<ul class="compact-list">${line.assets.map((asset) => `<li><strong>${escapeHtml(asset.name)}</strong><span>${escapeHtml(asset.observationWindow)}</span></li>`).join("")}</ul></article>`).join("")}</section>`;
   container.innerHTML += `<section class="panel"><header class="panel__header"><div><p class="section-kicker">策略经营下钻</p><h2>业务线覆盖明细</h2></div></header>${renderTable({ columns: [
-    { key: "name", label: "业务线" },
+    { key: "name", label: "业务域" },
     { key: "levels", label: "级别" },
     { key: "productTypes", label: "产品类型" },
     { key: "cohorts", label: "班期" },
@@ -80,7 +80,7 @@ export function render(container, { state }) {
   const globalRequirements = (state.dataRequirements || [])
     .filter((requirement) => requirementBusinessLines(requirement).length === 0)
     .filter((requirement) => requirement.status !== "confirmed-reusable");
-  container.innerHTML += `<section class="panel"><header class="panel__header"><div><p class="section-kicker">全局依赖</p><h2>跨业务线平台能力</h2><p>不计入单线数据缺口；仅在策略总控层跟踪。</p></div></header>${renderTable({ columns: [
+  container.innerHTML += `<section class="panel"><header class="panel__header"><div><p class="section-kicker">全局依赖</p><h2>跨级别平台能力</h2><p>不计入单线数据缺口；仅在策略总控层跟踪。</p></div></header>${renderTable({ columns: [
     { key: "name", label: "依赖项" },
     { key: "owner", label: "责任方" },
     { key: "refreshCycle", label: "刷新周期" },

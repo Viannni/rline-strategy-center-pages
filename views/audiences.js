@@ -38,7 +38,7 @@ export function render(container, { state }) {
   if (k2Rows.length) {
     container.innerHTML += `<section class="panel"><header class="panel__header"><div><p class="section-kicker">K2分层模拟</p><h2>K2高优与干预人群口径</h2><p>每个包都能直接对应策略动作、刷新周期和排除原因，便于数据产品确认取数。</p></div>${renderBadge("success", "分层清晰")}</header>${renderTable({ columns: [
       { key: "id", label: "人群包ID" },
-      { key: "name", label: "R线/业务名称可替换" },
+      { key: "name", label: "人群名称" },
       { key: "lifecycleNodes", label: "查看节点", format: joinList },
       { key: "rules", label: "取数标准", format: joinList },
       { key: "dataFreshness", label: "刷新周期" },

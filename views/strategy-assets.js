@@ -29,10 +29,10 @@ export function render(container, { state }) {
     fields: joinValues(asset.fieldContract),
     sourceStrategyIds: joinValues(asset.sourceStrategyIds)
   })));
-  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">策略资产</p><h1>策略资产库</h1><p>统一管理内容、执行、模型、用户洞察和AI应用策略。每个资产都要能看出是否全线复用，以及单线差异如何配置。</p></div>${renderBadge("success", "版本化")}</section><section class="strategy-card-grid">${assets.map(renderStrategyCard).join("")}</section><section class="panel"><header class="panel__header"><div><p class="section-kicker">复用与差异</p><h2>策略模板对照</h2></div></header>${renderTable({ columns: [
+  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">策略资产</p><h1>策略资产库</h1><p>统一管理内容、执行、模型、用户洞察和AI应用策略。每个资产都要能看出是否跨级别复用，以及K2/E1差异如何配置。</p></div>${renderBadge("success", "版本化")}</section><section class="strategy-card-grid">${assets.map(renderStrategyCard).join("")}</section><section class="panel"><header class="panel__header"><div><p class="section-kicker">复用与差异</p><h2>策略模板对照</h2></div></header>${renderTable({ columns: [
     { key: "id", label: "策略ID" },
     { key: "name", label: "名称" },
-    { key: "scope", label: "复用范围", format: (value) => value === "line-reusable" ? "全线复用" : value },
+    { key: "scope", label: "复用范围", format: (value) => value === "line-reusable" ? "跨级别复用" : value === "line-specific" ? "单级别专用" : value },
     { key: "lifecycleNodes", label: "生命周期节点" },
     { key: "ownerRole", label: "负责人" },
     { key: "status", label: "状态", trustedHtml: (value) => renderBadge(value === "online" ? "success" : "neutral", statusLabel(value)) },

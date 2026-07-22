@@ -21,8 +21,8 @@ import { icon, iconButton } from "../ui/icons.js";
 test("shell exposes the English strategy center navigation", () => {
   assert.deepEqual(ROLES.map(({ id }) => id), ["strategy"]);
   assert.deepEqual(NAV_ITEMS.map(({ label }) => label), [
-    "全线总控",
-    "业务线下钻",
+    "总控台",
+    "业务拆解",
     "生命周期",
     "策略资产库",
     "内容策略",

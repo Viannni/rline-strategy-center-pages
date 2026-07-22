@@ -55,11 +55,11 @@ test("static shell copy names English strategy center", async () => {
     readFile(new URL("../app.js", import.meta.url), "utf8"),
     readFile(new URL("../index.html", import.meta.url), "utf8")
   ]);
-  assert.match(app, /英语业务策略经营中台/);
+  assert.match(app, /英语策略运营中台/);
   assert.doesNotMatch(app, /Agent协同/);
   assert.doesNotMatch(app, /角色任务台/);
-  assert.match(index, /<title>英语全线策略中台<\/title>/);
-  assert.match(index, /aria-label="英语全线策略中台导航"/);
+  assert.match(index, /<title>英语策略运营中台<\/title>/);
+  assert.match(index, /aria-label="英语策略运营中台导航"/);
   assert.doesNotMatch(index, /R线策略中台/);
 });
 
@@ -93,7 +93,7 @@ test("lifecycle coverage map is reachable from the strategy shell", () => {
 
   assert.equal(lifecycle.label, "生命周期");
   assert.match(html, /策略覆盖地图/);
-  assert.match(html, /R \/ K \/ E 策略密度/);
+  assert.match(html, /K2 \/ E1 策略密度/);
 });
 
 test("every strategy navigation route renders without frontline records or operations", () => {

@@ -2,9 +2,9 @@ import { scoreUsers } from "./scoring-engine.js";
 import { routeUser } from "./routing-engine.js";
 import { importUsers, normalizeUser, validateUser } from "./import-export.js";
 
-export const STORAGE_KEY = "rline-strategy-center:state";
-export const STORAGE_SCHEMA = "rline-strategy-center-state";
-export const STORAGE_VERSION = 1;
+export const STORAGE_KEY = "english-strategy-center:state";
+export const STORAGE_SCHEMA = "english-strategy-center-state";
+export const STORAGE_VERSION = 3;
 
 const UNAVAILABLE_STORAGE = Object.freeze({
   getItem() { throw new Error("STORAGE_UNAVAILABLE"); },

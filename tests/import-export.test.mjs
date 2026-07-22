@@ -264,7 +264,7 @@ test("store recomputes scores and routes after user changes, keeps non-recursive
   store.reset();
   assert.deepEqual(store.getState().users, SEED_STATE.users);
   assert.equal(store.getState().scores.find((score) => score.userId === "mid-base").baseScore, seedScore.baseScore);
-  assert.match(storage.dump(STORAGE_KEY), /"schema":"rline-strategy-center-state"/);
+  assert.match(storage.dump(STORAGE_KEY), /"schema":"english-strategy-center-state"/);
 });
 
 test("store state and selectors are pure snapshots that do not mutate source state", () => {

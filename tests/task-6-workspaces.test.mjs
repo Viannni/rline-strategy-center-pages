@@ -41,15 +41,13 @@ test("effectiveness view measures strategy performance by business line", () => 
   const html = htmlFor(effectivenessView);
 
   assert.match(html, /有效性看板/);
-  assert.match(html, /H1\/H2续费率/);
-  assert.match(html, /报告打开后下一步点击率/);
+  assert.match(html, /微信回复率/);
+  assert.match(html, /E1课程QA模板解决率/);
   assert.match(html, /版本/);
   assert.match(html, /证据状态/);
-  assert.match(html, /r-line/);
   assert.match(html, /k-line/);
   assert.match(html, /e-line/);
-  assert.match(html, /结构占位/);
-  assert.match(html, /待接入/);
+  assert.match(html, /模板模拟/);
   assert.match(html, /观察窗口/);
 });
 
@@ -63,10 +61,9 @@ test("inbound review is strategy attribution rather than dispatch", () => {
   assert.match(html, /解决率/);
   assert.match(html, /证据状态/);
   assert.match(html, /非派单/);
-  assert.match(html, /r-line/);
   assert.match(html, /k-line/);
   assert.match(html, /e-line/);
-  assert.match(html, /结构占位/);
+  assert.match(html, /E1课程\/升阶规划/);
 });
 
 test("data foundation shows business-domain and product-engineering requirements", () => {
@@ -76,8 +73,7 @@ test("data foundation shows business-domain and product-engineering requirements
   assert.match(html, /策略ID\/版本ID/);
   assert.match(html, /刷新周期/);
   assert.match(html, /业务域/);
-  assert.match(html, /R线样板静态配置/);
-  assert.match(html, /r-line/);
+  assert.match(html, /首版用K2样例静态配置/);
   assert.match(html, /k-line/);
   assert.match(html, /e-line/);
 });
@@ -177,12 +173,12 @@ test("strategy workspaces render seed-backed asset configuration", () => {
   const insights = htmlFor(insightsView);
 
   assert.match(content, /ES-OUTCOME-REPORT-001/);
-  assert.match(content, /r-line/);
+  assert.match(content, /k-line/);
   assert.match(content, /3天/);
   assert.match(execution, /ES-EXEC-MISS-001/);
-  assert.match(execution, /T14/);
-  assert.match(models, /ES-MODEL-HIGH-001/);
-  assert.match(models, /score_snapshot/);
+  assert.match(execution, /M3/);
+  assert.match(models, /ES-RENEWAL-BRIDGE-001/);
+  assert.match(models, /planning_result/);
   assert.match(models, /online/);
   assert.match(applications, /e-line/);
   assert.match(insights, /k-line/);
@@ -215,9 +211,9 @@ test("strategy workspaces render related effectiveness metrics by strategy ID", 
 
   assert.match(content, /效果复盘/);
   assert.match(content, /ES-OUTCOME-REPORT-001/);
-  assert.match(content, /报告打开后下一步点击率/);
-  assert.match(content, /31\.4/);
-  assert.match(content, /24/);
+  assert.match(content, /微信回复率/);
+  assert.match(content, /18\.6/);
+  assert.match(content, /14/);
   assert.match(content, /3天/);
   assert.match(content, /positive/);
 
@@ -227,15 +223,15 @@ test("strategy workspaces render related effectiveness metrics by strategy ID", 
   assert.match(execution, /0\.8/);
   assert.match(execution, /7天/);
 
-  assert.match(models, /ES-MODEL-HIGH-001/);
-  assert.match(models, /H1\/H2续费率/);
-  assert.match(models, /42\.6/);
-  assert.match(models, /30/);
+  assert.match(models, /ES-RENEWAL-BRIDGE-001/);
+  assert.match(models, /下一阶段规划同意率/);
+  assert.match(models, /21\.7/);
+  assert.match(models, /16/);
   assert.match(models, /续费窗口/);
 });
 
 test("strategy workspaces expose each asset's reusable scope", () => {
-  assert.match(htmlFor(contentView), /全线复用/);
+  assert.match(htmlFor(contentView), /跨级别复用/);
 });
 
 test("unmatched strategy workspace renders an empty asset table", () => {
@@ -270,21 +266,20 @@ test("execution strategy workspace covers centralized touch and conflicts", () =
 });
 
 test("model and insight workspaces support user's core role", () => {
-  assert.match(htmlFor(modelsView), /高优续费识别/);
+  assert.match(htmlFor(modelsView), /学习分层/);
   assert.match(htmlFor(modelsView), /关单SOP/);
   assert.match(htmlFor(insightsView), /用户洞察工作区/);
-  assert.match(htmlFor(insightsView), /权益\/奖学金规则/);
+  assert.match(htmlFor(insightsView), /级别权益规则/);
 });
 
 test("lifecycle view becomes multi-line strategy coverage map", () => {
   const html = htmlFor(lifecycleView);
   assert.match(html, /策略覆盖地图/);
-  assert.match(html, /T0-T28/);
+  assert.match(html, /K2 \/ E1 策略密度/);
   assert.match(html, /M1-M12/);
   assert.match(html, /K2中心化SOP模板/);
-  assert.match(html, /R线/);
-  assert.match(html, /E线.*结构.*待模板/);
-  assert.match(html, /T22/);
+  assert.match(html, /E1升阶规划模板/);
+  assert.match(html, /E1待接入样例/);
   assert.match(html, /M12/);
   assert.match(html, /过密/);
 });

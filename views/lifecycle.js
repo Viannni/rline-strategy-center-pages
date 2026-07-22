@@ -94,9 +94,8 @@ export function render(container, { state }) {
     return counts;
   }, {});
   const coverageRows = [
-    { line: "r-line", name: "R线", templates: [templateById("monthly-t"), templateById("annual-m")].filter(Boolean), support: "完整样板" },
-    { line: "k-line", name: "K线", templates: [templateById("custom-k")].filter(Boolean), support: "中心化SOP模板" },
-    { line: "e-line", name: "E线", templates: [], support: "结构/待模板：按策略资产目标节点派生" }
+    { line: "k-line", name: "K2策略样例", templates: [templateById("k2-sop"), templateById("annual-common")].filter(Boolean), support: "完整模拟：中心化SOP+年课节点" },
+    { line: "e-line", name: "E1待接入样例", templates: [templateById("e1-growth"), templateById("annual-common")].filter(Boolean), support: "待接入：课程QA+升阶规划" }
   ].map((line) => {
     const density = densityFor(line.line);
     const templateNodes = line.templates.flatMap((template) => template.nodes || []);
@@ -120,16 +119,16 @@ export function render(container, { state }) {
     name: template.name,
     nodes: template.nodes.join(" / "),
     renewalWindow: template.renewalWindow.join(" - "),
-    status: template.id === "monthly-t" || template.id === "annual-m" ? "R线样板可用" : "结构样例"
+    status: template.id === "k2-sop" ? "K2模拟可用" : template.id === "e1-growth" ? "E1待接入" : "通用模板"
   }));
 
-  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">生命周期</p><h1>策略覆盖地图</h1><p>生命周期页不再是一线服务流程，而是用来查看各业务线节点策略密度、空白和过密风险。</p></div>${renderBadge("info", "多业务线")}</section>${renderMetricStrip([
-    { label: "月课模板", value: "T0-T28" },
+  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">生命周期</p><h1>策略覆盖地图</h1><p>生命周期页不展示一线服务流转，而是用于查看各级别节点策略密度、空白和过密风险。</p></div>${renderBadge("info", "多级别")}</section>${renderMetricStrip([
+    { label: "完整样例", value: "K2" },
     { label: "年课模板", value: "M1-M12" },
     { label: "覆盖策略", value: `${assets.length}` },
-    { label: "扩展模板", value: "K2中心化SOP模板" }
-  ])}<section class="panel"><header class="panel__header"><div><p class="section-kicker">节点覆盖</p><h2>R / K / E 策略密度</h2><p>节点密度为命中该节点的策略数；多个策略同节点时标记为过密。</p></div></header>${renderTable({ columns: [
-    { key: "name", label: "业务线" },
+    { label: "待接入", value: "E1" }
+  ])}<section class="panel"><header class="panel__header"><div><p class="section-kicker">节点覆盖</p><h2>K2 / E1 策略密度</h2><p>节点密度为命中该节点的策略数；多个策略同节点时标记为过密。</p></div></header>${renderTable({ columns: [
+    { key: "name", label: "业务域" },
     { key: "support", label: "支持状态" },
     { key: "strategyCount", label: "策略数" },
     { key: "coveredNodes", label: "已覆盖节点" },

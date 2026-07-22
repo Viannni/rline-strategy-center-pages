@@ -175,48 +175,44 @@ const users = [
 ];
 
 const businessLines = [
-  { id: "english-all", name: "英语全线", shortName: "全线", sampleDepth: "aggregate", levels: ["R1-R6", "K2", "E1"], status: "active" },
-  { id: "r-line", name: "R线", shortName: "R", sampleDepth: "full", levels: ["R1", "R2", "R3", "R4", "R5", "R6"], status: "pilot" },
-  { id: "k-line", name: "K线", shortName: "K", sampleDepth: "structure", levels: ["K1", "K2"], status: "supported" },
-  { id: "e-line", name: "E线", shortName: "E", sampleDepth: "structure", levels: ["E1", "E2"], status: "supported" }
+  { id: "english-all", name: "英语策略总控", shortName: "总控", sampleDepth: "aggregate", levels: ["K2", "E1"], status: "active" },
+  { id: "k-line", name: "K2策略样例", shortName: "K2", sampleDepth: "full", levels: ["K2"], status: "active" },
+  { id: "e-line", name: "E1待接入样例", shortName: "E1", sampleDepth: "structure", levels: ["E1"], status: "supported" }
 ];
 
 const lifecycleTemplates = [
-  { id: "monthly-t", name: "月课T模板", nodes: ["T0", "T7", "T14", "T21", "T22", "T24", "T28"], renewalWindow: ["T22", "T28"] },
-  { id: "annual-m", name: "年课M模板", nodes: ["M1", "M3", "M6", "M8", "M11", "M12"], renewalWindow: ["M8", "M12"] },
-  { id: "custom-k", name: "K2中心化SOP模板", nodes: ["M0W-1", "M1W1", "M1W3", "M2-M3", "M4-M5", "M6", "M8W1", "M9-M11", "M12W4"], renewalWindow: ["M9-M11"] }
+  { id: "annual-common", name: "年课M模板", nodes: ["M1", "M3", "M6", "M8", "M11", "M12"], renewalWindow: ["M8", "M12"] },
+  { id: "k2-sop", name: "K2中心化SOP模板", nodes: ["M0W-1", "M1W1", "M1W3", "M2-M3", "M4-M5", "M6", "M8W1", "M9-M11", "M12W4"], renewalWindow: ["M9-M11"] },
+  { id: "e1-growth", name: "E1升阶规划模板", nodes: ["体验课", "M1", "M3", "M6", "M8", "M12"], renewalWindow: ["M8", "M12"] }
 ];
 
 const strategyAssets = [
   {
     id: "ES-OUTCOME-REPORT-001", name: "成长报告打开后价值认知强化", type: "outcome-content", ownerRole: "content-strategy", scope: "line-reusable", reusable: true,
-    target: { businessLines: ["r-line", "k-line", "e-line"], productTypes: ["monthly", "annual"], lifecycleNodes: ["T21", "T24", "M8", "M11", "M12"] },
+    target: { businessLines: ["k-line", "e-line"], productTypes: ["annual"], lifecycleNodes: ["M6", "M8", "M11", "M12"] },
     exclusions: ["risk-fuse", "refund-open", "touch-frequency-blocked"], action: "报告打开后展示价值解释、下一步学习路径和对应权益入口", observationWindow: "3天",
     metrics: ["report_open_rate", "next_action_click_rate", "renewal_signal_lift"], dataDependencies: ["report_opened", "strategy_id", "audience_pack_id", "touch_writeback"], status: "online",
     differenceConfig: {
-      "r-line": { valueHook: "阅读成长 + 奖学金提醒", benefit: "奖学金可兑换续费券" },
       "k-line": { valueHook: "K2能力成长路径 + 中心化SOP", benefit: "阶段规划权益" },
       "e-line": { valueHook: "升阶规划 + 长期学习目标", benefit: "升阶体验权益" }
     }
   },
   {
     id: "ES-EXEC-MISS-001", name: "连续漏学修复策略包", type: "centralized-touch", ownerRole: "execution-strategy", scope: "line-reusable", reusable: true,
-    target: { businessLines: ["r-line", "k-line", "e-line"], productTypes: ["monthly", "annual"], lifecycleNodes: ["T7", "T14", "M3", "M6"] },
+    target: { businessLines: ["k-line", "e-line"], productTypes: ["annual"], lifecycleNodes: ["M1W3", "M3", "M6", "M8"] },
     exclusions: ["risk-fuse", "after-sales-unclosed"], action: "识别漏学后发送补读路径，并在7天观察回流", observationWindow: "7天",
     metrics: ["completion_rate_lift_7d", "active_days_lift_7d", "inbound_risk_rate"], dataDependencies: ["completion_rate", "missed_days", "touch_writeback", "activity_writeback"], status: "online",
     differenceConfig: {
-      "r-line": { valueHook: "阅读补读 + 轻活动提分", benefit: "补读奖学金" },
       "k-line": { valueHook: "词汇/表达复习任务", benefit: "复习直播预约" },
       "e-line": { valueHook: "综合能力薄弱项复习", benefit: "升阶规划提醒" }
     }
   },
   {
-    id: "ES-MODEL-HIGH-001", name: "高优续费识别与关单SOP", type: "renewal-model", ownerRole: "model-strategy", scope: "line-reusable", reusable: true,
-    target: { businessLines: ["r-line", "k-line", "e-line"], productTypes: ["monthly", "annual"], lifecycleNodes: ["T22", "T24", "T28", "M8", "M11", "M12"] },
-    exclusions: ["risk-fuse", "h4-low-maintenance"], action: "识别H1/H2高优、领券未付、支付失败和报告已开未转化用户，进入策略关单路径", observationWindow: "续费窗口内",
-    metrics: ["h1_h2_renewal_rate", "coupon_to_pay_rate", "high_score_miss_rate"], dataDependencies: ["score_snapshot", "transaction_status", "marketing_events", "risk_status"], status: "online",
+    id: "ES-RENEWAL-BRIDGE-001", name: "续费窗口学习规划衔接SOP", type: "renewal-model", ownerRole: "model-strategy", scope: "line-reusable", reusable: true,
+    target: { businessLines: ["k-line", "e-line"], productTypes: ["annual"], lifecycleNodes: ["M8", "M9", "M10", "M11", "M12"] },
+    exclusions: ["risk-fuse", "after-sales-unclosed"], action: "识别未续费、支付异常、报告已开未转化和规划意向用户，进入学习规划到权益解释的衔接路径", observationWindow: "续费窗口内",
+    metrics: ["planning_acceptance_rate", "coupon_to_pay_rate", "renewal_signal_lift"], dataDependencies: ["renewal_status", "transaction_status", "marketing_events", "risk_status", "planning_result"], status: "online",
     differenceConfig: {
-      "r-line": { valueHook: "月转年/年转年权益解释", benefit: "奖学金抵扣上限" },
       "k-line": { valueHook: "K2路径价值解释", benefit: "续费权益包" },
       "e-line": { valueHook: "升阶课程价值解释", benefit: "升阶规划权益" }
     }
@@ -272,16 +268,23 @@ const strategyAssets = [
     ],
     fieldContract: ["未完成节数", "历史补读节数", "本周补读节数", "正读时间分布", "补读观察截止时间"],
     sourceStrategyIds: ["939189397324813313", "939189219310163969", "939189239480572929"]
+  },
+  {
+    id: "ES-E1-GROWTH-PLAN-001", name: "E1升阶规划与客服知识承接", type: "outcome-content", ownerRole: "application-strategy", scope: "line-specific", reusable: false,
+    target: { businessLines: ["e-line"], productTypes: ["annual"], lifecycleNodes: ["体验课", "M1", "M6", "M8", "M12"] },
+    exclusions: ["risk-fuse", "after-sales-unclosed"], action: "围绕E1英语交流与阅读积累、全年240节、每周5节、6-9岁适配和升阶价值，配置AI/模板问答与规划引导", observationWindow: "7天/节点周期",
+    metrics: ["faq_resolution_rate", "plan_booking_rate", "after_sales_inbound_rate"], dataDependencies: ["course_level", "lesson_schedule", "faq_topic", "ai_resolution", "manual_transfer_reason"], status: "planned",
+    sampleCases: [
+      { node: "体验课", audience: "E1体验课家长", channel: "AI/模板回复", trigger: "咨询课程内容或适龄", sample: "解释E1面向6-9岁，重在基础语法、阅读理解和英文表达，体验课以海洋主题完成词汇、句型、阅读策略体验。" },
+      { node: "M1", audience: "E1年课新入班", channel: "私聊/前台卡片", trigger: "开班首周", sample: "同步每月4周、每周5课时的学习节奏，提醒第4周结构特殊，减少排课和解锁类进线。" },
+      { node: "M6", audience: "E1中期学习用户", channel: "成长报告/规划入口", trigger: "阶段反馈生成后", sample: "结合阅读策略、视觉词、自拼能力和表达练习，给出下阶段能力目标和规划入口。" }
+    ],
+    fieldContract: ["课程级别", "适龄", "课程结构", "体验课主题", "年课课时", "FAQ问题类型", "AI是否解决", "转人工原因"],
+    sourceStrategyIds: ["202405叫叫英语E1-QA-客服版", "E1全年服务设计&SOP讲解培训"]
   }
 ];
 
 const audiencePacks = [
-  {
-    id: "AUD-RLINE-HIGH-RENEWAL", name: "R线高优续费窗口人群", businessLine: "r-line", levelCode: "R1-R6", productType: "annual", cohortIds: ["R-Annual-M8M12-202607"], lifecycleNodes: ["M8", "M11", "M12"],
-    strategyId: "ES-MODEL-HIGH-001", targetCount: 1280, excludedCount: 96, overlapRate: 0.18, dataFreshness: "T+1", observationWindow: "续费窗口内",
-    availableActions: ["成长报告价值卡", "奖学金抵扣提醒", "续费权益解释"], exclusionReasons: ["风险熔断", "全局频控阻断", "售后未完结"],
-    rules: ["H1/H2", "无风险熔断", "报告已打开或领券未付"]
-  },
   {
     id: "AUD-KLINE-MISS-REPAIR", name: "K线连续漏学修复人群", businessLine: "k-line", levelCode: "K2", productType: "annual", cohortIds: ["K2-Annual-M3M6-202607"], lifecycleNodes: ["M3", "M6"],
     strategyId: "ES-EXEC-MISS-001", targetCount: 640, excludedCount: 42, overlapRate: 0.11, dataFreshness: "T+1", observationWindow: "7天",
@@ -327,41 +330,39 @@ const audiencePacks = [
   },
   {
     id: "AUD-ELINE-STRUCTURE", name: "E线升阶规划样例人群", businessLine: "e-line", levelCode: "E1", productType: "annual", cohortIds: ["待接入"], lifecycleNodes: ["M6", "M8"],
-    strategyId: "ES-OUTCOME-REPORT-001", targetCount: 0, excludedCount: 0, overlapRate: 0, dataFreshness: "待接入", observationWindow: "待接入",
-    availableActions: ["升阶规划入口待接入"], exclusionReasons: ["字段未接入"],
-    rules: ["结构样例，待接入真实字段"]
+    strategyId: "ES-E1-GROWTH-PLAN-001", targetCount: 320, excludedCount: 24, overlapRate: 0.09, dataFreshness: "待接入/T+1模拟", observationWindow: "7天",
+    availableActions: ["E1课程QA模板", "升阶规划入口", "开班节奏提醒", "售后规则解释"], exclusionReasons: ["售后未完结", "字段未接入"],
+    rules: ["E1年课或体验课", "咨询课程内容/适龄/解锁/售后", "可触达", "优先AI模板解决，复杂问题转人工"]
   }
 ];
 
 const dispatchBatches = [
-  { id: "DSP-20260722-001", strategyId: "ES-MODEL-HIGH-001", strategyVersion: "v2026.07.22-r1", audiencePackId: "AUD-RLINE-HIGH-RENEWAL", businessLine: "r-line", downstreamSystem: "前台卡片/中心化触达", status: "completed", plannedCount: 1280, reachedCount: 1096, failedCount: 48, blockedCount: 136, failureReasons: ["入口异常9", "字段缺失7", "系统失败32"], blockedReasons: ["全局频控96", "售后未完结40"], writebackStatus: "complete", observationWindow: "续费窗口内" },
   { id: "DSP-20260722-002", strategyId: "ES-EXEC-MISS-001", strategyVersion: "v2026.07.22-k1", audiencePackId: "AUD-KLINE-MISS-REPAIR", businessLine: "k-line", downstreamSystem: "中心化触达系统", status: "running", plannedCount: 640, reachedCount: 412, failedCount: 31, blockedCount: 0, failureReasons: ["不可触达18", "字段缺失8", "频控阻断5"], blockedReasons: [], writebackStatus: "partial", observationWindow: "7天" },
   { id: "DSP-K2-M1W1-NOSTART", strategyId: "ES-K2-PHONE-ASK-001", strategyVersion: "v2026.07.22-k2-phone-v0", audiencePackId: "AUD-K2-NOSTART-M1W1", businessLine: "k-line", downstreamSystem: "中心化触达系统/电话任务池", status: "completed", plannedCount: 210, reachedCount: 168, failedCount: 14, blockedCount: 28, failureReasons: ["电话字段缺失6", "不可触达5", "系统失败3"], blockedReasons: ["全局频控18", "售后未完结10"], writebackStatus: "complete", observationWindow: "7天" },
   { id: "DSP-K2-M2M3-B-WECHAT", strategyId: "ES-K2-WECHAT-REVIEW-001", strategyVersion: "v2026.07.22-k2-wechat-v0", audiencePackId: "AUD-K2-B-RHYTHM", businessLine: "k-line", downstreamSystem: "私聊触达配置", status: "completed", plannedCount: 920, reachedCount: 781, failedCount: 73, blockedCount: 66, failureReasons: ["素材参数缺失24", "触达失败31", "字段缺失18"], blockedReasons: ["售后未完结42", "频控24"], writebackStatus: "complete", observationWindow: "7天" },
   { id: "DSP-K2-M6-ACTIVITY", strategyId: "ES-K2-ACTIVITY-001", strategyVersion: "v2026.07.22-k2-activity-v0", audiencePackId: "AUD-K2-ACTIVITY-MIDTERM", businessLine: "k-line", downstreamSystem: "活动运营/私聊触达配置", status: "running", plannedCount: 1480, reachedCount: 1041, failedCount: 71, blockedCount: 82, failureReasons: ["海报参数缺失21", "触达失败42", "活动ID缺失8"], blockedReasons: ["频控51", "售后未完结31"], writebackStatus: "partial", observationWindow: "活动周期" },
-  { id: "DSP-K2-M9M11-RENEWAL", strategyId: "ES-K2-PHONE-ASK-001", strategyVersion: "v2026.07.22-k2-renew-v0", audiencePackId: "AUD-K2-UNRENEWED-M9M11", businessLine: "k-line", downstreamSystem: "策略包下发/二销承接", status: "running", plannedCount: 360, reachedCount: 219, failedCount: 18, blockedCount: 44, failureReasons: ["电话未接入8", "字段缺失5", "触达失败5"], blockedReasons: ["已续费剔除31", "售后未完结13"], writebackStatus: "partial", observationWindow: "续费窗口内" }
+  { id: "DSP-K2-M9M11-RENEWAL", strategyId: "ES-K2-PHONE-ASK-001", strategyVersion: "v2026.07.22-k2-renew-v0", audiencePackId: "AUD-K2-UNRENEWED-M9M11", businessLine: "k-line", downstreamSystem: "策略包下发/二销承接", status: "running", plannedCount: 360, reachedCount: 219, failedCount: 18, blockedCount: 44, failureReasons: ["电话未接入8", "字段缺失5", "触达失败5"], blockedReasons: ["已续费剔除31", "售后未完结13"], writebackStatus: "partial", observationWindow: "续费窗口内" },
+  { id: "DSP-E1-FAQ-PLAN", strategyId: "ES-E1-GROWTH-PLAN-001", strategyVersion: "v2026.07.22-e1-plan-v0", audiencePackId: "AUD-ELINE-STRUCTURE", businessLine: "e-line", downstreamSystem: "AI知识库/模板回复/规划入口", status: "planned", plannedCount: 320, reachedCount: 0, failedCount: 0, blockedCount: 24, failureReasons: [], blockedReasons: ["字段未接入24"], writebackStatus: "pending", observationWindow: "7天" }
 ];
 
 const effectivenessMetrics = [
-  { id: "EFF-RLINE-REPORT", strategyId: "ES-OUTCOME-REPORT-001", strategyVersion: "v2026.07.22-r1", businessLine: "r-line", metric: "报告打开后下一步点击率", value: 31.4, benchmark: 24.0, direction: "positive", window: "3天", evidenceStatus: "已观测" },
   { id: "EFF-KLINE-MISS", strategyId: "ES-EXEC-MISS-001", strategyVersion: "v2026.07.22-k1", businessLine: "k-line", metric: "7天活跃天数提升", value: 1.2, benchmark: 0.8, direction: "positive", window: "7天", evidenceStatus: "已观测" },
   { id: "EFF-K2-WECHAT-REPLY", strategyId: "ES-K2-WECHAT-REVIEW-001", strategyVersion: "v2026.07.22-k2-wechat-v0", businessLine: "k-line", metric: "微信回复率", value: 18.6, benchmark: 14.0, direction: "positive", window: "3天", evidenceStatus: "K2模拟" },
   { id: "EFF-K2-MAKEUP-FRI", strategyId: "ES-K2-MAKEUP-001", strategyVersion: "v2026.07.22-k2-makeup-v0", businessLine: "k-line", metric: "本周五24点前补读章节数/人", value: 1.8, benchmark: 1.1, direction: "positive", window: "本周五24:00", evidenceStatus: "K2模拟" },
   { id: "EFF-K2-ACTIVITY", strategyId: "ES-K2-ACTIVITY-001", strategyVersion: "v2026.07.22-k2-activity-v0", businessLine: "k-line", metric: "当日活动参与率", value: 26.5, benchmark: 20.0, direction: "positive", window: "当日", evidenceStatus: "K2模拟" },
   { id: "EFF-K2-PHONE", strategyId: "ES-K2-PHONE-ASK-001", strategyVersion: "v2026.07.22-k2-phone-v0", businessLine: "k-line", metric: "电话接通率", value: 43.2, benchmark: 35.0, direction: "positive", window: "7天", evidenceStatus: "K2模拟" },
   { id: "EFF-K2-RENEWAL-BRIDGE", strategyId: "ES-K2-PHONE-ASK-001", strategyVersion: "v2026.07.22-k2-renew-v0", businessLine: "k-line", metric: "下一阶段规划同意率", value: 21.7, benchmark: 16.0, direction: "positive", window: "续费窗口", evidenceStatus: "K2模拟" },
-  { id: "EFF-RLINE-HIGH", strategyId: "ES-MODEL-HIGH-001", strategyVersion: "v2026.07.22-r1", businessLine: "r-line", metric: "H1/H2续费率", value: 42.6, benchmark: 30.0, direction: "positive", window: "续费窗口", evidenceStatus: "已观测" },
-  { id: "EFF-ELINE-PLAN", strategyId: "ES-OUTCOME-REPORT-001", strategyVersion: "待接入", businessLine: "e-line", metric: "升阶规划预约率", value: null, benchmark: null, direction: "placeholder", window: "待接入", evidenceStatus: "结构占位" }
+  { id: "EFF-RENEWAL-BRIDGE", strategyId: "ES-RENEWAL-BRIDGE-001", strategyVersion: "v2026.07.22-renewal-bridge-v0", businessLine: "k-line / e-line", metric: "下一阶段规划同意率", value: 21.7, benchmark: 16.0, direction: "positive", window: "续费窗口", evidenceStatus: "模板模拟" },
+  { id: "EFF-ELINE-PLAN", strategyId: "ES-E1-GROWTH-PLAN-001", strategyVersion: "v2026.07.22-e1-plan-v0", businessLine: "e-line", metric: "E1课程QA模板解决率", value: 68.0, benchmark: 55.0, direction: "positive", window: "7天", evidenceStatus: "模板模拟" }
 ];
 
 const inboundReviews = [
-  { id: "INB-RLINE-REPORT-3D", businessLine: "r-line", sourceStrategyId: "ES-OUTCOME-REPORT-001", sourceVersion: "v2026.07.22-r1", type: "报告", window: "3天", inboundCount: 186, highValueRate: 38.2, riskRate: 4.3, resolutionRate: 81.7, qualityMix: "高价值 38.2% / 常规 57.5% / 风险 4.3%", evidenceStatus: "已观测", suggestion: "保留报告入口，补充奖学金解释" },
   { id: "INB-KLINE-MISS-7D", businessLine: "k-line", sourceStrategyId: "ES-EXEC-MISS-001", sourceVersion: "v2026.07.22-k1", type: "学习", window: "7天", inboundCount: 94, highValueRate: 24.5, riskRate: 7.4, resolutionRate: 76.6, qualityMix: "高价值 24.5% / 常规 68.1% / 风险 7.4%", evidenceStatus: "已观测", suggestion: "补读路径文案减少催学感" },
   { id: "INB-K2-FIRST-WEEK", businessLine: "k-line", sourceStrategyId: "ES-K2-PHONE-ASK-001", sourceVersion: "v2026.07.22-k2-phone-v0", type: "首周未启动", window: "7天", inboundCount: 47, highValueRate: 31.9, riskRate: 5.1, resolutionRate: 72.3, qualityMix: "开课阻碍 44.7% / 常规咨询 50.2% / 风险 5.1%", evidenceStatus: "K2模拟", suggestion: "保留共情式邀约，补齐未启动原因枚举" },
   { id: "INB-K2-ACTIVITY-RULE", businessLine: "k-line", sourceStrategyId: "ES-K2-ACTIVITY-001", sourceVersion: "v2026.07.22-k2-activity-v0", type: "活动规则", window: "活动周期", inboundCount: 128, highValueRate: 18.0, riskRate: 2.4, resolutionRate: 88.6, qualityMix: "规则确认 63.0% / 奖励咨询 34.6% / 风险 2.4%", evidenceStatus: "K2模拟", suggestion: "活动素材参数需展示规则、时间、奖品，不让老师二次解释" },
   { id: "INB-K2-MAKEUP", businessLine: "k-line", sourceStrategyId: "ES-K2-MAKEUP-001", sourceVersion: "v2026.07.22-k2-makeup-v0", type: "补读困难", window: "本周五24:00", inboundCount: 82, highValueRate: 29.6, riskRate: 6.2, resolutionRate: 70.4, qualityMix: "时间安排 41.5% / 难度卡点 52.3% / 风险 6.2%", evidenceStatus: "K2模拟", suggestion: "C/D级补读话术保持低压，M2后再提高目标明确度" },
   { id: "INB-K2-RENEWAL-PLAN", businessLine: "k-line", sourceStrategyId: "ES-K2-PHONE-ASK-001", sourceVersion: "v2026.07.22-k2-renew-v0", type: "续费衔接", window: "续费窗口", inboundCount: 61, highValueRate: 46.0, riskRate: 3.8, resolutionRate: 67.2, qualityMix: "规划需求 46.0% / 权益咨询 50.2% / 风险 3.8%", evidenceStatus: "K2模拟", suggestion: "M9-M11话术要先讲全年成果和下一阶段差距，再进入权益解释" },
-  { id: "INB-ELINE-PLAN-7D", businessLine: "e-line", sourceStrategyId: "ES-OUTCOME-REPORT-001", sourceVersion: "待接入", type: "升阶规划", window: "待接入", inboundCount: 0, highValueRate: null, riskRate: null, resolutionRate: null, qualityMix: "结构占位，待接入真实进线聚合", evidenceStatus: "结构占位", suggestion: "补齐升阶路径说明后再进入有效性观测" }
+  { id: "INB-ELINE-PLAN-7D", businessLine: "e-line", sourceStrategyId: "ES-E1-GROWTH-PLAN-001", sourceVersion: "v2026.07.22-e1-plan-v0", type: "E1课程/升阶规划", window: "7天", inboundCount: 73, highValueRate: 33.0, riskRate: 4.0, resolutionRate: 68.0, qualityMix: "课程内容 42.0% / 适龄与级别 31.0% / 售后规则 23.0% / 风险 4.0%", evidenceStatus: "模板模拟", suggestion: "先沉淀E1适龄、课时、解锁、售后规则FAQ，再接升阶规划入口回写" }
 ];
 
 const k2StrategyPlaybook = [
@@ -378,30 +379,29 @@ const k2StrategyPlaybook = [
 ];
 
 const strategyWorkTemplates = [
-  { id: "TPL-CONTENT-CALENDAR", ownerRole: "content-strategy", module: "内容策略配置", cadence: "月度规划+周度维护", input: "生命周期节点、主题月、活动素材、成长笔记、用户分层", work: "配置活动预告、复习直播、月测反馈、成长报告、节日比赛等内容动作，并维护素材参数", output: "内容日历、素材ID、策略话术版本、活动结果回写", example: "K2 M5W4期中活动预热；R线M8前奖学金激励活动；缺资料时用主题月活动模板补齐" },
+  { id: "TPL-CONTENT-CALENDAR", ownerRole: "content-strategy", module: "内容策略配置", cadence: "月度规划+周度维护", input: "生命周期节点、主题月、活动素材、成长笔记、用户分层", work: "配置活动预告、复习直播、月测反馈、成长报告、节日比赛等内容动作，并维护素材参数", output: "内容日历、素材ID、策略话术版本、活动结果回写", example: "K2 M5W4期中活动预热；E1开班首周课程节奏说明；缺资料时用主题月活动模板补齐" },
   { id: "TPL-CONTENT-COPY", ownerRole: "content-strategy", module: "话术与素材模板", cadence: "每个策略版本发布前", input: "人群层级、触发原因、禁止表达、可引用参数", work: "输出可复用话术模板和个性化参数，不让一线临场自由发挥", output: "话术版本、参数清单、禁用词/风险约束、样例摘要", example: "S/A级以肯定成长为主，B级先肯定再提醒，C/D级先共情再给补读方案" },
   { id: "TPL-EXEC-RULE", ownerRole: "execution-strategy", module: "策略动作包", cadence: "每日检查+周度发布", input: "人群包、策略ID、渠道、触发时间、排除条件、频控规则", work: "把策略拆成可下发批次，明确私聊、群聊、电话邀约、前台卡片等动作边界", output: "下发批次、失败原因、阻断原因、回写状态、观察窗口", example: "K2 M1W1未启动用户先私聊邀约，再进入电话任务池；资料缺失时用标准首周启动模板" },
   { id: "TPL-EXEC-CONFLICT", ownerRole: "execution-strategy", module: "频控与冲突检查", cadence: "每次下发前", input: "同用户近7天触达、售后状态、风险状态、活动曝光、续费窗口", work: "识别同一用户一周内收到的策略冲突，确定保留、延后、降频或熔断", output: "频控命中、豁免原因、冲突策略列表、最终下发顺序", example: "M6活动提醒与补读提醒同日命中时，优先活动入口，补读文案降压合并" },
-  { id: "TPL-MODEL-SCORE", ownerRole: "model-strategy", module: "分数与分层", cadence: "每日T+1+关键节点快照", input: "完课率、活跃天数、测评、报告、活动、回复、支付、风险", work: "定义各类分数的取数周期、加扣分规则、H层迁移和高优识别逻辑", output: "分数快照、H层级、人群包命中解释、误判复盘", example: "K2每周一取前20节分S/A/B/C/D；R线续费窗口按H1/H2/H3/H4识别高优和风险" },
+  { id: "TPL-MODEL-SCORE", ownerRole: "model-strategy", module: "分数与分层", cadence: "每日T+1+关键节点快照", input: "完课率、活跃天数、测评、报告、活动、回复、支付、风险", work: "定义各类分层的取数周期、规则解释、迁移和误判核验逻辑", output: "分层快照、人群包命中解释、误判复盘", example: "K2每周一取前20节分S/A/B/C/D；E1先用开课、课程咨询和升阶规划意向做结构化标签" },
   { id: "TPL-MODEL-RENEWAL", ownerRole: "model-strategy", module: "续费识别与关单", cadence: "续费窗口内每日", input: "续费状态、领券、支付失败、权益点击、报告打开、风险熔断", work: "识别可续费用户、领券未付、支付失败、高分未续和风险冻结用户", output: "高优池、关单策略、风险剔除、续费漏斗复盘", example: "K2 M9-M11未续费人群先做学习规划同意率，再承接权益解释" },
-  { id: "TPL-INSIGHT-ATTRIBUTION", ownerRole: "insight-strategy", module: "策略归因", cadence: "周复盘+节点复盘", input: "策略ID、版本、人群包、触达回写、学习行为、进线质量、转化结果", work: "判断策略动作是否带来学习、活跃、进线质量或转化改善，并输出保留/调整建议", output: "有效性报告、策略建议、数据缺口、AB实验需求", example: "K2补读提醒观察到周五24点；R线奖学金活动观察券点击、兑换和续费转化" },
+  { id: "TPL-INSIGHT-ATTRIBUTION", ownerRole: "insight-strategy", module: "策略归因", cadence: "周复盘+节点复盘", input: "策略ID、版本、人群包、触达回写、学习行为、进线质量、转化结果", work: "判断策略动作是否带来学习、活跃、进线质量或转化改善，并输出保留/调整建议", output: "有效性报告、策略建议、数据缺口、AB实验需求", example: "K2补读提醒观察到周五24点；E1课程QA模板观察解决率、转人工原因和规划预约率" },
   { id: "TPL-INSIGHT-INBOUND", ownerRole: "insight-strategy", module: "进线复盘", cadence: "每日监控+周度复盘", input: "来源策略、进线类型、高价值率、风险率、解决率、用户反馈原因", work: "把用户进线反向归因到策略文案、素材参数、产品入口和模型误判", output: "问题分类、文案修正、字段需求、产品提需", example: "活动规则进线高说明素材缺规则；补读困难进线高说明需要补缺课原因枚举" },
   { id: "TPL-AI-BOUNDARY", ownerRole: "application-strategy", module: "AI应用边界", cadence: "场景发布前+周度质检", input: "常见问答、活动规则、课程知识、风险场景、转人工原因", work: "定义哪些问题AI可答、哪些需要模板回复、哪些必须人工处理", output: "AI场景地图、知识缺口、转人工条件、风险拦截规则", example: "活动规则和课程入口可AI解释，投诉退款和强烈异议必须转人工" },
   { id: "TPL-AI-KB", ownerRole: "application-strategy", module: "知识库缺口维护", cadence: "每日收口+周度发布", input: "AI无法回答、重复追问、人工补充答案、课程FAQ", work: "把进线复盘中高频问题沉淀成可引用知识，更新问题模板和标准答案", output: "知识库新增项、命中率变化、转人工率变化", example: "K2活动奖品/时间/规则、课时内容、补读方式均应沉淀为参数化知识" }
 ];
 
 const dataRequirements = [
-  { id: "REQ-DOMAIN-001", name: "业务域主数据", owner: "产研/数据", status: "must-add", refreshCycle: "每日", reason: "全线中台必须按业务线、级别、班期和生命周期模板聚合", fallback: "R线样板静态配置" },
+  { id: "REQ-DOMAIN-001", name: "业务域主数据", owner: "产研/数据", status: "must-add", refreshCycle: "每日", reason: "策略中台必须按业务线、级别、班期和生命周期模板聚合", fallback: "首版用K2样例静态配置，E1按结构占位" },
   { id: "REQ-STRATEGY-001", name: "策略ID/版本ID", owner: "策略/产研", status: "must-add", refreshCycle: "实时/T+1", reason: "策略下发、回写和复盘必须能追溯到版本", fallback: "人工维护策略资产表" },
   { id: "REQ-WRITEBACK-001", name: "触达和活动回写", owner: "CRM/活动/数据", status: "needs-adaptation", refreshCycle: "T+1", reason: "判断策略动作是否真的影响学习和转化", fallback: "批次级汇总回填" },
-  { id: "REQ-RLINE-001", name: "R线报告路径聚合", businessLine: "r-line", owner: "数据产品", status: "confirmed-reusable", refreshCycle: "T+1", reason: "按策略和观察窗口汇总报告后行为", fallback: "R线样板静态配置" },
   { id: "REQ-KLINE-001", name: "K2周度分层与策略回写", businessLine: "k-line", owner: "数据产品/策略产品", status: "needs-adaptation", refreshCycle: "每日T+1+每周一分层", reason: "K2策略必须按S/A/B/C/D分层、业务周、策略ID、渠道和观察窗口看触达后学习变化", fallback: "周度聚合回填；首版先用前20节完成数+触达批次汇总" },
   { id: "REQ-KLINE-002", name: "K2内容素材参数池", businessLine: "k-line", owner: "内容策略/活动产品", status: "needs-adaptation", refreshCycle: "随主题月发布", reason: "活动、成长笔记、课时日签、主题周总结都需要参数化，否则策略配置只能写空话术", fallback: "素材ID人工维护，后续接入素材库版本ID" },
-  { id: "REQ-ELINE-001", name: "E线升阶规划聚合", businessLine: "e-line", owner: "数据产品", status: "must-add", refreshCycle: "T+1", reason: "按策略和观察窗口汇总升阶规划效果", fallback: "结构样例，待接入真实字段" }
+  { id: "REQ-ELINE-001", name: "E1课程QA与升阶规划聚合", businessLine: "e-line", owner: "数据产品/AI平台", status: "must-add", refreshCycle: "T+1", reason: "E1需要按FAQ问题、AI解决、转人工原因和规划预约观察策略有效性", fallback: "先用客服QA标签和人工周报汇总" }
 ];
 
 export const SEED_STATE = {
-  version: "seed-2026-07-22-english-strategy",
+  version: "seed-2026-07-22-english-strategy-k2-e1",
   generatedAt: "2026-07-22T10:00:00+08:00",
   businessLines,
   lifecycleTemplates,
@@ -425,8 +425,9 @@ export const SEED_STATE = {
     { id: "task-1022", userId: "touch-queued-p0-exemption", category: "conversion", subtype: "F14待付款/支付失败", priority: "P0", status: "queued", assigneeTeam: "sales", channel: "text" }
   ],
   activities: [
-    { id: "ACT-RLINE-CHALLENGE-07", source: "IN_APP", type: "challenge", status: "active" },
-    { id: "ACT-RLINE-REVIEW-07", source: "IN_APP", type: "review", status: "active" },
+    { id: "ACT-K2-MIDTERM-07", source: "IN_APP", type: "challenge", status: "active" },
+    { id: "ACT-K2-REVIEW-07", source: "IN_APP", type: "review", status: "active" },
+    { id: "FAQ-E1-COURSE-202607", source: "AI_KB", type: "course-faq", status: "planned" },
     { id: "LIVE-EXTERNAL-202607", source: "MANUAL", type: "external-live", status: "review-only" }
   ],
   scholarship: {
