@@ -9,11 +9,17 @@ function batchStatusLabel(status) {
   return status === "completed" ? "已完成" : status === "running" ? "进行中" : status || "待配置";
 }
 
+function requirementBusinessLines(requirement) {
+  if (Array.isArray(requirement.businessLines)) return requirement.businessLines;
+  return requirement.businessLine ? [requirement.businessLine] : [];
+}
+
 function dataGapSummary(state, line, audiencePacks) {
   const audienceGaps = audiencePacks
     .filter((pack) => pack.dataFreshness === "待接入")
     .map((pack) => `${pack.name}：${pack.dataFreshness}`);
   const requirementGaps = (state.dataRequirements || [])
+    .filter((requirement) => requirementBusinessLines(requirement).includes(line.businessLine))
     .filter((requirement) => requirement.status !== "confirmed-reusable")
     .map((requirement) => `${requirement.name}：${requirement.status === "must-add" ? "需新增" : "待适配"}`);
   const gaps = [...audienceGaps, ...requirementGaps];
@@ -32,7 +38,7 @@ export function render(container, { state }) {
       levels: joinValues(definition.levels),
       cohorts: joinValues(audiencePacks.map((pack) => pack.productType === "annual" ? "年课" : pack.productType === "monthly" ? "月课" : pack.productType)),
       lifecycleNodes: joinValues(audiencePacks.flatMap((pack) => pack.lifecycleNodes || [])),
-      audiencePacks: joinValues(audiencePacks.map((pack) => pack.name)),
+      audiencePacks: joinValues(audiencePacks.map((pack) => `${pack.id}（${pack.name}）`)),
       dispatchBatches: joinValues(dispatchBatches.map((batch) => `${batch.id}（${batchStatusLabel(batch.status)}）`), "暂无下发批次"),
       dataGaps: dataGapSummary(state, line, audiencePacks)
     };
@@ -52,4 +58,13 @@ export function render(container, { state }) {
     { key: "dispatchBatches", label: "下发批次" },
     { key: "dataGaps", label: "数据缺口" }
   ], rows })}</section>`;
+  const globalRequirements = (state.dataRequirements || [])
+    .filter((requirement) => requirementBusinessLines(requirement).length === 0)
+    .filter((requirement) => requirement.status !== "confirmed-reusable");
+  container.innerHTML += `<section class="panel"><header class="panel__header"><div><p class="section-kicker">全局依赖</p><h2>跨业务线平台能力</h2><p>不计入单线数据缺口；仅在策略总控层跟踪。</p></div></header>${renderTable({ columns: [
+    { key: "name", label: "依赖项" },
+    { key: "owner", label: "责任方" },
+    { key: "refreshCycle", label: "刷新周期" },
+    { key: "status", label: "状态", format: (value) => value === "must-add" ? "需新增" : value === "needs-adaptation" ? "待适配" : value }
+  ], rows: globalRequirements })}</section>`;
 }

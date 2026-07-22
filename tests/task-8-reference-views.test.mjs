@@ -27,6 +27,13 @@ function render(view, routeParams = {}) {
   return root.innerHTML;
 }
 
+function tableRowContaining(html, pattern) {
+  const matcher = typeof pattern === "string" ? new RegExp(pattern) : pattern;
+  const row = [...html.matchAll(/<tr[^>]*>[\s\S]*?<\/tr>/g)].find((candidate) => matcher.test(candidate[0]));
+  assert.ok(row, `expected a table row matching ${matcher}`);
+  return row[0];
+}
+
 test("dashboard renders English-wide strategy command center", () => {
   const html = render(dashboardView);
   assert.match(html, /英语全线策略总控/);
@@ -36,7 +43,7 @@ test("dashboard renders English-wide strategy command center", () => {
   assert.match(html, /E线/);
 });
 
-test("business line drilldown treats R-line as full sample and K/E as supported structures", () => {
+test("business line drilldown maps line-specific operating evidence and separates global dependencies", () => {
   const html = render(businessLinesView);
   assert.match(html, /R线首发样板/);
   assert.match(html, /K线/);
@@ -47,9 +54,23 @@ test("business line drilldown treats R-line as full sample and K/E as supported 
   assert.match(html, /人群包/);
   assert.match(html, /下发批次/);
   assert.match(html, /数据缺口/);
-  assert.match(html, /R1\s*\/\s*R2\s*\/\s*R3\s*\/\s*R4\s*\/\s*R5\s*\/\s*R6/);
-  assert.match(html, /完整样本/);
-  assert.match(html, /待接入/);
+  const rLineRow = tableRowContaining(html, /<td[^>]*>R线<\/td>/);
+  assert.match(rLineRow, /R1\s*\/\s*R2\s*\/\s*R3\s*\/\s*R4\s*\/\s*R5\s*\/\s*R6/);
+  assert.match(rLineRow, /AUD-RLINE-HIGH-RENEWAL/);
+  assert.match(rLineRow, /DSP-20260722-001/);
+  assert.doesNotMatch(rLineRow, /业务域主数据|策略ID\/版本ID|触达和活动回写/);
+
+  const kLineRow = tableRowContaining(html, /<td[^>]*>K线<\/td>/);
+  assert.match(kLineRow, /K2/);
+  assert.match(kLineRow, /AUD-KLINE-MISS-REPAIR/);
+  assert.match(kLineRow, /DSP-20260722-002/);
+
+  const eLineRow = tableRowContaining(html, /<td[^>]*>E线<\/td>/);
+  assert.match(eLineRow, /待接入|结构样例/);
+  assert.doesNotMatch(eLineRow, /DSP-20260722-00[12]|已完成|进行中/);
+
+  assert.match(html, /全局依赖/);
+  assert.match(html, /业务域主数据.*策略ID\/版本ID.*触达和活动回写/s);
 });
 
 test("strategy asset library renders reuse and difference configuration", () => {
@@ -58,13 +79,14 @@ test("strategy asset library renders reuse and difference configuration", () => 
   assert.match(html, /成长报告打开后价值认知强化/);
   assert.match(html, /全线复用/);
   assert.match(html, /阅读成长 \+ 奖学金提醒/);
-  assert.match(html, /生命周期节点/);
-  assert.match(html, /负责人/);
-  assert.match(html, /状态/);
-  assert.match(html, /数据依赖/);
-  assert.match(html, /观察窗口/);
-  assert.match(html, /差异配置/);
-  assert.match(html, /online|已上线/);
+  const assetRow = tableRowContaining(html, /ES-OUTCOME-REPORT-001/);
+  assert.match(assetRow, /生命周期节点|T21\s*\/\s*T24\s*\/\s*M8\s*\/\s*M11\s*\/\s*M12/);
+  assert.match(assetRow, /content-strategy/);
+  assert.match(assetRow, /online|已上线/);
+  assert.match(assetRow, /report_opened.*strategy_id.*audience_pack_id.*touch_writeback/);
+  assert.match(assetRow, /r-line: 阅读成长 \+ 奖学金提醒/);
+  assert.match(assetRow, /k-line: K2能力成长路径 \+ 中心化SOP/);
+  assert.match(assetRow, /e-line: 升阶规划 \+ 长期学习目标/);
 });
 
 test("Task 8 lifecycle phases cover approved monthly and annual ranges with sales only in renewal windows", () => {
