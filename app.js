@@ -9,9 +9,9 @@ import * as executionView from "./views/execution.js";
 import * as modelsView from "./views/models.js";
 import * as insightsView from "./views/insights.js";
 import * as audiencesView from "./views/users.js";
-import * as dispatchView from "./views/tasks.js";
+import * as dispatchView from "./views/dispatch.js";
 import * as effectivenessView from "./views/review.js";
-import * as inboundReviewView from "./views/intake.js";
+import * as inboundReviewView from "./views/inbound-review.js";
 import * as dataFoundationView from "./views/data-foundation.js";
 import {
   escapeAttribute,
