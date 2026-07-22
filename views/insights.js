@@ -8,7 +8,7 @@ const rows = [
 
 export function render(container, context) {
   renderStrategyWorkspace(container, context, {
-    kicker: "用户洞察", title: "用户洞察工作区", types: ["outcome-content", "renewal-model", "centralized-touch"],
+    kicker: "用户洞察", title: "用户洞察工作区", ownerRole: "insight-strategy", types: ["outcome-content", "renewal-model", "centralized-touch"],
     description: "统一观察跨业务线的用户画像、权益规则和策略行为归因。",
     assetHeading: "洞察关联策略资产", capabilityHeading: "画像、权益与归因", capabilityRows: rows
   });

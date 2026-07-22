@@ -8,7 +8,7 @@ const rows = [
 
 export function render(container, context) {
   renderStrategyWorkspace(container, context, {
-    kicker: "应用策略", title: "应用策略工作区", types: ["outcome-content", "centralized-touch"],
+    kicker: "应用策略", title: "应用策略工作区", ownerRole: "application-strategy", types: ["outcome-content", "centralized-touch"],
     description: "明确AI在策略服务中的适用边界、知识覆盖和人工介入条件。",
     assetHeading: "可应用策略资产", capabilityHeading: "AI场景与知识边界", capabilityRows: rows
   });

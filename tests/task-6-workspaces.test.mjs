@@ -188,6 +188,26 @@ test("strategy workspaces render seed-backed asset configuration", () => {
   assert.match(insights, /k-line/);
 });
 
+test("strategy workspaces render preset work templates for uncovered materials", () => {
+  const content = htmlFor(contentView);
+  const execution = htmlFor(executionView);
+  const models = htmlFor(modelsView);
+  const applications = htmlFor(applicationsView);
+  const insights = htmlFor(insightsView);
+
+  assert.match(content, /策略板块工作拆解/);
+  assert.match(content, /TPL-CONTENT-CALENDAR/);
+  assert.match(content, /资料未覆盖的部分使用预设模板补齐/);
+  assert.match(execution, /TPL-EXEC-RULE/);
+  assert.match(execution, /频控与冲突检查/);
+  assert.match(models, /TPL-MODEL-SCORE/);
+  assert.match(models, /每日T\+1\+关键节点快照/);
+  assert.match(insights, /TPL-INSIGHT-ATTRIBUTION/);
+  assert.match(insights, /进线复盘/);
+  assert.match(applications, /TPL-AI-BOUNDARY/);
+  assert.match(applications, /知识库缺口维护/);
+});
+
 test("strategy workspaces render related effectiveness metrics by strategy ID", () => {
   const content = htmlFor(contentView);
   const execution = htmlFor(executionView);
@@ -261,7 +281,7 @@ test("lifecycle view becomes multi-line strategy coverage map", () => {
   assert.match(html, /策略覆盖地图/);
   assert.match(html, /T0-T28/);
   assert.match(html, /M1-M12/);
-  assert.match(html, /K线中心化SOP模板/);
+  assert.match(html, /K2中心化SOP模板/);
   assert.match(html, /R线/);
   assert.match(html, /E线.*结构.*待模板/);
   assert.match(html, /T22/);

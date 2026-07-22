@@ -11,6 +11,7 @@ function productTypeLabel(productType) {
 
 export function render(container, { state }) {
   const rows = state.audiencePacks || [];
+  const k2Rows = rows.filter((row) => row.businessLine === "k-line" && row.id.startsWith("AUD-K2"));
   const selected = audienceSummary(state, rows.find((row) => row.targetCount > 0)?.id || rows[0]?.id);
   container.innerHTML = `<section class="page-header"><div><p class="section-kicker">人群圈选</p><h1>策略人群包</h1><p>按业务线、级别、产品、生命周期、分数、标签、风险和行为圈选目标人群，只输出策略包，不展示一线老师待办。</p></div>${renderBadge("info", "匿名样例")}</section>${selected ? renderMetricStrip([
     { label: "命中人数", value: `${selected.targetCount}` },
@@ -34,4 +35,17 @@ export function render(container, { state }) {
     { key: "overlapRate", label: "重叠率", format: (value) => `${Math.round((value || 0) * 100)}%` },
     { key: "dataFreshness", label: "刷新" }
   ], rows })}</section>`;
+  if (k2Rows.length) {
+    container.innerHTML += `<section class="panel"><header class="panel__header"><div><p class="section-kicker">K2分层模拟</p><h2>K2高优与干预人群口径</h2><p>每个包都能直接对应策略动作、刷新周期和排除原因，便于数据产品确认取数。</p></div>${renderBadge("success", "分层清晰")}</header>${renderTable({ columns: [
+      { key: "id", label: "人群包ID" },
+      { key: "name", label: "R线/业务名称可替换" },
+      { key: "lifecycleNodes", label: "查看节点", format: joinList },
+      { key: "rules", label: "取数标准", format: joinList },
+      { key: "dataFreshness", label: "刷新周期" },
+      { key: "strategyId", label: "默认策略" },
+      { key: "availableActions", label: "可组合动作", format: joinList },
+      { key: "targetCount", label: "模拟命中" },
+      { key: "excludedCount", label: "排除" }
+    ], rows: k2Rows })}</section>`;
+  }
 }

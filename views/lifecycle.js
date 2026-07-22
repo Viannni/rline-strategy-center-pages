@@ -127,7 +127,7 @@ export function render(container, { state }) {
     { label: "月课模板", value: "T0-T28" },
     { label: "年课模板", value: "M1-M12" },
     { label: "覆盖策略", value: `${assets.length}` },
-    { label: "扩展模板", value: "K线中心化SOP模板" }
+    { label: "扩展模板", value: "K2中心化SOP模板" }
   ])}<section class="panel"><header class="panel__header"><div><p class="section-kicker">节点覆盖</p><h2>R / K / E 策略密度</h2><p>节点密度为命中该节点的策略数；多个策略同节点时标记为过密。</p></div></header>${renderTable({ columns: [
     { key: "name", label: "业务线" },
     { key: "support", label: "支持状态" },

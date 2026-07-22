@@ -10,6 +10,7 @@ import { SEED_STATE } from "../data/seed-data.js";
 import * as dashboardView from "../views/dashboard.js";
 import * as businessLinesView from "../views/business-lines.js";
 import * as strategyAssetsView from "../views/strategy-assets.js";
+import * as audiencesView from "../views/audiences.js";
 
 function render(view, routeParams = {}, state = SEED_STATE) {
   const root = { innerHTML: "" };
@@ -83,6 +84,16 @@ test("business line drilldown maps line-specific operating evidence and separate
   assert.match(html, /业务域主数据.*策略ID\/版本ID.*触达和活动回写/s);
 });
 
+test("business line drilldown renders K2 SOP simulation details", () => {
+  const html = render(businessLinesView);
+  assert.match(html, /K2中心化SOP配置拆解/);
+  assert.match(html, /K2-LAYER-RULE/);
+  assert.match(html, /每周一/);
+  assert.match(html, /取前20节课完成数/);
+  assert.match(html, /M9-M11/);
+  assert.match(html, /下一阶段规划电话邀约/);
+});
+
 test("strategy asset library renders reuse and difference configuration", () => {
   const html = render(strategyAssetsView);
   assert.match(html, /策略资产库/);
@@ -97,6 +108,27 @@ test("strategy asset library renders reuse and difference configuration", () => 
   assert.match(assetRow, /r-line: 阅读成长 \+ 奖学金提醒/);
   assert.match(assetRow, /k-line: K2能力成长路径 \+ 中心化SOP/);
   assert.match(assetRow, /e-line: 升阶规划 \+ 长期学习目标/);
+});
+
+test("strategy asset library renders concrete K2 cases and field contracts", () => {
+  const html = render(strategyAssetsView);
+  assert.match(html, /K2策略资产样例/);
+  assert.match(html, /ES-K2-ACTIVITY-001/);
+  assert.match(html, /ES-K2-WECHAT-REVIEW-001/);
+  assert.match(html, /ES-K2-PHONE-ASK-001/);
+  assert.match(html, /字段合同/);
+  assert.match(html, /来源策略ID样例/);
+  assert.match(html, /补读观察截止时间/);
+});
+
+test("audience view renders K2 layered audience packs with refresh rules", () => {
+  const html = render(audiencesView);
+  assert.match(html, /K2高优与干预人群口径/);
+  assert.match(html, /AUD-K2-SA-STABLE/);
+  assert.match(html, /S=完成20节/);
+  assert.match(html, /AUD-K2-CD-REPAIR/);
+  assert.match(html, /每日T\+1\+每周一分层/);
+  assert.match(html, /AUD-K2-UNRENEWED-M9M11/);
 });
 
 test("Task 8 lifecycle phases cover approved monthly and annual ranges with sales only in renewal windows", () => {

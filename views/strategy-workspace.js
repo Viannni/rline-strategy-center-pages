@@ -32,6 +32,7 @@ function effectivenessMetricsForAssets(state, assets) {
 export function renderStrategyWorkspace(container, { state }, config) {
   const assets = assetsForWorkspace(state, config);
   const effectivenessMetrics = effectivenessMetricsForAssets(state, assets);
+  const workTemplates = (state.strategyWorkTemplates || []).filter((template) => template.ownerRole === config.ownerRole);
   const rows = assets.map((asset) => ({
     ...asset,
     scope: scopeLabel(asset.scope),
@@ -57,6 +58,18 @@ export function renderStrategyWorkspace(container, { state }, config) {
   ], rows })}</section><section class="panel"><header class="panel__header"><h2>${config.capabilityHeading}</h2></header>${renderTable({ columns: [
     { key: "module", label: "模块" }, { key: "example", label: "能力焦点" }, { key: "metric", label: "复盘指标" }
   ], rows: config.capabilityRows })}</section>`;
+
+  if (workTemplates.length) {
+    container.innerHTML += `<section class="panel"><header class="panel__header"><div><p class="section-kicker">工作模板</p><h2>策略板块工作拆解</h2><p>资料未覆盖的部分使用预设模板补齐，方便模拟后台呈现完整工作流。</p></div>${renderBadge("success", "可复用")}</header>${renderTable({ columns: [
+      { key: "id", label: "模板ID" },
+      { key: "module", label: "工作模块" },
+      { key: "cadence", label: "周期" },
+      { key: "input", label: "输入" },
+      { key: "work", label: "要做什么" },
+      { key: "output", label: "产出" },
+      { key: "example", label: "模拟案例" }
+    ], rows: workTemplates })}</section>`;
+  }
 
   if (effectivenessMetrics.length) {
     container.innerHTML += `<section class="panel"><header class="panel__header"><div><p class="section-kicker">效果数据</p><h2>效果复盘</h2><p>按策略ID关联聚合效果数据，展示业务线、指标值、基准、观察窗口和方向。</p></div></header>${renderTable({ columns: [
