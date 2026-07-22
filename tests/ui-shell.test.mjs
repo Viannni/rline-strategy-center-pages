@@ -18,36 +18,32 @@ import {
 } from "../ui/components.js";
 import { icon, iconButton } from "../ui/icons.js";
 
-test("shell exposes the approved roles and complete navigation", () => {
-  assert.deepEqual(ROLES.map(({ id }) => id), ["strategy", "agent", "learning", "sales"]);
+test("shell exposes the English strategy center navigation", () => {
+  assert.deepEqual(ROLES.map(({ id }) => id), ["strategy"]);
   assert.deepEqual(NAV_ITEMS.map(({ label }) => label), [
-    "总控台",
-    "用户中心",
-    "评分中心",
-    "进线中心",
-    "角色任务台",
-    "生命周期",
-    "提分运营",
-    "数据底座",
-    "系统落位",
-    "效果复盘",
-    "提需清单"
+    "全线总控",
+    "业务线下钻",
+    "策略资产库",
+    "内容策略",
+    "应用策略",
+    "执行策略",
+    "模型策略",
+    "用户洞察",
+    "人群圈选",
+    "下发追踪",
+    "有效性看板",
+    "进线复盘",
+    "数据底座"
   ]);
-  assert.ok(ROLES.every(({ permission }) => typeof permission === "string" && permission.length > 0));
+  assert.ok(NAV_ITEMS.every((item) => ["strategy", "audience", "dispatch", "writeback", "review"].includes(item.stage)));
 });
 
-test("role and hash routing restore only views visible to the active role", () => {
-  assert.equal(routeFromHash("#users"), "users");
-  assert.equal(routeFromHash("#view=tasks"), "tasks");
+test("hash routing restores strategy views without frontline role filtering", () => {
+  assert.equal(routeFromHash("#audiences"), "audiences");
+  assert.equal(routeFromHash("#view=dispatch"), "dispatch");
   assert.equal(routeFromHash("#%E0%A4%A"), "dashboard");
-  assert.deepEqual(visibleItems("agent").map(({ id }) => id), [
-    "dashboard",
-    "users",
-    "intake",
-    "tasks",
-    "lifecycle"
-  ]);
-  assert.equal(ensureVisibleView("scoring", "sales"), "dashboard");
+  assert.deepEqual(visibleItems("strategy").map(({ id }) => id), NAV_ITEMS.map(({ id }) => id));
+  assert.equal(ensureVisibleView("models", "strategy"), "models");
 });
 
 test("HTML and attribute escaping protects component output", () => {

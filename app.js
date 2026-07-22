@@ -13,70 +13,36 @@ import {
   toast
 } from "./ui/components.js";
 import { icon, refreshIcons } from "./ui/icons.js";
-import * as dashboardView from "./views/dashboard.js";
-import * as scoringView from "./views/scoring.js";
-import * as usersView from "./views/users.js";
-import * as intakeView from "./views/intake.js";
-import * as tasksView from "./views/tasks.js";
-import * as lifecycleView from "./views/lifecycle.js";
-import * as operationsView from "./views/operations.js";
-import * as dataFoundationView from "./views/data-foundation.js";
-import * as systemMapView from "./views/system-map.js";
-import * as reviewView from "./views/review.js";
-import * as demandsView from "./views/demands.js";
 
 export const ROLES = Object.freeze([
-  { id: "strategy", label: "策略全景", permission: "可查看全部模块；规则变更仅在本地模拟生效" },
-  { id: "agent", label: "Agent协同", permission: "仅展示当班队列与可转派任务" },
-  { id: "learning", label: "学情服务", permission: "仅展示学情、规划与售后协作范围" },
-  { id: "sales", label: "二销承接", permission: "仅展示续费窗口与绑定用户任务" }
+  { id: "strategy", label: "策略团队", permission: "查看英语全线策略配置、下发、回写和复盘；不展示一线个人作业权限。" }
 ]);
 
-const ALL_ROLES = ROLES.map(({ id }) => id);
-
 export const NAV_ITEMS = Object.freeze([
-  { id: "dashboard", label: "总控台", icon: "layout-dashboard", roles: ALL_ROLES, stage: "behavior", description: "关键人群、任务与风险的经营总览" },
-  { id: "users", label: "用户中心", icon: "users", roles: ALL_ROLES, stage: "behavior", description: "用户证据、分层和动作记录" },
-  { id: "scoring", label: "评分中心", icon: "calculator", roles: ["strategy"], stage: "score", description: "计分规则、独立信号与试算" },
-  { id: "intake", label: "进线中心", icon: "git-pull-request-arrow", roles: ALL_ROLES, stage: "gate", description: "触达准入、路由轨迹与异常进线" },
-  { id: "tasks", label: "角色任务台", icon: "list-checks", roles: ALL_ROLES, stage: "dispatch", description: "按演示角色承接任务与结构化回写" },
-  { id: "lifecycle", label: "生命周期", icon: "calendar-range", roles: ALL_ROLES, stage: "behavior", description: "月课与年课节点策略" },
-  { id: "operations", label: "提分运营", icon: "trending-up", roles: ["strategy", "learning"], stage: "tier", description: "中心化提分活动与人群迁移" },
-  { id: "data-foundation", label: "数据底座", icon: "database", roles: ["strategy"], stage: "score", description: "F01-F16字段口径与数据状态" },
-  { id: "system-map", label: "系统落位", icon: "network", roles: ["strategy"], stage: "writeback", description: "现有系统的复用、改造与新增证据" },
-  { id: "review", label: "效果复盘", icon: "chart-no-axes-combined", roles: ["strategy", "learning", "sales"], stage: "writeback", description: "分层迁移、任务、活动与转化复盘" },
-  { id: "demands", label: "提需清单", icon: "clipboard-list", roles: ["strategy"], stage: "writeback", description: "跨部门依赖、验收与降级方案" }
+  { id: "dashboard", label: "全线总控", icon: "layout-dashboard", stage: "strategy", description: "英语各业务线策略健康、覆盖、执行和风险总览" },
+  { id: "business-lines", label: "业务线下钻", icon: "network", stage: "strategy", description: "R线、K线、E线、级别与班期策略明细" },
+  { id: "strategy-assets", label: "策略资产库", icon: "folder-kanban", stage: "strategy", description: "策略、SOP、模型、内容、权益和版本统一管理" },
+  { id: "content", label: "内容策略", icon: "calendar-range", stage: "strategy", description: "活动、讲座、PK、月测、报告和权益内容配置" },
+  { id: "applications", label: "应用策略", icon: "bot", stage: "strategy", description: "AI场景、Agent知识库、解决率和兜底问题" },
+  { id: "execution", label: "执行策略", icon: "send", stage: "strategy", description: "中心化触达、频控、冲突和动作包配置" },
+  { id: "models", label: "模型策略", icon: "calculator", stage: "strategy", description: "高优识别、续费窗口、关单SOP和模型校准" },
+  { id: "insights", label: "用户洞察", icon: "scan-search", stage: "strategy", description: "画像、评分、信号、权益和行为归因" },
+  { id: "audiences", label: "人群圈选", icon: "users", stage: "audience", description: "按业务域、标签、分数、风险和行为生成人群包" },
+  { id: "dispatch", label: "下发追踪", icon: "list-checks", stage: "dispatch", description: "策略包下发、执行状态、失败原因和回写完整度" },
+  { id: "effectiveness", label: "有效性看板", icon: "chart-no-axes-combined", stage: "review", description: "策略覆盖、触达周期、SOP效果和实验校准" },
+  { id: "inbound-review", label: "进线复盘", icon: "git-pull-request-arrow", stage: "review", description: "策略归因、进线质量、问题反哺和修正建议" },
+  { id: "data-foundation", label: "数据底座", icon: "database", stage: "writeback", description: "业务域、事件、字段、刷新、产研提需和验收" }
 ]);
 
 export const FLOW_STAGES = Object.freeze([
-  { id: "behavior", label: "行为进入" },
-  { id: "score", label: "计分" },
-  { id: "tier", label: "分层" },
-  { id: "gate", label: "准入" },
-  { id: "dispatch", label: "派单" },
-  { id: "writeback", label: "回写" }
+  { id: "strategy", label: "策略配置" },
+  { id: "audience", label: "人群圈选" },
+  { id: "dispatch", label: "下发追踪" },
+  { id: "writeback", label: "数据回写" },
+  { id: "review", label: "效果复盘" }
 ]);
 
-const ROLE_TASK_TEAMS = Object.freeze({
-  strategy: null,
-  agent: ["agent"],
-  learning: ["learning", "learning-intervention", "learning-planning", "after-sales"],
-  sales: ["sales"]
-});
-
-const viewModules = new Map([
-  ["dashboard", dashboardView],
-  ["users", usersView],
-  ["scoring", scoringView],
-  ["intake", intakeView],
-  ["tasks", tasksView],
-  ["lifecycle", lifecycleView],
-  ["operations", operationsView],
-  ["data-foundation", dataFoundationView],
-  ["system-map", systemMapView],
-  ["review", reviewView],
-  ["demands", demandsView]
-]);
+const viewModules = new Map();
 const components = Object.freeze({
   iconButton,
   openDrawer,
@@ -90,11 +56,11 @@ const components = Object.freeze({
 let app = null;
 
 function validRole(role) {
-  return ROLES.some((item) => item.id === role) ? role : "strategy";
+  return role === "strategy" ? "strategy" : "strategy";
 }
 
-export function visibleItems(role) {
-  return NAV_ITEMS.filter((item) => item.roles.includes(role));
+export function visibleItems() {
+  return NAV_ITEMS;
 }
 
 function itemFor(viewId) {
@@ -112,10 +78,8 @@ export function routeFromHash(hash) {
   }
 }
 
-function roleTaskCount(state, role) {
-  const activeTasks = (state.tasks ?? []).filter((task) => !["done", "closed", "cancelled"].includes(task.status));
-  const teams = ROLE_TASK_TEAMS[role];
-  return teams === null ? activeTasks.length : activeTasks.filter((task) => teams.includes(task.assigneeTeam)).length;
+function roleTaskCount() {
+  return 0;
 }
 
 function currentRole() {
@@ -127,18 +91,12 @@ export function ensureVisibleView(viewId, role) {
 }
 
 function renderSidebar() {
-  const role = currentRole();
-  const state = app.store.getState();
-  const taskCount = roleTaskCount(state, role);
-  const links = visibleItems(role).map((item) => {
+  const links = visibleItems().map((item) => {
     const isCurrent = item.id === app.currentView;
-    const count = item.id === "tasks" && taskCount > 0
-      ? `<span class="nav-count" aria-label="${taskCount}个待处理任务">${taskCount}</span>`
-      : "";
-    return `<a class="nav-item${isCurrent ? " is-current" : ""}" href="#${escapeAttribute(item.id)}"${isCurrent ? ' aria-current="page"' : ""}>${icon(item.icon, { className: "nav-item__icon" })}<span>${escapeHtml(item.label)}</span>${count}</a>`;
+    return `<a class="nav-item${isCurrent ? " is-current" : ""}" href="#${escapeAttribute(item.id)}"${isCurrent ? ' aria-current="page"' : ""}>${icon(item.icon, { className: "nav-item__icon" })}<span>${escapeHtml(item.label)}</span></a>`;
   }).join("");
 
-  app.sidebar.innerHTML = `<div class="sidebar__header"><a class="brand" href="#dashboard" aria-label="R线策略中台总控台"><span class="brand__mark" aria-hidden="true">R</span><span class="brand__text"><strong>R线策略中台</strong><small>策略运营工作台</small></span></a>${iconButton({ icon: "x", label: "关闭导航", id: "navCloseButton", className: "sidebar__close" })}</div><nav class="nav-list" aria-label="工作台视图">${links}</nav><div class="sidebar__foot"><strong>演示视图</strong><span>${escapeHtml(ROLES.find((item) => item.id === role)?.label)}</span><small>仅切换信息范围，不代表真实安全权限。</small></div>`;
+  app.sidebar.innerHTML = `<div class="sidebar__header"><a class="brand" href="#dashboard" aria-label="英语业务策略经营中台"><span class="brand__mark" aria-hidden="true">英</span><span class="brand__text"><strong>英语策略中台</strong><small>R线首发样板</small></span></a>${iconButton({ icon: "x", label: "关闭导航", id: "navCloseButton", className: "sidebar__close" })}</div><nav class="nav-list" aria-label="策略中台视图">${links}</nav><div class="sidebar__foot"><strong>策略团队</strong><span>全线经营视角</span><small>仅展示策略配置、下发、回写和复盘，不是一线作业台。</small></div>`;
 }
 
 function renderFlowRail(stageId) {
@@ -151,16 +109,13 @@ function renderFlowRail(stageId) {
 
 function renderTopbar() {
   const state = app.store.getState();
-  const role = currentRole();
   const stage = itemFor(app.currentView).stage;
-  const permission = ROLES.find((item) => item.id === role)?.permission || "仅用于模拟信息范围";
-  const options = ROLES.map((item) => `<option value="${item.id}"${item.id === role ? " selected" : ""}>${escapeHtml(item.label)}</option>`).join("");
   const storageNotice = state.storage?.notice;
   const storageTools = storageNotice
     ? `<span class="storage-notice" role="status">本地存储异常，当前仍在内存中运行。</span>${iconButton({ icon: "download", label: "导出当前快照", id: "exportSnapshotButton" })}${iconButton({ icon: "rotate-ccw", label: "恢复种子数据", id: "recoverStorageButton" })}`
     : "";
 
-  app.topbar.innerHTML = `<div class="topbar__flow">${iconButton({ icon: "menu", label: "打开导航", id: "navMenuButton", className: "menu-button", controls: "appSidebar", expanded: document.body.classList.contains("nav-open") })}${renderFlowRail(stage)}</div><div class="topbar__tools">${storageTools}${iconButton({ icon: "undo-2", label: "撤销最近一次更改", id: "undoButton", disabled: (state.history?.length ?? 0) === 0 })}${iconButton({ icon: "rotate-ccw", label: "重置本地演示数据", id: "resetButton" })}<label class="role-switch" for="roleSelect"><span>演示视图</span><select id="roleSelect" aria-describedby="roleHint">${options}</select></label><span id="roleHint" class="role-hint">${escapeHtml(permission)}</span></div>`;
+  app.topbar.innerHTML = `<div class="topbar__flow">${iconButton({ icon: "menu", label: "打开导航", id: "navMenuButton", className: "menu-button", controls: "appSidebar", expanded: document.body.classList.contains("nav-open") })}${renderFlowRail(stage)}</div><div class="topbar__tools">${storageTools}${iconButton({ icon: "undo-2", label: "撤销最近一次更改", id: "undoButton", disabled: (state.history?.length ?? 0) === 0 })}${iconButton({ icon: "rotate-ccw", label: "重置本地演示数据", id: "resetButton" })}<span class="role-hint">英语全线策略视角 · R线首发样板</span></div>`;
 }
 
 function exportSnapshot(store) {
@@ -364,21 +319,6 @@ function boot() {
     if (target.closest("#exportSnapshotButton")) exportSnapshot(store);
     if (target.closest("#recoverStorageButton, #recoverViewButton")) confirmReset(store);
     if (target.closest("#retryViewButton")) renderCurrentView({ focus: true });
-  });
-
-  document.addEventListener("change", (event) => {
-    const target = event.target instanceof HTMLSelectElement ? event.target : null;
-    if (target?.id !== "roleSelect") return;
-    const nextRole = validRole(target.value);
-    const nextView = ensureVisibleView(app.currentView, nextRole);
-    const viewChanged = nextView !== app.currentView;
-    store.update((state) => ({ ...state, ui: { ...(state.ui ?? {}), role: nextRole } }));
-    if (viewChanged) {
-      toast("已切换到该演示角色可见的默认视图。", "info");
-      navigate(nextView);
-    } else {
-      queueMicrotask(() => document.getElementById("roleSelect")?.focus());
-    }
   });
 
   document.addEventListener("keydown", (event) => {
