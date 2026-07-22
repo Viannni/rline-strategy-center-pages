@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 import { createStore } from "../core/store.js";
 import { SEED_STATE } from "../data/seed-data.js";
@@ -115,4 +116,19 @@ test("strict ISO input pattern is valid under the HTML v-mode regexp rules", () 
   assert.equal(browserPattern.test("2026-07-21T10:00:00+08:00"), true);
   assert.equal(browserPattern.test("2026-07-21T02:00:00Z"), true);
   assert.equal(browserPattern.test("2026-07-21 10:00:00"), false);
+});
+
+test("audience and dispatch views are strategy-level not teacher task pages", async () => {
+  const audiencesSource = await readFile(new URL("../views/audiences.js", import.meta.url), "utf8");
+  const dispatchSource = await readFile(new URL("../views/dispatch.js", import.meta.url), "utf8");
+
+  assert.match(audiencesSource, /人群圈选/);
+  assert.match(audiencesSource, /排除人数/);
+  assert.match(audiencesSource, /数据新鲜度/);
+  assert.doesNotMatch(audiencesSource, /真实姓名/);
+
+  assert.match(dispatchSource, /下发追踪/);
+  assert.match(dispatchSource, /策略包/);
+  assert.match(dispatchSource, /回写完整/);
+  assert.doesNotMatch(dispatchSource, /老师待办/);
 });

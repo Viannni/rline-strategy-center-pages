@@ -1,3 +1,21 @@
-export function render(container) {
-  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">策略人群</p><h1>人群圈选</h1><p>策略人群包将在后续版本提供，聚焦业务域、标签、分数、风险和行为条件的聚合配置与覆盖评估。</p></div></section>`;
+import { audienceSummary } from "../core/strategy-domain.js";
+import { renderBadge, renderMetricStrip, renderTable } from "../ui/components.js";
+
+export function render(container, { state }) {
+  const rows = state.audiencePacks || [];
+  const selected = audienceSummary(state, rows[0]?.id);
+  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">人群圈选</p><h1>策略人群包</h1><p>按业务线、级别、产品、生命周期、分数、标签、风险和行为圈选目标人群，只输出策略包，不展示一线老师待办。</p></div>${renderBadge("info", "匿名样例")}</section>${selected ? renderMetricStrip([
+    { label: "命中人数", value: `${selected.targetCount}` },
+    { label: "排除人数", value: `${selected.excludedCount}`, hint: `${selected.exclusionRate}%` },
+    { label: "重叠率", value: `${Math.round(selected.overlapRate * 100)}%` },
+    { label: "数据新鲜度", value: selected.dataFreshness }
+  ]) : ""}<section class="panel"><header class="panel__header"><h2>人群包清单</h2></header>${renderTable({ columns: [
+    { key: "id", label: "人群包ID" },
+    { key: "name", label: "名称" },
+    { key: "businessLine", label: "业务线" },
+    { key: "levelCode", label: "级别" },
+    { key: "targetCount", label: "命中人数" },
+    { key: "excludedCount", label: "排除人数" },
+    { key: "dataFreshness", label: "刷新" }
+  ], rows })}</section>`;
 }
