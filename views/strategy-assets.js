@@ -7,12 +7,30 @@ function differenceSummary(asset) {
     .join("；");
 }
 
+function joinValues(values, fallback = "-") {
+  return Array.isArray(values) && values.length ? values.join(" / ") : fallback;
+}
+
+function statusLabel(status) {
+  return status === "online" ? "已上线" : status || "未标记";
+}
+
 export function render(container, { state }) {
   const assets = strategyAssetsForDomain(state, { businessLine: "english-all" });
   container.innerHTML = `<section class="page-header"><div><p class="section-kicker">策略资产</p><h1>策略资产库</h1><p>统一管理内容、执行、模型、用户洞察和AI应用策略。每个资产都要能看出是否全线复用，以及单线差异如何配置。</p></div>${renderBadge("success", "版本化")}</section><section class="strategy-card-grid">${assets.map(renderStrategyCard).join("")}</section><section class="panel"><header class="panel__header"><div><p class="section-kicker">复用与差异</p><h2>策略模板对照</h2></div></header>${renderTable({ columns: [
     { key: "id", label: "策略ID" },
     { key: "name", label: "名称" },
     { key: "scope", label: "复用范围", format: (value) => value === "line-reusable" ? "全线复用" : value },
+    { key: "lifecycleNodes", label: "生命周期节点" },
+    { key: "ownerRole", label: "负责人" },
+    { key: "status", label: "状态", trustedHtml: (value) => renderBadge(value === "online" ? "success" : "neutral", statusLabel(value)) },
+    { key: "dataDependencies", label: "数据依赖" },
+    { key: "observationWindow", label: "观察窗口" },
     { key: "difference", label: "差异配置" }
-  ], rows: assets.map((asset) => ({ ...asset, difference: differenceSummary(asset) })) })}</section>`;
+  ], rows: assets.map((asset) => ({
+    ...asset,
+    lifecycleNodes: joinValues(asset.target?.lifecycleNodes),
+    dataDependencies: joinValues(asset.dataDependencies),
+    difference: differenceSummary(asset)
+  })) })}</section>`;
 }

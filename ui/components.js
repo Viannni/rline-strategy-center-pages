@@ -320,7 +320,15 @@ export function renderStrategyCard(asset = {}) {
   const target = asset.target || {};
   const lines = Array.isArray(target.businessLines) ? target.businessLines.join(" / ") : "全线";
   const scopeLabel = asset.reusable ? "全线复用" : "单线配置";
-  return `<article class="strategy-card" data-strategy-id="${escapeAttribute(asset.id)}"><header><p class="section-kicker">${escapeHtml(asset.id || "")}</p><h3>${escapeHtml(asset.name || "未命名策略")}</h3>${renderBadge(asset.status || "neutral", scopeLabel)}</header><dl><div><dt>业务线</dt><dd>${escapeHtml(lines)}</dd></div><div><dt>动作</dt><dd>${escapeHtml(asset.action || "-")}</dd></div><div><dt>观察窗口</dt><dd>${escapeHtml(asset.observationWindow || "-")}</dd></div></dl></article>`;
+  const lifecycleNodes = Array.isArray(target.lifecycleNodes) && target.lifecycleNodes.length
+    ? target.lifecycleNodes.join(" / ")
+    : "-";
+  const dataDependencies = Array.isArray(asset.dataDependencies) && asset.dataDependencies.length
+    ? asset.dataDependencies.join(" / ")
+    : "-";
+  const statusLabel = asset.status === "online" ? "已上线" : asset.status || "未标记";
+  const statusTone = asset.status === "online" ? "success" : asset.status === "offline" ? "danger" : "neutral";
+  return `<article class="strategy-card" data-strategy-id="${escapeAttribute(asset.id)}"><header><p class="section-kicker">${escapeHtml(asset.id || "")}</p><h3>${escapeHtml(asset.name || "未命名策略")}</h3><div>${renderBadge("info", scopeLabel)}${renderBadge(statusTone, statusLabel)}</div></header><dl><div><dt>业务线</dt><dd>${escapeHtml(lines)}</dd></div><div><dt>生命周期节点</dt><dd>${escapeHtml(lifecycleNodes)}</dd></div><div><dt>负责人</dt><dd>${escapeHtml(asset.ownerRole || "-")}</dd></div><div><dt>动作</dt><dd>${escapeHtml(asset.action || "-")}</dd></div><div><dt>数据依赖</dt><dd>${escapeHtml(dataDependencies)}</dd></div><div><dt>观察窗口</dt><dd>${escapeHtml(asset.observationWindow || "-")}</dd></div></dl></article>`;
 }
 
 export { iconButton } from "./icons.js";

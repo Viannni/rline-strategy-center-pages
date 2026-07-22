@@ -41,6 +41,15 @@ test("business line drilldown treats R-line as full sample and K/E as supported 
   assert.match(html, /R线首发样板/);
   assert.match(html, /K线/);
   assert.match(html, /结构样例/);
+  assert.match(html, /级别/);
+  assert.match(html, /班期/);
+  assert.match(html, /生命周期节点/);
+  assert.match(html, /人群包/);
+  assert.match(html, /下发批次/);
+  assert.match(html, /数据缺口/);
+  assert.match(html, /R1\s*\/\s*R2\s*\/\s*R3\s*\/\s*R4\s*\/\s*R5\s*\/\s*R6/);
+  assert.match(html, /完整样本/);
+  assert.match(html, /待接入/);
 });
 
 test("strategy asset library renders reuse and difference configuration", () => {
@@ -49,6 +58,13 @@ test("strategy asset library renders reuse and difference configuration", () => 
   assert.match(html, /成长报告打开后价值认知强化/);
   assert.match(html, /全线复用/);
   assert.match(html, /阅读成长 \+ 奖学金提醒/);
+  assert.match(html, /生命周期节点/);
+  assert.match(html, /负责人/);
+  assert.match(html, /状态/);
+  assert.match(html, /数据依赖/);
+  assert.match(html, /观察窗口/);
+  assert.match(html, /差异配置/);
+  assert.match(html, /online|已上线/);
 });
 
 test("Task 8 lifecycle phases cover approved monthly and annual ranges with sales only in renewal windows", () => {
