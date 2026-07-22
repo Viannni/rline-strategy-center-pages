@@ -12,7 +12,9 @@ const FRONTLINE_FORBIDDEN_TERMS = [
   "转派",
   "提交反馈",
   "进线队列",
-  "派单轨迹",
+  "派单",
+  "创建任务",
+  "外呼",
   "SLA",
   "任务台",
   "二销任务",
@@ -73,7 +75,7 @@ test("strategy routes are wired to renderable modules", () => {
 test("every strategy navigation route renders without frontline records or operations", () => {
   for (const item of NAV_ITEMS) {
     const view = viewModules.get(item.id);
-    const html = renderRoute(view);
+    const html = renderRoute(view).replaceAll("非派单", "NON_DISPATCH");
 
     assert.match(html, new RegExp(item.label), `${item.id} should identify its strategy view`);
     for (const forbidden of FRONTLINE_FORBIDDEN_TERMS) {

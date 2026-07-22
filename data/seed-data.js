@@ -237,18 +237,23 @@ const dispatchBatches = [
 const effectivenessMetrics = [
   { id: "EFF-RLINE-REPORT", strategyId: "ES-OUTCOME-REPORT-001", businessLine: "r-line", metric: "报告打开后下一步点击率", value: 31.4, benchmark: 24.0, direction: "positive", window: "3天" },
   { id: "EFF-KLINE-MISS", strategyId: "ES-EXEC-MISS-001", businessLine: "k-line", metric: "7天活跃天数提升", value: 1.2, benchmark: 0.8, direction: "positive", window: "7天" },
-  { id: "EFF-RLINE-HIGH", strategyId: "ES-MODEL-HIGH-001", businessLine: "r-line", metric: "H1/H2续费率", value: 42.6, benchmark: 30.0, direction: "positive", window: "续费窗口" }
+  { id: "EFF-RLINE-HIGH", strategyId: "ES-MODEL-HIGH-001", businessLine: "r-line", metric: "H1/H2续费率", value: 42.6, benchmark: 30.0, direction: "positive", window: "续费窗口" },
+  { id: "EFF-ELINE-PLAN", strategyId: "ES-OUTCOME-REPORT-001", businessLine: "e-line", metric: "升阶规划预约率", value: 18.6, benchmark: 15.0, direction: "positive", window: "7天" }
 ];
 
 const inboundReviews = [
-  { id: "INB-001", businessLine: "r-line", sourceStrategyId: "ES-OUTCOME-REPORT-001", type: "报告", quality: "high-value", solved: true, scoreImpact: "plus", suggestion: "保留报告入口，补充奖学金解释" },
-  { id: "INB-002", businessLine: "k-line", sourceStrategyId: "ES-EXEC-MISS-001", type: "学习", quality: "normal", solved: true, scoreImpact: "none", suggestion: "补读路径文案减少催学感" }
+  { id: "INB-RLINE-REPORT-3D", businessLine: "r-line", sourceStrategyId: "ES-OUTCOME-REPORT-001", type: "报告", window: "3天", inboundCount: 186, highValueRate: 38.2, riskRate: 4.3, resolutionRate: 81.7, qualityMix: "高价值 38.2% / 常规 57.5% / 风险 4.3%", suggestion: "保留报告入口，补充奖学金解释" },
+  { id: "INB-KLINE-MISS-7D", businessLine: "k-line", sourceStrategyId: "ES-EXEC-MISS-001", type: "学习", window: "7天", inboundCount: 94, highValueRate: 24.5, riskRate: 7.4, resolutionRate: 76.6, qualityMix: "高价值 24.5% / 常规 68.1% / 风险 7.4%", suggestion: "补读路径文案减少催学感" },
+  { id: "INB-ELINE-PLAN-7D", businessLine: "e-line", sourceStrategyId: "ES-OUTCOME-REPORT-001", type: "升阶规划", window: "7天", inboundCount: 41, highValueRate: 31.7, riskRate: 2.4, resolutionRate: 85.4, qualityMix: "高价值 31.7% / 常规 65.9% / 风险 2.4%", suggestion: "补齐升阶路径说明，验证预约入口" }
 ];
 
 const dataRequirements = [
   { id: "REQ-DOMAIN-001", name: "业务域主数据", owner: "产研/数据", status: "must-add", refreshCycle: "每日", reason: "全线中台必须按业务线、级别、班期和生命周期模板聚合", fallback: "R线样板静态配置" },
   { id: "REQ-STRATEGY-001", name: "策略ID/版本ID", owner: "策略/产研", status: "must-add", refreshCycle: "实时/T+1", reason: "策略下发、回写和复盘必须能追溯到版本", fallback: "人工维护策略资产表" },
-  { id: "REQ-WRITEBACK-001", name: "触达和活动回写", owner: "CRM/活动/数据", status: "needs-adaptation", refreshCycle: "T+1", reason: "判断策略动作是否真的影响学习和转化", fallback: "批次级汇总回填" }
+  { id: "REQ-WRITEBACK-001", name: "触达和活动回写", owner: "CRM/活动/数据", status: "needs-adaptation", refreshCycle: "T+1", reason: "判断策略动作是否真的影响学习和转化", fallback: "批次级汇总回填" },
+  { id: "REQ-RLINE-001", name: "R线报告路径聚合", businessLine: "r-line", owner: "数据产品", status: "confirmed-reusable", refreshCycle: "T+1", reason: "按策略和观察窗口汇总报告后行为", fallback: "R线样板静态配置" },
+  { id: "REQ-KLINE-001", name: "K线学习修复聚合", businessLine: "k-line", owner: "数据产品", status: "needs-adaptation", refreshCycle: "T+1", reason: "按策略和观察窗口汇总学习进线质量", fallback: "周度聚合回填" },
+  { id: "REQ-ELINE-001", name: "E线升阶规划聚合", businessLine: "e-line", owner: "数据产品", status: "must-add", refreshCycle: "T+1", reason: "按策略和观察窗口汇总升阶规划效果", fallback: "结构样例，待接入真实字段" }
 ];
 
 export const SEED_STATE = {

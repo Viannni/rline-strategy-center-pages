@@ -45,6 +45,7 @@ test("effectiveness view measures strategy performance by business line", () => 
   assert.match(html, /报告打开后下一步点击率/);
   assert.match(html, /r-line/);
   assert.match(html, /k-line/);
+  assert.match(html, /e-line/);
   assert.match(html, /观察窗口/);
 });
 
@@ -53,9 +54,13 @@ test("inbound review is strategy attribution rather than dispatch", () => {
 
   assert.match(html, /进线复盘/);
   assert.match(html, /策略归因/);
-  assert.match(html, /质量评级/);
+  assert.match(html, /质量分布/);
+  assert.match(html, /进线量/);
+  assert.match(html, /解决率/);
   assert.match(html, /非派单/);
-  assert.doesNotMatch(html, /派单轨迹/);
+  assert.match(html, /r-line/);
+  assert.match(html, /k-line/);
+  assert.match(html, /e-line/);
 });
 
 test("data foundation shows business-domain and product-engineering requirements", () => {
@@ -64,7 +69,11 @@ test("data foundation shows business-domain and product-engineering requirements
   assert.match(html, /业务域主数据/);
   assert.match(html, /策略ID\/版本ID/);
   assert.match(html, /刷新周期/);
+  assert.match(html, /业务域/);
   assert.match(html, /R线样板静态配置/);
+  assert.match(html, /r-line/);
+  assert.match(html, /k-line/);
+  assert.match(html, /e-line/);
 });
 
 const state = () => createStore(SEED_STATE, null).getState();
