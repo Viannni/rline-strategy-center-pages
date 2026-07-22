@@ -83,7 +83,40 @@ function renderTimeline(product) {
 }
 
 export function render(container, { state }) {
-  const rows = (state.lifecycleTemplates || []).map((template) => ({
+  const templates = state.lifecycleTemplates || [];
+  const assets = state.strategyAssets || [];
+  const templateById = (id) => templates.find((template) => template.id === id);
+  const nodesFor = (asset, line) => asset.target?.businessLines?.includes(line)
+    ? asset.target.lifecycleNodes || []
+    : [];
+  const densityFor = (line) => assets.flatMap((asset) => nodesFor(asset, line)).reduce((counts, node) => {
+    counts[node] = (counts[node] || 0) + 1;
+    return counts;
+  }, {});
+  const coverageRows = [
+    { line: "r-line", name: "R线", templates: [templateById("monthly-t"), templateById("annual-m")].filter(Boolean), support: "完整样板" },
+    { line: "k-line", name: "K线", templates: [templateById("custom-k")].filter(Boolean), support: "中心化SOP模板" },
+    { line: "e-line", name: "E线", templates: [], support: "结构/待模板：按策略资产目标节点派生" }
+  ].map((line) => {
+    const density = densityFor(line.line);
+    const templateNodes = line.templates.flatMap((template) => template.nodes || []);
+    const derivedNodes = Object.keys(density);
+    const nodes = templateNodes.length ? templateNodes : derivedNodes;
+    const blankNodes = templateNodes.filter((node) => !density[node]);
+    const overCovered = Object.entries(density).filter(([, count]) => count > 1);
+    return {
+      id: line.line,
+      name: line.name,
+      support: line.support,
+      strategyCount: assets.filter((asset) => nodesFor(asset, line.line).length).length,
+      coveredNodes: derivedNodes.join(" / ") || "暂无策略节点",
+      density: Object.entries(density).map(([node, count]) => `${node}(${count})`).join(" / ") || "0",
+      blank: templateNodes.length ? `${blankNodes.length}个：${blankNodes.join(" / ") || "无"}` : "结构/待模板，待定义空白节点",
+      overCoverage: overCovered.length ? `过密：${overCovered.map(([node, count]) => `${node}(${count})`).join(" / ")}` : "无过密",
+      templateNodes: nodes.join(" / ") || "由策略资产派生"
+    };
+  });
+  const templateRows = templates.map((template) => ({
     name: template.name,
     nodes: template.nodes.join(" / "),
     renewalWindow: template.renewalWindow.join(" - "),
@@ -93,11 +126,20 @@ export function render(container, { state }) {
   container.innerHTML = `<section class="page-header"><div><p class="section-kicker">生命周期</p><h1>策略覆盖地图</h1><p>生命周期页不再是一线服务流程，而是用来查看各业务线节点策略密度、空白和过密风险。</p></div>${renderBadge("info", "多业务线")}</section>${renderMetricStrip([
     { label: "月课模板", value: "T0-T28" },
     { label: "年课模板", value: "M1-M12" },
+    { label: "覆盖策略", value: `${assets.length}` },
     { label: "扩展模板", value: "K线中心化SOP模板" }
-  ])}<section class="panel"><header class="panel__header"><h2>生命周期模板</h2></header>${renderTable({ columns: [
+  ])}<section class="panel"><header class="panel__header"><div><p class="section-kicker">节点覆盖</p><h2>R / K / E 策略密度</h2><p>节点密度为命中该节点的策略数；多个策略同节点时标记为过密。</p></div></header>${renderTable({ columns: [
+    { key: "name", label: "业务线" },
+    { key: "support", label: "支持状态" },
+    { key: "strategyCount", label: "策略数" },
+    { key: "coveredNodes", label: "已覆盖节点" },
+    { key: "density", label: "节点密度" },
+    { key: "blank", label: "空白节点" },
+    { key: "overCoverage", label: "过密提示" }
+  ], rows: coverageRows })}</section><section class="panel"><header class="panel__header"><h2>生命周期模板</h2></header>${renderTable({ columns: [
     { key: "name", label: "模板" },
     { key: "nodes", label: "关键节点" },
     { key: "renewalWindow", label: "续费窗口" },
     { key: "status", label: "状态" }
-  ], rows })}</section>`;
+  ], rows: templateRows })}</section>`;
 }
