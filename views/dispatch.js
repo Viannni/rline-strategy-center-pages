@@ -24,6 +24,8 @@ export function render(container, { state }) {
     { key: "reachedCount", label: "触达" },
     { key: "failedCount", label: "失败" },
     { key: "failureReasons", label: "失败原因", format: joinList },
+    { key: "blockedCount", label: "阻断" },
+    { key: "blockedReasons", label: "阻断原因", format: joinList },
     { key: "observationWindow", label: "观察窗口" },
     { key: "writebackStatus", label: "回写" }
   ], rows })}</section>`;

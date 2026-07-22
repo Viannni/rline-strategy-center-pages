@@ -1,9 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { readFile } from "node:fs/promises";
+import { promisify } from "node:util";
 
 import { FLOW_STAGES, NAV_ITEMS, viewModules } from "../app.js";
 import { SEED_STATE } from "../data/seed-data.js";
+const execFileAsync = promisify(execFile);
 const ROUTE_SAFETY_FORBIDDEN_TERMS = [
   "child-",
   "当前主责",
@@ -121,23 +124,14 @@ test("public files do not expose internal source URLs", async () => {
     "admin-" + "xjjj",
     "zt" + "na"
   ].join("|"), "i");
-  const roots = [
-    new URL("../README.md", import.meta.url),
-    new URL("../index.html", import.meta.url),
-    new URL("../app.js", import.meta.url),
-    new URL("../styles.css", import.meta.url),
-    new URL("../docs/superpowers/specs/", import.meta.url),
-    new URL("../docs/superpowers/plans/", import.meta.url)
-  ];
-  const files = [];
-  for (const root of roots) {
-    if (root.pathname.endsWith("/")) {
-      const entries = await readdir(root);
-      files.push(...entries.filter((entry) => entry.endsWith(".md")).map((entry) => new URL(entry, root)));
-    } else {
-      files.push(root);
-    }
-  }
+  const repoRoot = new URL("../", import.meta.url);
+  const { stdout } = await execFileAsync("git", ["ls-files"], { cwd: repoRoot });
+  const files = stdout
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .filter((path) => /\.(?:md|html|js|css|mjs|json)$/.test(path))
+    .map((path) => new URL(path, repoRoot));
 
   for (const file of files) {
     const source = await readFile(file, "utf8");

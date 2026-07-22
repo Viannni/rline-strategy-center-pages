@@ -155,10 +155,17 @@ test("strategy operations views expose cohort, action, failure, and window contr
   assert.match(audiences, /排除原因/);
   assert.match(audiences, /观察窗/);
   assert.match(audiences, /奖学金抵扣提醒/);
+  for (const pack of SEED_STATE.audiencePacks) {
+    assert.match(audiences, new RegExp(pack.id));
+    assert.match(audiences, new RegExp(pack.businessLine));
+    assert.match(audiences, new RegExp(pack.observationWindow));
+  }
 
   assert.match(dispatch, /版本/);
   assert.match(dispatch, /失败原因/);
+  assert.match(dispatch, /阻断原因/);
   assert.match(dispatch, /观察窗口/);
   assert.match(dispatch, /v2026\.07\.22-r1/);
   assert.match(dispatch, /字段缺失/);
+  assert.match(dispatch, /全局频控96/);
 });

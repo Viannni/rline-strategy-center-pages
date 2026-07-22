@@ -245,8 +245,8 @@ const audiencePacks = [
 ];
 
 const dispatchBatches = [
-  { id: "DSP-20260722-001", strategyId: "ES-OUTCOME-REPORT-001", strategyVersion: "v2026.07.22-r1", audiencePackId: "AUD-RLINE-HIGH-RENEWAL", businessLine: "r-line", downstreamSystem: "前台卡片/中心化触达", status: "completed", plannedCount: 1280, reachedCount: 1096, failedCount: 48, failureReasons: ["频控阻断32", "入口异常9", "字段缺失7"], writebackStatus: "complete", observationWindow: "3天" },
-  { id: "DSP-20260722-002", strategyId: "ES-EXEC-MISS-001", strategyVersion: "v2026.07.22-k1", audiencePackId: "AUD-KLINE-MISS-REPAIR", businessLine: "k-line", downstreamSystem: "中心化触达系统", status: "running", plannedCount: 640, reachedCount: 412, failedCount: 31, failureReasons: ["不可触达18", "字段缺失8", "频控阻断5"], writebackStatus: "partial", observationWindow: "7天" }
+  { id: "DSP-20260722-001", strategyId: "ES-MODEL-HIGH-001", strategyVersion: "v2026.07.22-r1", audiencePackId: "AUD-RLINE-HIGH-RENEWAL", businessLine: "r-line", downstreamSystem: "前台卡片/中心化触达", status: "completed", plannedCount: 1280, reachedCount: 1096, failedCount: 48, blockedCount: 136, failureReasons: ["入口异常9", "字段缺失7", "系统失败32"], blockedReasons: ["全局频控96", "售后未完结40"], writebackStatus: "complete", observationWindow: "续费窗口内" },
+  { id: "DSP-20260722-002", strategyId: "ES-EXEC-MISS-001", strategyVersion: "v2026.07.22-k1", audiencePackId: "AUD-KLINE-MISS-REPAIR", businessLine: "k-line", downstreamSystem: "中心化触达系统", status: "running", plannedCount: 640, reachedCount: 412, failedCount: 31, blockedCount: 0, failureReasons: ["不可触达18", "字段缺失8", "频控阻断5"], blockedReasons: [], writebackStatus: "partial", observationWindow: "7天" }
 ];
 
 const effectivenessMetrics = [
