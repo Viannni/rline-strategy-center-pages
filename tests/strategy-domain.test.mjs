@@ -31,7 +31,10 @@ test("coverage summary compares R, K, and E lines", () => {
   const coverage = coverageByBusinessLine(SEED_STATE);
   assert.deepEqual(coverage.map((item) => item.businessLine), ["r-line", "k-line", "e-line"]);
   assert.equal(coverage.find((item) => item.businessLine === "r-line").coverageStatus, "healthy");
-  assert.equal(coverage.find((item) => item.businessLine === "e-line").coverageStatus, "needs-setup");
+  const eLine = coverage.find((item) => item.businessLine === "e-line");
+  assert.equal(eLine.assetCount, 3);
+  assert.equal(eLine.onlineCount, 3);
+  assert.equal(eLine.coverageStatus, "needs-setup");
 });
 
 test("dashboard and dispatch summaries expose strategy-level operations", () => {
