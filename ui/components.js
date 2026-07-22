@@ -312,4 +312,15 @@ export function toast(message, tone = "info", timeout = 3200) {
   return remove;
 }
 
+export function renderMetricStrip(items = []) {
+  return `<dl class="metric-strip">${items.map((item) => `<div><dt>${escapeHtml(item.label)}</dt><dd>${escapeHtml(item.value)}</dd><small>${escapeHtml(item.hint || "")}</small></div>`).join("")}</dl>`;
+}
+
+export function renderStrategyCard(asset = {}) {
+  const target = asset.target || {};
+  const lines = Array.isArray(target.businessLines) ? target.businessLines.join(" / ") : "全线";
+  const scopeLabel = asset.reusable ? "全线复用" : "单线配置";
+  return `<article class="strategy-card" data-strategy-id="${escapeAttribute(asset.id)}"><header><p class="section-kicker">${escapeHtml(asset.id || "")}</p><h3>${escapeHtml(asset.name || "未命名策略")}</h3>${renderBadge(asset.status || "neutral", scopeLabel)}</header><dl><div><dt>业务线</dt><dd>${escapeHtml(lines)}</dd></div><div><dt>动作</dt><dd>${escapeHtml(asset.action || "-")}</dd></div><div><dt>观察窗口</dt><dd>${escapeHtml(asset.observationWindow || "-")}</dd></div></dl></article>`;
+}
+
 export { iconButton } from "./icons.js";

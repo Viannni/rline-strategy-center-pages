@@ -6,6 +6,50 @@ import { SCHOLARSHIP_POLICY, buildOperationAssets } from "../views/operations.js
 import { buildSystemRows } from "../views/system-map.js";
 import { buildReviewTables } from "../views/review.js";
 import { DEMAND_ROWS, demandCsvRows } from "../views/demands.js";
+import { SEED_STATE } from "../data/seed-data.js";
+import * as dashboardView from "../views/dashboard.js";
+import * as businessLinesView from "../views/business-lines.js";
+import * as strategyAssetsView from "../views/strategy-assets.js";
+
+function render(view, routeParams = {}) {
+  const root = { innerHTML: "" };
+  view.render(root, {
+    state: SEED_STATE,
+    role: "strategy",
+    routeParams,
+    components: {
+      renderBadge: (status, label) => `<span data-badge="${status}">${label || status}</span>`,
+      renderTable: ({ columns, rows }) => `<table><thead>${columns.map((col) => `<th>${col.label}</th>`).join("")}</thead><tbody>${rows.map((row) => `<tr>${columns.map((col) => `<td>${typeof col.trustedHtml === "function" ? col.trustedHtml(row[col.key], row) : row[col.key] || ""}</td>`).join("")}</tr>`).join("")}</tbody></table>`,
+      iconButton: () => "<button></button>",
+      openDrawer: () => () => {}
+    }
+  });
+  return root.innerHTML;
+}
+
+test("dashboard renders English-wide strategy command center", () => {
+  const html = render(dashboardView);
+  assert.match(html, /英语全线策略总控/);
+  assert.match(html, /业务线覆盖/);
+  assert.match(html, /R线/);
+  assert.match(html, /K线/);
+  assert.match(html, /E线/);
+});
+
+test("business line drilldown treats R-line as full sample and K/E as supported structures", () => {
+  const html = render(businessLinesView);
+  assert.match(html, /R线首发样板/);
+  assert.match(html, /K线/);
+  assert.match(html, /结构样例/);
+});
+
+test("strategy asset library renders reuse and difference configuration", () => {
+  const html = render(strategyAssetsView);
+  assert.match(html, /策略资产库/);
+  assert.match(html, /成长报告打开后价值认知强化/);
+  assert.match(html, /全线复用/);
+  assert.match(html, /阅读成长 \+ 奖学金提醒/);
+});
 
 test("Task 8 lifecycle phases cover approved monthly and annual ranges with sales only in renewal windows", () => {
   assert.deepEqual(LIFECYCLE_PHASES.map((phase) => phase.range), ["T0-T10", "T11-T21", "T22-T28", "M1-M7", "M8-M12"]);
