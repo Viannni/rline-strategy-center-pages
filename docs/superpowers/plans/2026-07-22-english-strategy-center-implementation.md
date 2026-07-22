@@ -627,7 +627,6 @@ Update `tests/task-8-reference-views.test.mjs` with:
 ```js
 import test from "node:test";
 import assert from "node:assert/strict";
-import { JSDOM } from "jsdom";
 
 import { SEED_STATE } from "../data/seed-data.js";
 import * as dashboardView from "../views/dashboard.js";
@@ -635,8 +634,7 @@ import * as businessLinesView from "../views/business-lines.js";
 import * as strategyAssetsView from "../views/strategy-assets.js";
 
 function render(view, routeParams = {}) {
-  const dom = new JSDOM(`<main id="root"></main>`);
-  const root = dom.window.document.getElementById("root");
+  const root = { innerHTML: "" };
   view.render(root, {
     state: SEED_STATE,
     role: "strategy",
@@ -819,7 +817,6 @@ Replace `tests/task-6-workspaces.test.mjs` with:
 ```js
 import test from "node:test";
 import assert from "node:assert/strict";
-import { JSDOM } from "jsdom";
 
 import { SEED_STATE } from "../data/seed-data.js";
 import * as contentView from "../views/content.js";
@@ -830,8 +827,7 @@ import * as insightsView from "../views/insights.js";
 import * as lifecycleView from "../views/lifecycle.js";
 
 function htmlFor(view) {
-  const dom = new JSDOM(`<main></main>`);
-  const root = dom.window.document.querySelector("main");
+  const root = { innerHTML: "" };
   view.render(root, { state: SEED_STATE, role: "strategy", components: {} });
   return root.innerHTML;
 }
@@ -1129,7 +1125,6 @@ Replace old intake feedback expectations in `tests/task-7-intake-feedback.test.m
 ```js
 import test from "node:test";
 import assert from "node:assert/strict";
-import { JSDOM } from "jsdom";
 
 import { SEED_STATE } from "../data/seed-data.js";
 import * as reviewView from "../views/review.js";
@@ -1137,8 +1132,7 @@ import * as intakeView from "../views/intake.js";
 import * as dataFoundationView from "../views/data-foundation.js";
 
 function render(view) {
-  const dom = new JSDOM(`<main></main>`);
-  const root = dom.window.document.querySelector("main");
+  const root = { innerHTML: "" };
   view.render(root, { state: SEED_STATE, role: "strategy", components: {} });
   return root.innerHTML;
 }
@@ -1473,4 +1467,3 @@ Expected: [https://viannni.github.io/rline-strategy-center-pages/](https://viann
 - Placeholder scan: The plan contains no TBD/TODO/fill-later instructions. Every code-writing step includes concrete snippets or exact replacement structure.
 - Type consistency: The seed arrays created in Task 1 are consumed by selectors and views using the same names: `businessLines`, `lifecycleTemplates`, `strategyAssets`, `audiencePacks`, `dispatchBatches`, `effectivenessMetrics`, `inboundReviews`, and `dataRequirements`.
 - Scope check: K2 48-period real-data simulation is intentionally excluded. The plan keeps only structure-level K/K2 references and does not import real user-level details.
-
