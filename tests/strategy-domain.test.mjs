@@ -46,6 +46,8 @@ test("dashboard and dispatch summaries expose strategy-level operations", () => 
   const dispatch = dispatchSummary(SEED_STATE);
   assert.equal(dispatch.totalBatches, SEED_STATE.dispatchBatches.length);
   assert.ok(dispatch.writebackCompleteRate > 0);
+  assert.ok(SEED_STATE.dispatchBatches.every((batch) => batch.strategyVersion && batch.observationWindow));
+  assert.ok(SEED_STATE.dispatchBatches.every((batch) => Array.isArray(batch.failureReasons)));
 });
 
 test("audience pack summary explains target, exclusions, and freshness", () => {
@@ -54,4 +56,19 @@ test("audience pack summary explains target, exclusions, and freshness", () => {
   assert.equal(summary.businessLine, "r-line");
   assert.ok(summary.excludedCount > 0);
   assert.equal(summary.dataFreshness, "T+1");
+  assert.deepEqual(summary.cohortIds, ["R-Annual-M8M12-202607"]);
+  assert.ok(summary.availableActions.includes("奖学金抵扣提醒"));
+});
+
+test("structural E-line records are placeholders until execution evidence exists", () => {
+  assert.equal(SEED_STATE.audiencePacks.find((pack) => pack.businessLine === "e-line").targetCount, 0);
+  assert.equal(SEED_STATE.dispatchBatches.some((batch) => batch.businessLine === "e-line"), false);
+
+  const effectiveness = SEED_STATE.effectivenessMetrics.find((metric) => metric.businessLine === "e-line");
+  const inbound = SEED_STATE.inboundReviews.find((review) => review.businessLine === "e-line");
+
+  assert.equal(effectiveness.evidenceStatus, "结构占位");
+  assert.equal(effectiveness.value, null);
+  assert.equal(inbound.evidenceStatus, "结构占位");
+  assert.equal(inbound.inboundCount, 0);
 });

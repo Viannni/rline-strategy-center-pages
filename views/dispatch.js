@@ -1,6 +1,10 @@
 import { dispatchSummary } from "../core/strategy-domain.js";
 import { renderBadge, renderMetricStrip, renderTable } from "../ui/components.js";
 
+function joinList(values) {
+  return Array.isArray(values) && values.length ? values.join(" / ") : values || "无";
+}
+
 export function render(container, { state }) {
   const summary = dispatchSummary(state);
   const rows = state.dispatchBatches || [];
@@ -12,11 +16,15 @@ export function render(container, { state }) {
   ])}<section class="panel"><header class="panel__header"><h2>策略包批次</h2></header>${renderTable({ columns: [
     { key: "id", label: "批次ID" },
     { key: "strategyId", label: "策略ID" },
+    { key: "strategyVersion", label: "版本" },
     { key: "audiencePackId", label: "人群包" },
     { key: "downstreamSystem", label: "下发系统" },
     { key: "status", label: "状态" },
     { key: "plannedCount", label: "计划" },
     { key: "reachedCount", label: "触达" },
+    { key: "failedCount", label: "失败" },
+    { key: "failureReasons", label: "失败原因", format: joinList },
+    { key: "observationWindow", label: "观察窗口" },
     { key: "writebackStatus", label: "回写" }
   ], rows })}</section>`;
 }

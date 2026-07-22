@@ -2,6 +2,7 @@ import { SEED_STATE } from "./data/seed-data.js";
 import { createStore } from "./core/store.js";
 import * as dashboardView from "./views/dashboard.js";
 import * as businessLinesView from "./views/business-lines.js";
+import * as lifecycleView from "./views/lifecycle.js";
 import * as strategyAssetsView from "./views/strategy-assets.js";
 import * as contentView from "./views/content.js";
 import * as applicationsView from "./views/applications.js";
@@ -34,6 +35,7 @@ export const ROLES = Object.freeze([
 export const NAV_ITEMS = Object.freeze([
   { id: "dashboard", label: "全线总控", icon: "layout-dashboard", stage: "strategy", description: "英语各业务线策略健康、覆盖、执行和风险总览" },
   { id: "business-lines", label: "业务线下钻", icon: "network", stage: "strategy", description: "R线、K线、E线、级别与班期策略明细" },
+  { id: "lifecycle", label: "生命周期", icon: "route", stage: "strategy", description: "月课、年课和各业务线节点策略密度、空白和过密风险" },
   { id: "strategy-assets", label: "策略资产库", icon: "folder-kanban", stage: "strategy", description: "策略、SOP、模型、内容、权益和版本统一管理" },
   { id: "content", label: "内容策略", icon: "calendar-range", stage: "strategy", description: "活动、讲座、PK、月测、报告和权益内容配置" },
   { id: "applications", label: "应用策略", icon: "bot", stage: "strategy", description: "AI场景、Agent知识库、解决率和兜底问题" },
@@ -58,6 +60,7 @@ export const FLOW_STAGES = Object.freeze([
 export const viewModules = new Map([
   ["dashboard", dashboardView],
   ["business-lines", businessLinesView],
+  ["lifecycle", lifecycleView],
   ["strategy-assets", strategyAssetsView],
   ["content", contentView],
   ["applications", applicationsView],
@@ -127,7 +130,7 @@ function renderSidebar() {
 }
 
 function renderFlowRail(stageId) {
-  return `<ol class="flow-rail" aria-label="R线策略流程">${FLOW_STAGES.map((stage, index) => {
+  return `<ol class="flow-rail" aria-label="英语全线策略流程">${FLOW_STAGES.map((stage, index) => {
     const current = stage.id === stageId;
     const arrow = index < FLOW_STAGES.length - 1 ? '<span class="flow-rail__arrow" aria-hidden="true">-&gt;</span>' : "";
     return `<li class="flow-rail__stage${current ? " is-current" : ""}"${current ? ' aria-current="step"' : ""}><span>${escapeHtml(stage.label)}</span>${arrow}</li>`;
@@ -146,7 +149,7 @@ function renderTopbar() {
 }
 
 function exportSnapshot(store) {
-  downloadFile({ content: `${JSON.stringify(store.getState(), null, 2)}\n`, filename: "rline-local-demo-snapshot.json", type: "application/json;charset=utf-8" });
+  downloadFile({ content: `${JSON.stringify(store.getState(), null, 2)}\n`, filename: "english-strategy-center-demo-snapshot.json", type: "application/json;charset=utf-8" });
   toast("已导出当前本地快照。", "success");
 }
 

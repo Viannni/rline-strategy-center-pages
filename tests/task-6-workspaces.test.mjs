@@ -43,9 +43,13 @@ test("effectiveness view measures strategy performance by business line", () => 
   assert.match(html, /有效性看板/);
   assert.match(html, /H1\/H2续费率/);
   assert.match(html, /报告打开后下一步点击率/);
+  assert.match(html, /版本/);
+  assert.match(html, /证据状态/);
   assert.match(html, /r-line/);
   assert.match(html, /k-line/);
   assert.match(html, /e-line/);
+  assert.match(html, /结构占位/);
+  assert.match(html, /待接入/);
   assert.match(html, /观察窗口/);
 });
 
@@ -57,10 +61,12 @@ test("inbound review is strategy attribution rather than dispatch", () => {
   assert.match(html, /质量分布/);
   assert.match(html, /进线量/);
   assert.match(html, /解决率/);
+  assert.match(html, /证据状态/);
   assert.match(html, /非派单/);
   assert.match(html, /r-line/);
   assert.match(html, /k-line/);
   assert.match(html, /e-line/);
+  assert.match(html, /结构占位/);
 });
 
 test("data foundation shows business-domain and product-engineering requirements", () => {

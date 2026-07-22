@@ -17,6 +17,9 @@ import {
 import { RULE_EDITOR_MIN_WIDTH, isRuleEditorAvailable } from "../views/scoring.js";
 import { STRICT_ISO_HTML_PATTERN, taskExportCsv } from "../views/tasks.js";
 import { dialogContract } from "../ui/components.js";
+import * as audiencesView from "../views/audiences.js";
+import * as businessLinesView from "../views/business-lines.js";
+import * as dispatchView from "../views/dispatch.js";
 
 const memoryStorage = (setItem = () => {}) => ({
   getItem() { return null; },
@@ -131,4 +134,31 @@ test("audience and dispatch views are strategy-level not teacher task pages", as
   assert.match(dispatchSource, /策略包/);
   assert.match(dispatchSource, /回写完整/);
   assert.doesNotMatch(dispatchSource, /老师待办/);
+});
+
+test("strategy operations views expose cohort, action, failure, and window contracts", () => {
+  const render = (view) => {
+    const root = { innerHTML: "" };
+    view.render(root, { state: SEED_STATE, role: "strategy" });
+    return root.innerHTML;
+  };
+  const businessLines = render(businessLinesView);
+  const audiences = render(audiencesView);
+  const dispatch = render(dispatchView);
+
+  assert.match(businessLines, /产品类型/);
+  assert.match(businessLines, /班期/);
+  assert.match(businessLines, /R-Annual-M8M12-202607/);
+
+  assert.match(audiences, /圈选规则/);
+  assert.match(audiences, /可执行动作/);
+  assert.match(audiences, /排除原因/);
+  assert.match(audiences, /观察窗/);
+  assert.match(audiences, /奖学金抵扣提醒/);
+
+  assert.match(dispatch, /版本/);
+  assert.match(dispatch, /失败原因/);
+  assert.match(dispatch, /观察窗口/);
+  assert.match(dispatch, /v2026\.07\.22-r1/);
+  assert.match(dispatch, /字段缺失/);
 });

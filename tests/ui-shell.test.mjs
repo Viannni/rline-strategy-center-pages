@@ -23,6 +23,7 @@ test("shell exposes the English strategy center navigation", () => {
   assert.deepEqual(NAV_ITEMS.map(({ label }) => label), [
     "全线总控",
     "业务线下钻",
+    "生命周期",
     "策略资产库",
     "内容策略",
     "应用策略",

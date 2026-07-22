@@ -224,27 +224,42 @@ const strategyAssets = [
 ];
 
 const audiencePacks = [
-  { id: "AUD-RLINE-HIGH-RENEWAL", name: "R线高优续费窗口人群", businessLine: "r-line", levelCode: "R1-R6", productType: "annual", lifecycleNodes: ["M8", "M11", "M12"], targetCount: 1280, excludedCount: 96, overlapRate: 0.18, dataFreshness: "T+1", rules: ["H1/H2", "无风险熔断", "报告已打开或领券未付"] },
-  { id: "AUD-KLINE-MISS-REPAIR", name: "K线连续漏学修复人群", businessLine: "k-line", levelCode: "K2", productType: "annual", lifecycleNodes: ["M3", "M6"], targetCount: 640, excludedCount: 42, overlapRate: 0.11, dataFreshness: "T+1", rules: ["近7天漏学>=3天", "可触达", "无售后未完结"] },
-  { id: "AUD-ELINE-STRUCTURE", name: "E线升阶规划样例人群", businessLine: "e-line", levelCode: "E1", productType: "annual", lifecycleNodes: ["M6", "M8"], targetCount: 0, excludedCount: 0, overlapRate: 0, dataFreshness: "待接入", rules: ["结构样例，待接入真实字段"] }
+  {
+    id: "AUD-RLINE-HIGH-RENEWAL", name: "R线高优续费窗口人群", businessLine: "r-line", levelCode: "R1-R6", productType: "annual", cohortIds: ["R-Annual-M8M12-202607"], lifecycleNodes: ["M8", "M11", "M12"],
+    strategyId: "ES-MODEL-HIGH-001", targetCount: 1280, excludedCount: 96, overlapRate: 0.18, dataFreshness: "T+1", observationWindow: "续费窗口内",
+    availableActions: ["成长报告价值卡", "奖学金抵扣提醒", "续费权益解释"], exclusionReasons: ["风险熔断", "全局频控阻断", "售后未完结"],
+    rules: ["H1/H2", "无风险熔断", "报告已打开或领券未付"]
+  },
+  {
+    id: "AUD-KLINE-MISS-REPAIR", name: "K线连续漏学修复人群", businessLine: "k-line", levelCode: "K2", productType: "annual", cohortIds: ["K2-Annual-M3M6-202607"], lifecycleNodes: ["M3", "M6"],
+    strategyId: "ES-EXEC-MISS-001", targetCount: 640, excludedCount: 42, overlapRate: 0.11, dataFreshness: "T+1", observationWindow: "7天",
+    availableActions: ["补读路径卡", "复习直播预约", "学习修复提醒"], exclusionReasons: ["不可触达", "售后未完结"],
+    rules: ["近7天漏学>=3天", "可触达", "无售后未完结"]
+  },
+  {
+    id: "AUD-ELINE-STRUCTURE", name: "E线升阶规划样例人群", businessLine: "e-line", levelCode: "E1", productType: "annual", cohortIds: ["待接入"], lifecycleNodes: ["M6", "M8"],
+    strategyId: "ES-OUTCOME-REPORT-001", targetCount: 0, excludedCount: 0, overlapRate: 0, dataFreshness: "待接入", observationWindow: "待接入",
+    availableActions: ["升阶规划入口待接入"], exclusionReasons: ["字段未接入"],
+    rules: ["结构样例，待接入真实字段"]
+  }
 ];
 
 const dispatchBatches = [
-  { id: "DSP-20260722-001", strategyId: "ES-OUTCOME-REPORT-001", audiencePackId: "AUD-RLINE-HIGH-RENEWAL", businessLine: "r-line", downstreamSystem: "私聊/前台卡片", status: "completed", plannedCount: 1280, reachedCount: 1096, failedCount: 48, writebackStatus: "complete", observationWindow: "3天" },
-  { id: "DSP-20260722-002", strategyId: "ES-EXEC-MISS-001", audiencePackId: "AUD-KLINE-MISS-REPAIR", businessLine: "k-line", downstreamSystem: "中心化触达系统", status: "running", plannedCount: 640, reachedCount: 412, failedCount: 31, writebackStatus: "partial", observationWindow: "7天" }
+  { id: "DSP-20260722-001", strategyId: "ES-OUTCOME-REPORT-001", strategyVersion: "v2026.07.22-r1", audiencePackId: "AUD-RLINE-HIGH-RENEWAL", businessLine: "r-line", downstreamSystem: "前台卡片/中心化触达", status: "completed", plannedCount: 1280, reachedCount: 1096, failedCount: 48, failureReasons: ["频控阻断32", "入口异常9", "字段缺失7"], writebackStatus: "complete", observationWindow: "3天" },
+  { id: "DSP-20260722-002", strategyId: "ES-EXEC-MISS-001", strategyVersion: "v2026.07.22-k1", audiencePackId: "AUD-KLINE-MISS-REPAIR", businessLine: "k-line", downstreamSystem: "中心化触达系统", status: "running", plannedCount: 640, reachedCount: 412, failedCount: 31, failureReasons: ["不可触达18", "字段缺失8", "频控阻断5"], writebackStatus: "partial", observationWindow: "7天" }
 ];
 
 const effectivenessMetrics = [
-  { id: "EFF-RLINE-REPORT", strategyId: "ES-OUTCOME-REPORT-001", businessLine: "r-line", metric: "报告打开后下一步点击率", value: 31.4, benchmark: 24.0, direction: "positive", window: "3天" },
-  { id: "EFF-KLINE-MISS", strategyId: "ES-EXEC-MISS-001", businessLine: "k-line", metric: "7天活跃天数提升", value: 1.2, benchmark: 0.8, direction: "positive", window: "7天" },
-  { id: "EFF-RLINE-HIGH", strategyId: "ES-MODEL-HIGH-001", businessLine: "r-line", metric: "H1/H2续费率", value: 42.6, benchmark: 30.0, direction: "positive", window: "续费窗口" },
-  { id: "EFF-ELINE-PLAN", strategyId: "ES-OUTCOME-REPORT-001", businessLine: "e-line", metric: "升阶规划预约率", value: 18.6, benchmark: 15.0, direction: "positive", window: "7天" }
+  { id: "EFF-RLINE-REPORT", strategyId: "ES-OUTCOME-REPORT-001", strategyVersion: "v2026.07.22-r1", businessLine: "r-line", metric: "报告打开后下一步点击率", value: 31.4, benchmark: 24.0, direction: "positive", window: "3天", evidenceStatus: "已观测" },
+  { id: "EFF-KLINE-MISS", strategyId: "ES-EXEC-MISS-001", strategyVersion: "v2026.07.22-k1", businessLine: "k-line", metric: "7天活跃天数提升", value: 1.2, benchmark: 0.8, direction: "positive", window: "7天", evidenceStatus: "已观测" },
+  { id: "EFF-RLINE-HIGH", strategyId: "ES-MODEL-HIGH-001", strategyVersion: "v2026.07.22-r1", businessLine: "r-line", metric: "H1/H2续费率", value: 42.6, benchmark: 30.0, direction: "positive", window: "续费窗口", evidenceStatus: "已观测" },
+  { id: "EFF-ELINE-PLAN", strategyId: "ES-OUTCOME-REPORT-001", strategyVersion: "待接入", businessLine: "e-line", metric: "升阶规划预约率", value: null, benchmark: null, direction: "placeholder", window: "待接入", evidenceStatus: "结构占位" }
 ];
 
 const inboundReviews = [
-  { id: "INB-RLINE-REPORT-3D", businessLine: "r-line", sourceStrategyId: "ES-OUTCOME-REPORT-001", type: "报告", window: "3天", inboundCount: 186, highValueRate: 38.2, riskRate: 4.3, resolutionRate: 81.7, qualityMix: "高价值 38.2% / 常规 57.5% / 风险 4.3%", suggestion: "保留报告入口，补充奖学金解释" },
-  { id: "INB-KLINE-MISS-7D", businessLine: "k-line", sourceStrategyId: "ES-EXEC-MISS-001", type: "学习", window: "7天", inboundCount: 94, highValueRate: 24.5, riskRate: 7.4, resolutionRate: 76.6, qualityMix: "高价值 24.5% / 常规 68.1% / 风险 7.4%", suggestion: "补读路径文案减少催学感" },
-  { id: "INB-ELINE-PLAN-7D", businessLine: "e-line", sourceStrategyId: "ES-OUTCOME-REPORT-001", type: "升阶规划", window: "7天", inboundCount: 41, highValueRate: 31.7, riskRate: 2.4, resolutionRate: 85.4, qualityMix: "高价值 31.7% / 常规 65.9% / 风险 2.4%", suggestion: "补齐升阶路径说明，验证预约入口" }
+  { id: "INB-RLINE-REPORT-3D", businessLine: "r-line", sourceStrategyId: "ES-OUTCOME-REPORT-001", sourceVersion: "v2026.07.22-r1", type: "报告", window: "3天", inboundCount: 186, highValueRate: 38.2, riskRate: 4.3, resolutionRate: 81.7, qualityMix: "高价值 38.2% / 常规 57.5% / 风险 4.3%", evidenceStatus: "已观测", suggestion: "保留报告入口，补充奖学金解释" },
+  { id: "INB-KLINE-MISS-7D", businessLine: "k-line", sourceStrategyId: "ES-EXEC-MISS-001", sourceVersion: "v2026.07.22-k1", type: "学习", window: "7天", inboundCount: 94, highValueRate: 24.5, riskRate: 7.4, resolutionRate: 76.6, qualityMix: "高价值 24.5% / 常规 68.1% / 风险 7.4%", evidenceStatus: "已观测", suggestion: "补读路径文案减少催学感" },
+  { id: "INB-ELINE-PLAN-7D", businessLine: "e-line", sourceStrategyId: "ES-OUTCOME-REPORT-001", sourceVersion: "待接入", type: "升阶规划", window: "待接入", inboundCount: 0, highValueRate: null, riskRate: null, resolutionRate: null, qualityMix: "结构占位，待接入真实进线聚合", evidenceStatus: "结构占位", suggestion: "补齐升阶路径说明后再进入有效性观测" }
 ];
 
 const dataRequirements = [

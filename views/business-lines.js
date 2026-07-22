@@ -9,6 +9,10 @@ function batchStatusLabel(status) {
   return status === "completed" ? "已完成" : status === "running" ? "进行中" : status || "待配置";
 }
 
+function productTypeLabel(productType) {
+  return productType === "annual" ? "年课" : productType === "monthly" ? "月课" : productType || "待配置";
+}
+
 function requirementBusinessLines(requirement) {
   if (Array.isArray(requirement.businessLines)) return requirement.businessLines;
   return requirement.businessLine ? [requirement.businessLine] : [];
@@ -36,7 +40,8 @@ export function render(container, { state }) {
       ...line,
       assets: strategyAssetsForDomain(state, { businessLine: line.businessLine }),
       levels: joinValues(definition.levels),
-      cohorts: joinValues(audiencePacks.map((pack) => pack.productType === "annual" ? "年课" : pack.productType === "monthly" ? "月课" : pack.productType)),
+      productTypes: joinValues([...new Set(audiencePacks.map((pack) => productTypeLabel(pack.productType)))]),
+      cohorts: joinValues(audiencePacks.flatMap((pack) => pack.cohortIds || [])),
       lifecycleNodes: joinValues(audiencePacks.flatMap((pack) => pack.lifecycleNodes || [])),
       audiencePacks: joinValues(audiencePacks.map((pack) => `${pack.id}（${pack.name}）`)),
       dispatchBatches: joinValues(dispatchBatches.map((batch) => `${batch.id}（${batchStatusLabel(batch.status)}）`), "暂无下发批次"),
@@ -52,6 +57,7 @@ export function render(container, { state }) {
   container.innerHTML += `<section class="panel"><header class="panel__header"><div><p class="section-kicker">策略经营下钻</p><h2>业务线覆盖明细</h2></div></header>${renderTable({ columns: [
     { key: "name", label: "业务线" },
     { key: "levels", label: "级别" },
+    { key: "productTypes", label: "产品类型" },
     { key: "cohorts", label: "班期" },
     { key: "lifecycleNodes", label: "生命周期节点" },
     { key: "audiencePacks", label: "人群包" },
