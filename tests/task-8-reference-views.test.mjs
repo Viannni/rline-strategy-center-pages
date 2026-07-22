@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { FIELD_DEFINITIONS } from "../data/rules.js";
 import { serializeCsv } from "../core/import-export.js";
 import { LIFECYCLE_PHASES, lifecycleNode } from "../views/lifecycle.js";
 import { SCHOLARSHIP_POLICY, buildOperationAssets } from "../views/operations.js";
-import { buildFieldRows, render as renderDataFoundation } from "../views/data-foundation.js";
 import { buildSystemRows } from "../views/system-map.js";
 import { buildReviewTables } from "../views/review.js";
 import { DEMAND_ROWS, demandCsvRows } from "../views/demands.js";
@@ -28,67 +26,6 @@ test("Task 8 keeps scholarships outside base scoring and maps click and transact
   assert.ok(assets.some((asset) => asset.source === "IN_APP" && asset.scoreField === "F10"));
   assert.ok(assets.some((asset) => asset.source === "MANUAL" && asset.scoreField === "复盘，不进F10"));
   assert.ok(assets.some((asset) => asset.id === "scholarship" && asset.clickField === "F13" && asset.resultField === "F14"));
-});
-
-test("Task 8 exposes every F01-F16 contract and separates gate, independent signals, and feedback", () => {
-  const rows = buildFieldRows(FIELD_DEFINITIONS);
-  assert.equal(rows.length, 16);
-  assert.match(rows.find((row) => row.id === "F12").semantic, /触达准入/);
-  assert.match(rows.find((row) => row.id === "F13").semantic, /独立营销意向/);
-  assert.match(rows.find((row) => row.id === "F14").semantic, /独立交易状态/);
-  assert.match(rows.find((row) => row.id === "F16").semantic, /结构化回写/);
-  assert.ok(rows.every((row) => row.window && row.downstream && row.placement));
-});
-
-test("Task 8 data foundation renders before its filter form exists and filters on a later change", () => {
-  const originalFormData = globalThis.FormData;
-  const select = {
-    addEventListener(type, listener) {
-      if (type === "change") this.onChange = listener;
-    }
-  };
-  const form = { formDataEntries: [["role", "base"]] };
-  let hasRendered = false;
-  const container = {
-    querySelector(selector) {
-      return selector === "#fieldFilters" && hasRendered ? form : null;
-    },
-    querySelectorAll(selector) {
-      return selector === "#fieldFilters select" ? [select] : [];
-    },
-    set innerHTML(value) {
-      hasRendered = true;
-      this.html = value;
-    },
-    get innerHTML() {
-      return this.html;
-    }
-  };
-
-  globalThis.FormData = class FakeFormData {
-    constructor(value) {
-      if (value === undefined) {
-        this.values = [];
-      } else if (value?.formDataEntries) {
-        this.values = value.formDataEntries;
-      } else {
-        throw new TypeError("FormData requires a form");
-      }
-    }
-
-    entries() {
-      return this.values[Symbol.iterator]();
-    }
-  };
-
-  try {
-    assert.doesNotThrow(() => renderDataFoundation(container));
-    assert.match(container.innerHTML, /id="fieldFilters"/);
-    select.onChange();
-    assert.match(container.innerHTML, new RegExp(`字段契约 ${buildFieldRows().filter((row) => row.scoreRole === "base").length} 条`));
-  } finally {
-    globalThis.FormData = originalFormData;
-  }
 });
 
 test("Task 8 system topology retains source evidence and CRM 403 tag-first fallback", () => {

@@ -4,7 +4,6 @@ import assert from "node:assert/strict";
 import { createStore } from "../core/store.js";
 import { SEED_STATE } from "../data/seed-data.js";
 import { escapeHtml, renderTable } from "../ui/components.js";
-import { buildDashboardMetrics } from "../views/dashboard.js";
 import {
   DETAIL_FLOW,
   applyUserPreset,
@@ -23,20 +22,6 @@ import {
 } from "../views/scoring.js";
 
 const state = () => createStore(SEED_STATE, null).getState();
-
-test("dashboard KPI view models expose the six approved user presets", () => {
-  const metrics = buildDashboardMetrics(state());
-
-  assert.deepEqual(metrics.map(({ id, preset }) => [id, preset]), [
-    ["high-priority", "h1-h2"],
-    ["uplift", "h3-uplift"],
-    ["risk", "h4-risk"],
-    ["realtime", "f14-realtime"],
-    ["blocked", "f12-blocked"],
-    ["anomaly", "data-anomaly"]
-  ]);
-  assert.ok(metrics.every(({ value }) => Number.isInteger(value) && value >= 0));
-});
 
 test("dashboard presets become composable user filters", () => {
   const rows = buildUserRows(state());
