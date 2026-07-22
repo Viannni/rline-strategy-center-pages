@@ -3,8 +3,23 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 import { FLOW_STAGES, NAV_ITEMS, viewModules } from "../app.js";
+import * as audiencesView from "../views/audiences.js";
 import * as dispatchView from "../views/dispatch.js";
+import * as effectivenessView from "../views/effectiveness.js";
 import * as inboundReviewView from "../views/inbound-review.js";
+
+const FRONTLINE_FORBIDDEN_TERMS = ["角色任务台", "转派", "提交反馈", "进线队列", "派单", "SLA", "前台主责", "当前任务", "用户导入", "路线轨迹", "路由轨迹"];
+
+function assertStrategyOnlyRoute(view, title, strategyCopy) {
+  const container = { innerHTML: "" };
+  view.render(container);
+
+  assert.match(container.innerHTML, new RegExp(title));
+  assert.match(container.innerHTML, new RegExp(strategyCopy));
+  for (const forbidden of FRONTLINE_FORBIDDEN_TERMS) {
+    assert.doesNotMatch(container.innerHTML, new RegExp(forbidden));
+  }
+}
 
 test("flow rail no longer describes frontline dispatch flow", () => {
   assert.deepEqual(FLOW_STAGES.map((stage) => stage.label), ["策略配置", "人群圈选", "下发追踪", "数据回写", "效果复盘"]);
@@ -46,24 +61,18 @@ test("strategy routes are wired to renderable modules", () => {
   assert.ok([...viewModules.values()].every((module) => typeof module.render === "function"));
 });
 
-test("dispatch route renders strategy tracking without frontline task operations", () => {
-  const container = { innerHTML: "" };
-  dispatchView.render(container);
+test("audiences route renders strategy audience packages without frontline workflows", () => {
+  assertStrategyOnlyRoute(audiencesView, "人群圈选", "策略人群包");
+});
 
-  assert.match(container.innerHTML, /下发追踪/);
-  assert.match(container.innerHTML, /策略包下发追踪/);
-  for (const forbidden of ["角色任务台", "转派", "提交反馈", "进线队列", "派单", "SLA"]) {
-    assert.doesNotMatch(container.innerHTML, new RegExp(forbidden));
-  }
+test("dispatch route renders strategy tracking without frontline task operations", () => {
+  assertStrategyOnlyRoute(dispatchView, "下发追踪", "策略包下发追踪");
+});
+
+test("effectiveness route renders strategy review without frontline metrics", () => {
+  assertStrategyOnlyRoute(effectivenessView, "有效性看板", "策略效果复盘");
 });
 
 test("inbound review route renders strategy attribution without intake operations", () => {
-  const container = { innerHTML: "" };
-  inboundReviewView.render(container);
-
-  assert.match(container.innerHTML, /进线复盘/);
-  assert.match(container.innerHTML, /策略归因/);
-  for (const forbidden of ["角色任务台", "转派", "提交反馈", "进线队列", "派单", "SLA"]) {
-    assert.doesNotMatch(container.innerHTML, new RegExp(forbidden));
-  }
+  assertStrategyOnlyRoute(inboundReviewView, "进线复盘", "策略归因");
 });
