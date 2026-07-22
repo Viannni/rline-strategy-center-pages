@@ -5,7 +5,7 @@
 - 状态：已由用户确认，待进入实施计划。
 - 日期：2026-07-20。
 - 目标站点：`https://viannni.github.io/rline-strategy-center-pages/`。
-- 业务事实源：[R线用户分数系统与高优用户识别方案](https://alidocs.dingtalk.com/i/nodes/dQPGYqjpJYgoM27OcBp667plWakx1Z5N?utm_scene=person_space)。
+- 业务事实源：内部文档单独维护，公开仓库不保留内部链接。
 - 本设计以 2026-07-20 回读到的线上正文为准；当本地旧稿与线上文档冲突时，线上文档优先。
 
 ## 2. 产品目标

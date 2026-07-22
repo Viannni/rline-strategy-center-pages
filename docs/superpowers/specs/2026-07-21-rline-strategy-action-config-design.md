@@ -5,7 +5,7 @@
 - 状态：设计已由用户确认，待用户复核本规格后进入实施计划。
 - 日期：2026-07-21。
 - 目标站点：[R线策略中台后台](https://viannni.github.io/rline-strategy-center-pages/)。
-- 业务事实源：[R线全周期策略规划方案V1](https://alidocs.dingtalk.com/i/nodes/r1R7q3QmWe7LqyrKiNoZK6zwJxkXOEP2?utm_scene=person_space)。
+- 业务事实源：内部文档单独维护，公开仓库不保留内部链接。
 - 本期选择：B，本机验证版配置面板。
 
 ## 2. 本期目标
