@@ -26,6 +26,7 @@ import * as executionView from "../views/execution.js";
 import * as modelsView from "../views/models.js";
 import * as insightsView from "../views/insights.js";
 import * as lifecycleView from "../views/lifecycle.js";
+import { renderStrategyWorkspace } from "../views/strategy-workspace.js";
 
 function htmlFor(view) {
   const root = { innerHTML: "" };
@@ -137,6 +138,27 @@ test("strategy workspaces render seed-backed asset configuration", () => {
   assert.match(models, /online/);
   assert.match(applications, /e-line/);
   assert.match(insights, /k-line/);
+});
+
+test("strategy workspaces expose each asset's reusable scope", () => {
+  assert.match(htmlFor(contentView), /全线复用/);
+});
+
+test("unmatched strategy workspace renders an empty asset table", () => {
+  const root = { innerHTML: "" };
+  renderStrategyWorkspace(root, { state: { strategyAssets: [{ id: "UNMATCHED", ownerRole: "other-role", type: "other-type" }] } }, {
+    ownerRole: "missing-role",
+    types: [],
+    kicker: "测试",
+    title: "未匹配工作区",
+    description: "测试无匹配资产时的空状态。",
+    assetHeading: "资产",
+    capabilityHeading: "能力",
+    capabilityRows: []
+  });
+
+  assert.match(root.innerHTML, /暂无数据/);
+  assert.doesNotMatch(root.innerHTML, /UNMATCHED/);
 });
 
 test("application strategy workspace covers AI scene boundaries", () => {

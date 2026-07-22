@@ -11,16 +11,23 @@ function differenceSummary(asset) {
     : "无单线差异";
 }
 
+function scopeLabel(scope) {
+  return {
+    "line-reusable": "全线复用",
+    "line-specific": "单线专用"
+  }[scope] || scope || "待配置";
+}
+
 function assetsForWorkspace(state, { ownerRole, types = [] }) {
   const assets = Array.isArray(state?.strategyAssets) ? state.strategyAssets : [];
-  const matched = assets.filter((asset) => asset.ownerRole === ownerRole || types.includes(asset.type));
-  return matched.length ? matched : assets;
+  return assets.filter((asset) => asset.ownerRole === ownerRole || types.includes(asset.type));
 }
 
 export function renderStrategyWorkspace(container, { state }, config) {
   const assets = assetsForWorkspace(state, config);
   const rows = assets.map((asset) => ({
     ...asset,
+    scope: scopeLabel(asset.scope),
     businessLines: joinValues(asset.target?.businessLines),
     lifecycleNodes: joinValues(asset.target?.lifecycleNodes),
     reuse: asset.reusable ? "可复用" : "单线专用",
@@ -35,6 +42,7 @@ export function renderStrategyWorkspace(container, { state }, config) {
     { label: "复用范围", value: "R / K / E" }
   ])}<section class="panel"><header class="panel__header"><div><p class="section-kicker">策略资产配置</p><h2>${config.assetHeading}</h2><p>以策略ID追溯跨业务线复用、生命周期落点、数据依赖和观察口径。</p></div></header>${renderTable({ columns: [
     { key: "id", label: "策略ID" }, { key: "name", label: "策略名称" },
+    { key: "scope", label: "复用范围" },
     { key: "businessLines", label: "业务线" }, { key: "lifecycleNodes", label: "生命周期节点" },
     { key: "ownerRole", label: "负责人" }, { key: "status", label: "状态" },
     { key: "observationWindow", label: "观察窗口" }, { key: "dataDependencies", label: "数据依赖" },
