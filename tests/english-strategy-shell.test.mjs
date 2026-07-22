@@ -4,11 +4,14 @@ import { readFile } from "node:fs/promises";
 
 import { FLOW_STAGES, NAV_ITEMS, viewModules } from "../app.js";
 import { SEED_STATE } from "../data/seed-data.js";
-const FRONTLINE_FORBIDDEN_TERMS = [
+const ROUTE_SAFETY_FORBIDDEN_TERMS = [
   "child-",
   "当前主责",
   "团队队列",
   "角色任务台",
+  "派发",
+  "分配",
+  "路由",
   "转派",
   "提交反馈",
   "进线队列",
@@ -20,6 +23,14 @@ const FRONTLINE_FORBIDDEN_TERMS = [
   "二销任务",
   "任务准入"
 ];
+
+function assertRouteIsStrategySafe(html, routeId) {
+  const htmlWithoutExactNonDispatchLabel = html.replaceAll(">非派单<", "><");
+
+  for (const forbidden of ROUTE_SAFETY_FORBIDDEN_TERMS) {
+    assert.doesNotMatch(htmlWithoutExactNonDispatchLabel, new RegExp(forbidden), `${routeId} must not render ${forbidden}`);
+  }
+}
 
 function renderRoute(view) {
   const container = {
@@ -75,11 +86,12 @@ test("strategy routes are wired to renderable modules", () => {
 test("every strategy navigation route renders without frontline records or operations", () => {
   for (const item of NAV_ITEMS) {
     const view = viewModules.get(item.id);
-    const html = renderRoute(view).replaceAll("非派单", "NON_DISPATCH");
+    const html = renderRoute(view);
 
     assert.match(html, new RegExp(item.label), `${item.id} should identify its strategy view`);
-    for (const forbidden of FRONTLINE_FORBIDDEN_TERMS) {
-      assert.doesNotMatch(html, new RegExp(forbidden), `${item.id} must not render ${forbidden}`);
+    if (item.id === "inbound-review") {
+      assert.match(html, />非派单</, "inbound-review should contain the exact 非派单 label");
     }
+    assertRouteIsStrategySafe(html, item.id);
   }
 });
