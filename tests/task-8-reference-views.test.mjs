@@ -11,10 +11,10 @@ import * as dashboardView from "../views/dashboard.js";
 import * as businessLinesView from "../views/business-lines.js";
 import * as strategyAssetsView from "../views/strategy-assets.js";
 
-function render(view, routeParams = {}) {
+function render(view, routeParams = {}, state = SEED_STATE) {
   const root = { innerHTML: "" };
   view.render(root, {
-    state: SEED_STATE,
+    state,
     role: "strategy",
     routeParams,
     components: {
@@ -44,7 +44,14 @@ test("dashboard renders English-wide strategy command center", () => {
 });
 
 test("business line drilldown maps line-specific operating evidence and separates global dependencies", () => {
-  const html = render(businessLinesView);
+  const state = {
+    ...SEED_STATE,
+    dataRequirements: [
+      ...SEED_STATE.dataRequirements,
+      { id: "REQ-KLINE-ONLY", name: "K线专属数据缺口", businessLine: "k-line", status: "must-add" }
+    ]
+  };
+  const html = render(businessLinesView, {}, state);
   assert.match(html, /R线首发样板/);
   assert.match(html, /K线/);
   assert.match(html, /结构样例/);
@@ -64,10 +71,13 @@ test("business line drilldown maps line-specific operating evidence and separate
   assert.match(kLineRow, /K2/);
   assert.match(kLineRow, /AUD-KLINE-MISS-REPAIR/);
   assert.match(kLineRow, /DSP-20260722-002/);
+  assert.match(kLineRow, /K线专属数据缺口/);
 
   const eLineRow = tableRowContaining(html, /<td[^>]*>E线<\/td>/);
   assert.match(eLineRow, /待接入|结构样例/);
   assert.doesNotMatch(eLineRow, /DSP-20260722-00[12]|已完成|进行中/);
+  assert.doesNotMatch(rLineRow, /K线专属数据缺口/);
+  assert.doesNotMatch(eLineRow, /K线专属数据缺口/);
 
   assert.match(html, /全局依赖/);
   assert.match(html, /业务域主数据.*策略ID\/版本ID.*触达和活动回写/s);
