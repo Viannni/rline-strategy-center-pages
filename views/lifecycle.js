@@ -1,5 +1,5 @@
 import { FEATURE_PLACEMENTS } from "../data/system-capabilities.js";
-import { escapeAttribute, escapeHtml, openDrawer, renderBadge, renderPlacementPanel } from "../ui/components.js";
+import { escapeAttribute, escapeHtml, openDrawer, renderBadge, renderMetricStrip, renderPlacementPanel, renderTable } from "../ui/components.js";
 
 const placementStatus = (id) => FEATURE_PLACEMENTS.find((item) => item.id === id)?.status ?? "entry-confirmed";
 const monthlyRenewal = new Set(["T22", "T23", "T24", "T25", "T26", "T27", "T28"]);
@@ -82,11 +82,22 @@ function renderTimeline(product) {
   }).join("");
 }
 
-export function render(container) {
-  const nodes = [...allNodes("monthly"), ...allNodes("annual")];
-  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">全周期节点参考</p><h1>生命周期</h1><p>销售绑定只在月课 T22-T28 和年课 M8-M12 的续费窗口内出现；其余节点由学服/运营承接。</p></div>${renderBadge("info", `${nodes.length} 个节点`)}</section><section class="reference-notice"><strong>口径</strong><span>节点动作、字段和验收均为产研核对参考；系统状态来自既有落位证据。</span></section><section class="lifecycle-board" aria-label="月课生命周期"><header class="board-header"><h2>月课 T0-T28</h2><span>T0-T10 / T11-T21 / T22-T28</span></header>${renderTimeline("monthly")}</section><section class="lifecycle-board" aria-label="年课生命周期"><header class="board-header"><h2>年课 M1-M12</h2><span>M1-M7 / M8-M12</span></header>${renderTimeline("annual")}</section>`;
-  container.querySelectorAll("[data-lifecycle-node]").forEach((button) => button.addEventListener("click", () => {
-    const node = nodes.find((item) => item.id === button.dataset.lifecycleNode);
-    if (node) openNode(node);
+export function render(container, { state }) {
+  const rows = (state.lifecycleTemplates || []).map((template) => ({
+    name: template.name,
+    nodes: template.nodes.join(" / "),
+    renewalWindow: template.renewalWindow.join(" - "),
+    status: template.id === "monthly-t" || template.id === "annual-m" ? "R线样板可用" : "结构样例"
   }));
+
+  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">生命周期</p><h1>策略覆盖地图</h1><p>生命周期页不再是一线服务流程，而是用来查看各业务线节点策略密度、空白和过密风险。</p></div>${renderBadge("info", "多业务线")}</section>${renderMetricStrip([
+    { label: "月课模板", value: "T0-T28" },
+    { label: "年课模板", value: "M1-M12" },
+    { label: "扩展模板", value: "K线中心化SOP模板" }
+  ])}<section class="panel"><header class="panel__header"><h2>生命周期模板</h2></header>${renderTable({ columns: [
+    { key: "name", label: "模板" },
+    { key: "nodes", label: "关键节点" },
+    { key: "renewalWindow", label: "续费窗口" },
+    { key: "status", label: "状态" }
+  ], rows })}</section>`;
 }
