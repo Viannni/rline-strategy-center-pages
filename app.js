@@ -1,5 +1,18 @@
 import { SEED_STATE } from "./data/seed-data.js";
 import { createStore } from "./core/store.js";
+import * as dashboardView from "./views/dashboard.js";
+import * as businessLinesView from "./views/business-lines.js";
+import * as strategyAssetsView from "./views/strategy-assets.js";
+import * as contentView from "./views/content.js";
+import * as applicationsView from "./views/applications.js";
+import * as executionView from "./views/execution.js";
+import * as modelsView from "./views/models.js";
+import * as insightsView from "./views/insights.js";
+import * as audiencesView from "./views/users.js";
+import * as dispatchView from "./views/tasks.js";
+import * as effectivenessView from "./views/review.js";
+import * as inboundReviewView from "./views/intake.js";
+import * as dataFoundationView from "./views/data-foundation.js";
 import {
   escapeAttribute,
   escapeHtml,
@@ -42,7 +55,21 @@ export const FLOW_STAGES = Object.freeze([
   { id: "review", label: "效果复盘" }
 ]);
 
-const viewModules = new Map();
+export const viewModules = new Map([
+  ["dashboard", dashboardView],
+  ["business-lines", businessLinesView],
+  ["strategy-assets", strategyAssetsView],
+  ["content", contentView],
+  ["applications", applicationsView],
+  ["execution", executionView],
+  ["models", modelsView],
+  ["insights", insightsView],
+  ["audiences", audiencesView],
+  ["dispatch", dispatchView],
+  ["effectiveness", effectivenessView],
+  ["inbound-review", inboundReviewView],
+  ["data-foundation", dataFoundationView]
+]);
 const components = Object.freeze({
   iconButton,
   openDrawer,
