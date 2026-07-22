@@ -95,3 +95,11 @@ test("every strategy navigation route renders without frontline records or opera
     assertRouteIsStrategySafe(html, item.id);
   }
 });
+
+test("styles include strategy dashboard responsive surfaces", async () => {
+  const styles = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(styles, /\.metric-strip/);
+  assert.match(styles, /\.line-grid/);
+  assert.match(styles, /\.strategy-card-grid/);
+  assert.match(styles, /@media\s*\(max-width:\s*900px\)/);
+});
