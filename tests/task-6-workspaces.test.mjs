@@ -26,6 +26,9 @@ import * as executionView from "../views/execution.js";
 import * as modelsView from "../views/models.js";
 import * as insightsView from "../views/insights.js";
 import * as lifecycleView from "../views/lifecycle.js";
+import * as effectivenessView from "../views/effectiveness.js";
+import * as inboundReviewView from "../views/inbound-review.js";
+import * as dataFoundationView from "../views/data-foundation.js";
 import { renderStrategyWorkspace } from "../views/strategy-workspace.js";
 
 function htmlFor(view) {
@@ -33,6 +36,36 @@ function htmlFor(view) {
   view.render(root, { state: SEED_STATE, role: "strategy", components: {} });
   return root.innerHTML;
 }
+
+test("effectiveness view measures strategy performance by business line", () => {
+  const html = htmlFor(effectivenessView);
+
+  assert.match(html, /有效性看板/);
+  assert.match(html, /H1\/H2续费率/);
+  assert.match(html, /报告打开后下一步点击率/);
+  assert.match(html, /r-line/);
+  assert.match(html, /k-line/);
+  assert.match(html, /观察窗口/);
+});
+
+test("inbound review is strategy attribution rather than dispatch", () => {
+  const html = htmlFor(inboundReviewView);
+
+  assert.match(html, /进线复盘/);
+  assert.match(html, /策略归因/);
+  assert.match(html, /质量评级/);
+  assert.match(html, /非派单/);
+  assert.doesNotMatch(html, /派单轨迹/);
+});
+
+test("data foundation shows business-domain and product-engineering requirements", () => {
+  const html = htmlFor(dataFoundationView);
+
+  assert.match(html, /业务域主数据/);
+  assert.match(html, /策略ID\/版本ID/);
+  assert.match(html, /刷新周期/);
+  assert.match(html, /R线样板静态配置/);
+});
 
 const state = () => createStore(SEED_STATE, null).getState();
 

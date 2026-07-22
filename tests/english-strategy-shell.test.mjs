@@ -12,7 +12,7 @@ const FRONTLINE_FORBIDDEN_TERMS = [
   "转派",
   "提交反馈",
   "进线队列",
-  "派单",
+  "派单轨迹",
   "SLA",
   "任务台",
   "二销任务",

@@ -1,3 +1,14 @@
-export function render(container) {
-  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">策略复盘</p><h1>有效性看板</h1><p>策略效果复盘将在后续版本提供，聚焦策略覆盖、触达周期、实验校准和效果归因的聚合分析。</p></div></section>`;
+import { renderBadge, renderTable } from "../ui/components.js";
+
+export function render(container, { state }) {
+  const rows = state.effectivenessMetrics || [];
+  container.innerHTML = `<section class="page-header"><div><p class="section-kicker">策略复盘</p><h1>有效性看板</h1><p>按业务线、策略ID、版本、人群、渠道和观察窗口复盘策略是否带来学习、活跃、进线质量和转化改善。</p></div>${renderBadge("success", "观察窗口")}</section><section class="panel"><header class="panel__header"><h2>策略效果指标</h2></header>${renderTable({ columns: [
+    { key: "businessLine", label: "业务线" },
+    { key: "strategyId", label: "策略ID" },
+    { key: "metric", label: "指标" },
+    { key: "value", label: "当前值" },
+    { key: "benchmark", label: "基准" },
+    { key: "window", label: "观察窗口" },
+    { key: "direction", label: "方向", trustedHtml: (value) => renderBadge(value === "positive" ? "success" : "warning", value === "positive" ? "正向" : "观察") }
+  ], rows })}</section>`;
 }
