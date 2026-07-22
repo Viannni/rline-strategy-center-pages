@@ -174,9 +174,94 @@ const users = [
   })
 ];
 
+const businessLines = [
+  { id: "english-all", name: "英语全线", shortName: "全线", sampleDepth: "aggregate", levels: ["R1-R6", "K2", "E1"], status: "active" },
+  { id: "r-line", name: "R线", shortName: "R", sampleDepth: "full", levels: ["R1", "R2", "R3", "R4", "R5", "R6"], status: "pilot" },
+  { id: "k-line", name: "K线", shortName: "K", sampleDepth: "structure", levels: ["K1", "K2"], status: "supported" },
+  { id: "e-line", name: "E线", shortName: "E", sampleDepth: "structure", levels: ["E1", "E2"], status: "supported" }
+];
+
+const lifecycleTemplates = [
+  { id: "monthly-t", name: "月课T模板", nodes: ["T0", "T7", "T14", "T21", "T22", "T24", "T28"], renewalWindow: ["T22", "T28"] },
+  { id: "annual-m", name: "年课M模板", nodes: ["M1", "M3", "M6", "M8", "M11", "M12"], renewalWindow: ["M8", "M12"] },
+  { id: "custom-k", name: "K线中心化SOP模板", nodes: ["M0", "M3", "M6", "M8"], renewalWindow: ["M6", "M8"] }
+];
+
+const strategyAssets = [
+  {
+    id: "ES-OUTCOME-REPORT-001", name: "成长报告打开后价值认知强化", type: "outcome-content", ownerRole: "content-strategy", scope: "line-reusable", reusable: true,
+    target: { businessLines: ["r-line", "k-line", "e-line"], productTypes: ["monthly", "annual"], lifecycleNodes: ["T21", "T24", "M8", "M11", "M12"] },
+    exclusions: ["risk-fuse", "refund-open", "touch-frequency-blocked"], action: "报告打开后展示价值解释、下一步学习路径和对应权益入口", observationWindow: "3天",
+    metrics: ["report_open_rate", "next_action_click_rate", "renewal_signal_lift"], dataDependencies: ["report_opened", "strategy_id", "audience_pack_id", "touch_writeback"], status: "online",
+    differenceConfig: {
+      "r-line": { valueHook: "阅读成长 + 奖学金提醒", benefit: "奖学金可兑换续费券" },
+      "k-line": { valueHook: "K2能力成长路径 + 中心化SOP", benefit: "阶段规划权益" },
+      "e-line": { valueHook: "升阶规划 + 长期学习目标", benefit: "升阶体验权益" }
+    }
+  },
+  {
+    id: "ES-EXEC-MISS-001", name: "连续漏学修复策略包", type: "centralized-touch", ownerRole: "execution-strategy", scope: "line-reusable", reusable: true,
+    target: { businessLines: ["r-line", "k-line", "e-line"], productTypes: ["monthly", "annual"], lifecycleNodes: ["T7", "T14", "M3", "M6"] },
+    exclusions: ["risk-fuse", "after-sales-unclosed"], action: "识别漏学后发送补读路径，并在7天观察回流", observationWindow: "7天",
+    metrics: ["completion_rate_lift_7d", "active_days_lift_7d", "inbound_risk_rate"], dataDependencies: ["completion_rate", "missed_days", "touch_writeback", "activity_writeback"], status: "online",
+    differenceConfig: {
+      "r-line": { valueHook: "阅读补读 + 轻活动提分", benefit: "补读奖学金" },
+      "k-line": { valueHook: "词汇/表达复习任务", benefit: "复习直播预约" },
+      "e-line": { valueHook: "综合能力薄弱项复习", benefit: "升阶规划提醒" }
+    }
+  },
+  {
+    id: "ES-MODEL-HIGH-001", name: "高优续费识别与关单SOP", type: "renewal-model", ownerRole: "model-strategy", scope: "line-reusable", reusable: true,
+    target: { businessLines: ["r-line", "k-line", "e-line"], productTypes: ["monthly", "annual"], lifecycleNodes: ["T22", "T24", "T28", "M8", "M11", "M12"] },
+    exclusions: ["risk-fuse", "h4-low-maintenance"], action: "识别H1/H2高优、领券未付、支付失败和报告已开未转化用户，进入策略关单路径", observationWindow: "续费窗口内",
+    metrics: ["h1_h2_renewal_rate", "coupon_to_pay_rate", "high_score_miss_rate"], dataDependencies: ["score_snapshot", "transaction_status", "marketing_events", "risk_status"], status: "online",
+    differenceConfig: {
+      "r-line": { valueHook: "月转年/年转年权益解释", benefit: "奖学金抵扣上限" },
+      "k-line": { valueHook: "K2路径价值解释", benefit: "续费权益包" },
+      "e-line": { valueHook: "升阶课程价值解释", benefit: "升阶规划权益" }
+    }
+  }
+];
+
+const audiencePacks = [
+  { id: "AUD-RLINE-HIGH-RENEWAL", name: "R线高优续费窗口人群", businessLine: "r-line", levelCode: "R1-R6", productType: "annual", lifecycleNodes: ["M8", "M11", "M12"], targetCount: 1280, excludedCount: 96, overlapRate: 0.18, dataFreshness: "T+1", rules: ["H1/H2", "无风险熔断", "报告已打开或领券未付"] },
+  { id: "AUD-KLINE-MISS-REPAIR", name: "K线连续漏学修复人群", businessLine: "k-line", levelCode: "K2", productType: "annual", lifecycleNodes: ["M3", "M6"], targetCount: 640, excludedCount: 42, overlapRate: 0.11, dataFreshness: "T+1", rules: ["近7天漏学>=3天", "可触达", "无售后未完结"] },
+  { id: "AUD-ELINE-STRUCTURE", name: "E线升阶规划样例人群", businessLine: "e-line", levelCode: "E1", productType: "annual", lifecycleNodes: ["M6", "M8"], targetCount: 0, excludedCount: 0, overlapRate: 0, dataFreshness: "待接入", rules: ["结构样例，待接入真实字段"] }
+];
+
+const dispatchBatches = [
+  { id: "DSP-20260722-001", strategyId: "ES-OUTCOME-REPORT-001", audiencePackId: "AUD-RLINE-HIGH-RENEWAL", businessLine: "r-line", downstreamSystem: "私聊/前台卡片", status: "completed", plannedCount: 1280, reachedCount: 1096, failedCount: 48, writebackStatus: "complete", observationWindow: "3天" },
+  { id: "DSP-20260722-002", strategyId: "ES-EXEC-MISS-001", audiencePackId: "AUD-KLINE-MISS-REPAIR", businessLine: "k-line", downstreamSystem: "中心化触达系统", status: "running", plannedCount: 640, reachedCount: 412, failedCount: 31, writebackStatus: "partial", observationWindow: "7天" }
+];
+
+const effectivenessMetrics = [
+  { id: "EFF-RLINE-REPORT", strategyId: "ES-OUTCOME-REPORT-001", businessLine: "r-line", metric: "报告打开后下一步点击率", value: 31.4, benchmark: 24.0, direction: "positive", window: "3天" },
+  { id: "EFF-KLINE-MISS", strategyId: "ES-EXEC-MISS-001", businessLine: "k-line", metric: "7天活跃天数提升", value: 1.2, benchmark: 0.8, direction: "positive", window: "7天" },
+  { id: "EFF-RLINE-HIGH", strategyId: "ES-MODEL-HIGH-001", businessLine: "r-line", metric: "H1/H2续费率", value: 42.6, benchmark: 30.0, direction: "positive", window: "续费窗口" }
+];
+
+const inboundReviews = [
+  { id: "INB-001", businessLine: "r-line", sourceStrategyId: "ES-OUTCOME-REPORT-001", type: "报告", quality: "high-value", solved: true, scoreImpact: "plus", suggestion: "保留报告入口，补充奖学金解释" },
+  { id: "INB-002", businessLine: "k-line", sourceStrategyId: "ES-EXEC-MISS-001", type: "学习", quality: "normal", solved: true, scoreImpact: "none", suggestion: "补读路径文案减少催学感" }
+];
+
+const dataRequirements = [
+  { id: "REQ-DOMAIN-001", name: "业务域主数据", owner: "产研/数据", status: "must-add", refreshCycle: "每日", reason: "全线中台必须按业务线、级别、班期和生命周期模板聚合", fallback: "R线样板静态配置" },
+  { id: "REQ-STRATEGY-001", name: "策略ID/版本ID", owner: "策略/产研", status: "must-add", refreshCycle: "实时/T+1", reason: "策略下发、回写和复盘必须能追溯到版本", fallback: "人工维护策略资产表" },
+  { id: "REQ-WRITEBACK-001", name: "触达和活动回写", owner: "CRM/活动/数据", status: "needs-adaptation", refreshCycle: "T+1", reason: "判断策略动作是否真的影响学习和转化", fallback: "批次级汇总回填" }
+];
+
 export const SEED_STATE = {
-  version: "seed-2026-07-20",
-  generatedAt: "2026-07-20T10:00:00+08:00",
+  version: "seed-2026-07-22-english-strategy",
+  generatedAt: "2026-07-22T10:00:00+08:00",
+  businessLines,
+  lifecycleTemplates,
+  strategyAssets,
+  audiencePacks,
+  dispatchBatches,
+  effectivenessMetrics,
+  inboundReviews,
+  dataRequirements,
   users,
   tasks: [
     { id: "task-1025", userId: "monthly-t24-p0", category: "conversion", subtype: "F14待付款/支付失败", priority: "P0", status: "open", assigneeTeam: "sales", channel: "text" },
