@@ -23,8 +23,15 @@ function assetsForWorkspace(state, { ownerRole, types = [] }) {
   return assets.filter((asset) => asset.ownerRole === ownerRole || types.includes(asset.type));
 }
 
+function effectivenessMetricsForAssets(state, assets) {
+  const assetIds = new Set(assets.map((asset) => asset.id));
+  const metrics = Array.isArray(state?.effectivenessMetrics) ? state.effectivenessMetrics : [];
+  return metrics.filter((metric) => assetIds.has(metric.strategyId));
+}
+
 export function renderStrategyWorkspace(container, { state }, config) {
   const assets = assetsForWorkspace(state, config);
+  const effectivenessMetrics = effectivenessMetricsForAssets(state, assets);
   const rows = assets.map((asset) => ({
     ...asset,
     scope: scopeLabel(asset.scope),
@@ -50,4 +57,13 @@ export function renderStrategyWorkspace(container, { state }, config) {
   ], rows })}</section><section class="panel"><header class="panel__header"><h2>${config.capabilityHeading}</h2></header>${renderTable({ columns: [
     { key: "module", label: "模块" }, { key: "example", label: "能力焦点" }, { key: "metric", label: "复盘指标" }
   ], rows: config.capabilityRows })}</section>`;
+
+  if (effectivenessMetrics.length) {
+    container.innerHTML += `<section class="panel"><header class="panel__header"><div><p class="section-kicker">效果数据</p><h2>效果复盘</h2><p>按策略ID关联聚合效果数据，展示业务线、指标值、基准、观察窗口和方向。</p></div></header>${renderTable({ columns: [
+      { key: "strategyId", label: "策略ID" }, { key: "businessLine", label: "业务线" },
+      { key: "metric", label: "指标" }, { key: "value", label: "值" },
+      { key: "benchmark", label: "基准" }, { key: "window", label: "观察窗口" },
+      { key: "direction", label: "方向" }
+    ], rows: effectivenessMetrics })}</section>`;
+  }
 }

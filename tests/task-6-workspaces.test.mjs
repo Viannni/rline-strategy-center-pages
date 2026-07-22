@@ -140,6 +140,32 @@ test("strategy workspaces render seed-backed asset configuration", () => {
   assert.match(insights, /k-line/);
 });
 
+test("strategy workspaces render related effectiveness metrics by strategy ID", () => {
+  const content = htmlFor(contentView);
+  const execution = htmlFor(executionView);
+  const models = htmlFor(modelsView);
+
+  assert.match(content, /效果复盘/);
+  assert.match(content, /ES-OUTCOME-REPORT-001/);
+  assert.match(content, /报告打开后下一步点击率/);
+  assert.match(content, /31\.4/);
+  assert.match(content, /24/);
+  assert.match(content, /3天/);
+  assert.match(content, /positive/);
+
+  assert.match(execution, /ES-EXEC-MISS-001/);
+  assert.match(execution, /7天活跃天数提升/);
+  assert.match(execution, /1\.2/);
+  assert.match(execution, /0\.8/);
+  assert.match(execution, /7天/);
+
+  assert.match(models, /ES-MODEL-HIGH-001/);
+  assert.match(models, /H1\/H2续费率/);
+  assert.match(models, /42\.6/);
+  assert.match(models, /30/);
+  assert.match(models, /续费窗口/);
+});
+
 test("strategy workspaces expose each asset's reusable scope", () => {
   assert.match(htmlFor(contentView), /全线复用/);
 });
