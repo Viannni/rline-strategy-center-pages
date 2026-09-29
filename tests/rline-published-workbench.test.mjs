@@ -13,8 +13,9 @@ test("published R-line workbench is self-contained inside the GitHub Pages repos
   const viewUrl = new URL("modules/views/rline-daily.js", publishedWorkbench);
   const dataUrl = new URL("modules/data/rline-daily-data.js", publishedWorkbench);
   const historyUrl = new URL("modules/history.js", publishedWorkbench);
+  const capabilityUrl = new URL("modules/data/system-capabilities.js", publishedWorkbench);
 
-  await Promise.all([indexUrl, appUrl, stylesUrl, baseStylesUrl, snapshotUrl, viewUrl, dataUrl, historyUrl].map((url) => access(url)));
+  await Promise.all([indexUrl, appUrl, stylesUrl, baseStylesUrl, snapshotUrl, viewUrl, dataUrl, historyUrl, capabilityUrl].map((url) => access(url)));
 
   const [index, app] = await Promise.all([readFile(indexUrl, "utf8"), readFile(appUrl, "utf8")]);
   assert.match(index, /R线运营策略工作台/);

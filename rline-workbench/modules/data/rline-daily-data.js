@@ -1,4 +1,4 @@
-// Snapshot from the DingTalk R-line SOP and course data sources.
+// Snapshot from the internal R-line SOP and course data sources.
 // Keep source timestamps explicit so partial-day data is never presented as a final result.
 export const RLINE_DAILY_SNAPSHOT = Object.freeze({
   version: "rline-daily-snapshot-2026-09-20-m1w1-closed",
@@ -35,7 +35,7 @@ export const RLINE_DAILY_SNAPSHOT = Object.freeze({
   },
   bi: {
     name: "R线月课训练营看板 · 班期转化数据",
-    url: "https://admin-xjjj-co-76n22rtvw45c.ztna-dingtalk.com/bi-admin/tableau/8e175c1b-65c1-4db1-88d7-3f02ba77f40c",
+    url: null,
     capturedAt: "2026-09-22T00:30:00+08:00",
     status: "refreshed",
     note: "BI实时结果层；本次为2026-09-21昨日快照。未开课和其他状态保留原始0值，不纳入行课策略达成判断；日内和日终历史仍以课程日数据快照为准。",
@@ -74,7 +74,7 @@ export const RLINE_DAILY_SNAPSHOT = Object.freeze({
   },
   sop: {
     week: "WEEK1",
-    sourceUrl: "https://alidocs.dingtalk.com/i/nodes/QG53mjyd80RMX42QtwNGDR0XV6zbX04v",
+    sourceUrl: null,
     lastSyncedStage: "M1W1D5",
     lastSyncedAt: "2026-09-20T00:00:00+08:00",
     syncStatus: "manual-source-capture",
@@ -182,8 +182,8 @@ export const RLINE_DAILY_SNAPSHOT = Object.freeze({
     ]
   },
   sourceLinks: [
-    { label: "R线运营SOP", url: "https://alidocs.dingtalk.com/i/nodes/QG53mjyd80RMX42QtwNGDR0XV6zbX04v" },
-    { label: "1期行课数据", url: "https://alidocs.dingtalk.com/i/nodes/gwva2dxOW4KX7gmQCYbDAx6B8bkz3BRL" },
-    { label: "R线行课运营参考标准", url: "https://alidocs.dingtalk.com/i/nodes/vy20BglGWOeD5vNmHv5wdnz5JA7depqY" }
+    { label: "R线运营SOP", url: null },
+    { label: "1期行课数据", url: null },
+    { label: "R线行课运营参考标准", url: null }
   ]
 });

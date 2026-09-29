@@ -1,5 +1,5 @@
 {
-  "source": "DingTalk · 1期行课数据 + R线课程BI",
+  "source": "Internal snapshot · 1期行课数据 + R线课程BI",
   "sourceUpdatedAt": "2026-09-23T00:30:00+08:00",
   "generatedAt": "2026-09-23T00:30:00+08:00",
   "snapshotCapturedAt": "2026-09-23T00:30:00+08:00",
@@ -14,7 +14,7 @@
   },
   "bi": {
     "name": "R线月课训练营看板 · 班期转化数据",
-    "url": "https://admin-xjjj-co-76n22rtvw45c.ztna-dingtalk.com/bi-admin/tableau/8e175c1b-65c1-4db1-88d7-3f02ba77f40c",
+    "url": null,
     "capturedAt": "2026-09-22T00:30:00+08:00",
     "status": "refreshed",
     "note": "BI实时结果层；本次为2026-09-21昨日快照。未开课和其他状态保留原始0值，不纳入行课策略达成判断；日内和日终历史仍以课程日数据快照为准。",
