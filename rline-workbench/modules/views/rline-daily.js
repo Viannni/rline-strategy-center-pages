@@ -637,14 +637,14 @@ function renderDayEndTrend(snapshot, cohortId = ALL_COHORTS, week = comparisonWe
   const hasCompletion = completionValues.some(hasNumber);
   const scope = cohortId === ALL_COHORTS ? "全部班期" : snapshot.current.cohort;
   const actualDatasets = [
-    { label: "留存实际", data: actual("retention"), color: "#16795a" },
-    { label: "深度实际", data: actual("depth"), color: "#4d8fe3" },
-    { label: "完课实际", data: completionValues, color: "#dd9d22" }
+    { label: "留存实际", data: actual("retention"), color: "#16795a", valueLabelOffset: 14 },
+    { label: "深度实际", data: actual("depth"), color: "#4d8fe3", valueLabelOffset: 28 },
+    { label: "完课实际", data: completionValues, color: "#dd9d22", valueLabelOffset: 42 }
   ];
   const referenceDatasets = [
-    { label: "留存目标线", data: targetSeries(snapshot, "retention", labels), color: "#16795a", dashed: true },
-    { label: "深度目标线", data: targetSeries(snapshot, "depth", labels), color: "#4d8fe3", dashed: true },
-    { label: "完课目标线", data: targetSeries(snapshot, "completion", labels), color: "#dd9d22", dashed: true }
+    { label: "留存目标线", data: targetSeries(snapshot, "retention", labels), color: "#16795a", dashed: true, valueLabelOffset: -12 },
+    { label: "深度目标线", data: targetSeries(snapshot, "depth", labels), color: "#4d8fe3", dashed: true, valueLabelOffset: -26 },
+    { label: "完课目标线", data: targetSeries(snapshot, "completion", labels), color: "#dd9d22", dashed: true, valueLabelOffset: -40 }
   ];
   const status = records.length === 0 ? "等待日终" : hasCompletion ? `已留存${records.length}天` : `已留存${records.length}天 · 完课待回填`;
   const note = records.length === 0
@@ -657,7 +657,7 @@ function renderDayEndTrend(snapshot, cohortId = ALL_COHORTS, week = comparisonWe
     const completion = trendMetric(record, "completion");
     return `<div><strong>${escapeHtml(label)}</strong><span>留存：${escapeHtml(goalSummary(retention, targetSeries(snapshot, "retention", [label])[0]))}</span><span>深度：${escapeHtml(goalSummary(depth, targetSeries(snapshot, "depth", [label])[0]))}</span><span>完课：${escapeHtml(goalSummary(completion, targetSeries(snapshot, "completion", [label])[0]))}</span></div>`;
   }).join("");
-  return `<section class="rline-day-trend" aria-labelledby="rline-day-trend-title"><header class="rline-day-trend__header"><div><p class="section-kicker">首周日目标线 · 日维度变化</p><h3 id="rline-day-trend-title">D1、D2、D3…日终留存 / 深度 / 完课变化</h3><p>每日只取24:00最终值；实线是实际值，虚线是首周目标线，卡片显示每天与目标的差值。</p></div><span class="rline-chart-status">${escapeHtml(status)}</span></header>${renderLineChart({ title: "日终指标变化", subtitle: "实线：日终实际 · 虚线：首周目标线", labels, datasets: [...actualDatasets, ...referenceDatasets], yMax: 100, unit: "%", decimals: 1, emptyLabel: records.length === 0 ? "暂无日终数据" : "" })}<div class="rline-day-trend__note"><strong>目标口径</strong><span>${escapeHtml(note)}</span></div>${rows ? `<div class="rline-day-trend__table">${rows}</div>` : ""}</section>`;
+  return `<section class="rline-day-trend" aria-labelledby="rline-day-trend-title"><header class="rline-day-trend__header"><div><p class="section-kicker">首周日目标线 · 日维度变化</p><h3 id="rline-day-trend-title">D1、D2、D3…日终留存 / 深度 / 完课变化</h3><p>每日只取24:00最终值；实线是实际值，虚线是首周目标线，卡片显示每天与目标的差值。</p></div><span class="rline-chart-status">${escapeHtml(status)}</span></header>${renderLineChart({ title: "日终指标变化", subtitle: "实线：日终实际 · 虚线：首周目标线", labels, datasets: [...actualDatasets, ...referenceDatasets], yMax: 100, unit: "%", decimals: 1, showValues: true, emptyLabel: records.length === 0 ? "暂无日终数据" : "" })}<div class="rline-day-trend__note"><strong>目标口径</strong><span>${escapeHtml(note)}</span></div>${rows ? `<div class="rline-day-trend__table">${rows}</div>` : ""}</section>`;
 }
 
 function renderWeeklyDailyTable(snapshot, cohortId = ALL_COHORTS, week = comparisonWeekFor(snapshot, cohortId)) {
