@@ -1,5 +1,5 @@
 import { escapeHtml, renderBadge } from "../ui/components.js";
-import { renderBarChart, renderLineChart } from "./rline-charts.js";
+import { renderBarChart, renderLineChart } from "./rline-charts.js?v=20260929-point-values";
 import { ALL_COHORTS, dayEndRecords, summarizeHistory } from "../history.js";
 import { buildWeeklyReport, progressOverview } from "../reporting.js";
 
@@ -38,7 +38,7 @@ function trend(report, metric, title, color) {
     title, subtitle: "实线=24:00日终实际；虚线=首周每日目标；空缺=暂无日终数据",
     labels: ["D1", "D2", "D3", "D4", "D5"],
     datasets: [{ label: "实际", data: actual.length ? [...actual, ...Array(Math.max(0, 5 - actual.length)).fill(null)] : [null, null, null, null, null], color }, { label: "目标", data: reportingTargetFor(report, metric), color, dashed: true }],
-    yMax: 100, unit: "%", decimals: 1, emptyLabel: report.dataQuality.capturedDays < 5 ? `已回填${report.dataQuality.capturedDays}/5天` : ""
+    yMax: 100, unit: "%", decimals: 1, showValues: true, emptyLabel: report.dataQuality.capturedDays < 5 ? `已回填${report.dataQuality.capturedDays}/5天` : ""
   });
 }
 function reportingTargetFor(report, metric) {

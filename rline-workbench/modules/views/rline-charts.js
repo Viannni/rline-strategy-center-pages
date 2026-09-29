@@ -75,7 +75,7 @@ function chartCard(title, subtitle, content, datasets, emptyLabel = "") {
   return `<article class="rline-chart-card"><header><div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(subtitle)}</p></div>${emptyLabel ? `<span class="rline-chart-status">${escapeHtml(emptyLabel)}</span>` : ""}</header>${content}${renderLegend(datasets)}</article>`;
 }
 
-export function renderLineChart({ title, subtitle, labels, datasets, yMin = 0, yMax, unit = "", decimals = 0, emptyLabel = "" }) {
+export function renderLineChart({ title, subtitle, labels, datasets, yMin = 0, yMax, unit = "", decimals = 0, emptyLabel = "", showValues = false }) {
   const plotLeft = PADDING.left;
   const plotRight = WIDTH - PADDING.right;
   const plotTop = PADDING.top;
@@ -90,7 +90,8 @@ export function renderLineChart({ title, subtitle, labels, datasets, yMin = 0, y
       if (value === null) return "";
       const x = xPosition(index, labels.length, plotLeft, plotRight);
       const y = scale(value, bounds.min, bounds.max, plotBottom, plotTop);
-      return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.5" fill="${escapeHtml(dataset.color || "#16795a")}" class="rline-chart-point"><title>${escapeHtml(dataset.label)} · ${escapeHtml(labels[index])}: ${escapeHtml(displayNumber(value, decimals, unit))}</title></circle>`;
+      const valueLabel = showValues ? `<text x="${x.toFixed(2)}" y="${(y + (dataset.valueLabelOffset ?? (dataset.dashed ? -12 : 16))).toFixed(2)}" text-anchor="middle" class="rline-chart-value-label${dataset.dashed ? " is-target" : ""}">${escapeHtml(displayNumber(value, decimals, unit))}</text>` : "";
+      return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.5" fill="${escapeHtml(dataset.color || "#16795a")}" class="rline-chart-point"><title>${escapeHtml(dataset.label)} · ${escapeHtml(labels[index])}: ${escapeHtml(displayNumber(value, decimals, unit))}</title></circle>${valueLabel}`;
     }).join("");
     return `${path ? `<path d="${path}" fill="none" stroke="${escapeHtml(dataset.color || "#16795a")}" class="rline-chart-line${dataset.dashed ? " is-dashed" : ""}" />` : ""}${points}`;
   }).join("");
