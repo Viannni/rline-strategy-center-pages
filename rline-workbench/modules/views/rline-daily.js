@@ -3,7 +3,7 @@ import { icon } from "../ui/icons.js";
 import { RLINE_DAILY_SNAPSHOT } from "../data/rline-daily-data.js?v=20260923-full-analysis";
 import { renderBarChart, renderLineChart } from "./rline-charts.js";
 import { ALL_COHORTS, cohortEntries, dayEndRecords, deriveWeeklyRollups, historyDates, previousDailyRecord, selectSnapshotForCohort, summarizeHistory } from "../history.js";
-import { bindReportingActions, renderDataArchive, renderProjectProgress, renderWeeklyReport } from "./rline-reporting.js?v=20260929-point-values";
+import { bindReportingActions, renderDataArchive, renderProjectProgress, renderQACenter, renderWeeklyReport } from "./rline-reporting.js?v=20260929-weekly-scope";
 
 function snapshotFrom(context) {
   return context.state.rlineDailyWorkbench || RLINE_DAILY_SNAPSHOT;
@@ -840,9 +840,9 @@ export function render(container, context) {
     const availableDates = historyDateEntries(baseSnapshot, selectedCohortId);
     const effectiveDate = availableDates.some((item) => item.date === selectedDate) ? selectedDate : availableDates[0]?.date || baseSnapshot.current.date;
     const snapshot = selectSnapshotForCohort(baseSnapshot, selectedCohortId, activeTab === "daily" ? effectiveDate : null);
-    const tabs = [["daily", "今日策略"], ["weekly", "周汇报"], ["archive", "数据留存"], ["progress", "项目推进"], ["monthly", "月度规划"]];
+    const tabs = [["daily", "今日策略"], ["weekly", "周汇报"], ["archive", "数据留存"], ["qa", "QA中心"], ["progress", "项目推进"], ["monthly", "月度规划"]];
     const reportDraft = context.reportDrafts?.[`${selectedCohortId}::${effectiveDate}`]?.rows || {};
-    const body = activeTab === "weekly" ? renderWeeklyReport(snapshot, selectedCohortId) : activeTab === "archive" ? renderDataArchive(baseSnapshot, selectedCohortId) : activeTab === "progress" ? renderProjectProgress(context.projects) : activeTab === "monthly" ? renderMonthly(snapshot, selectedCohortId) : renderDaily(snapshot, { stage: selectedBiStage, cohortId: selectedBiCohortId, historyCohortId: selectedCohortId, reportDraft });
+    const body = activeTab === "weekly" ? renderWeeklyReport(snapshot, selectedCohortId) : activeTab === "archive" ? renderDataArchive(baseSnapshot, selectedCohortId, context) : activeTab === "qa" ? renderQACenter(baseSnapshot, context.qaEntries, context) : activeTab === "progress" ? renderProjectProgress(context.projects) : activeTab === "monthly" ? renderMonthly(snapshot, selectedCohortId) : renderDaily(snapshot, { stage: selectedBiStage, cohortId: selectedBiCohortId, historyCohortId: selectedCohortId, reportDraft });
     const historyPanel = "";
     const previousReview = activeTab === "daily" ? renderPreviousDayReview(baseSnapshot, selectedCohortId, effectiveDate, selectedBiStage, selectedBiCohortId) : "";
     container.innerHTML = `<section class="rline-workbench-shell"><nav class="rline-tab-nav" aria-label="R线工作台视图">${tabs.map(([id, label]) => `<button type="button" class="rline-tab${activeTab === id ? " is-current" : ""}" data-rline-tab="${id}" aria-selected="${activeTab === id}">${icon(id === "daily" ? "calendar-days" : id === "weekly" ? "chart-no-axes-combined" : "route")}${escapeHtml(label)}</button>`).join("")}</nav>${renderCohortFilter(baseSnapshot, selectedCohortId, effectiveDate, activeTab)}${historyPanel}${previousReview}${body}</section>`;

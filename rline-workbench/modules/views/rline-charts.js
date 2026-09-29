@@ -99,7 +99,7 @@ export function renderLineChart({ title, subtitle, labels, datasets, yMin = 0, y
   return chartCard(title, subtitle, svg, datasets, emptyLabel);
 }
 
-export function renderBarChart({ title, subtitle, labels, datasets, yMin = 0, yMax, unit = "", decimals = 0, emptyLabel = "" }) {
+export function renderBarChart({ title, subtitle, labels, datasets, yMin = 0, yMax, unit = "", decimals = 0, emptyLabel = "", showValues = false }) {
   const plotLeft = PADDING.left;
   const plotRight = WIDTH - PADDING.right;
   const plotTop = PADDING.top;
@@ -116,7 +116,8 @@ export function renderBarChart({ title, subtitle, labels, datasets, yMin = 0, yM
     const x = plotLeft + index * groupWidth + (groupWidth - totalBarWidth) / 2 + datasetIndex * barWidth;
     const y = scale(value, bounds.min, bounds.max, plotBottom, plotTop);
     const height = Math.max(plotBottom - y, 1);
-    return `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${Math.max(barWidth - 3, 2).toFixed(2)}" height="${height.toFixed(2)}" rx="3" fill="${escapeHtml(dataset.color || "#16795a")}" class="rline-chart-bar"><title>${escapeHtml(dataset.label)} · ${escapeHtml(labels[index])}: ${escapeHtml(displayNumber(value, decimals, unit))}</title></rect>`;
+    const valueLabel = showValues ? `<text x="${(x + Math.max(barWidth - 3, 2) / 2).toFixed(2)}" y="${Math.max(plotTop + 11, y - 6).toFixed(2)}" text-anchor="middle" class="rline-chart-bar-value">${escapeHtml(displayNumber(value, decimals, unit))}</text>` : "";
+    return `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${Math.max(barWidth - 3, 2).toFixed(2)}" height="${height.toFixed(2)}" rx="3" fill="${escapeHtml(dataset.color || "#16795a")}" class="rline-chart-bar"><title>${escapeHtml(dataset.label)} · ${escapeHtml(labels[index])}: ${escapeHtml(displayNumber(value, decimals, unit))}</title></rect>${valueLabel}`;
   }).join("")).join("");
   const svg = `<svg class="rline-chart-svg" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img" aria-label="${escapeHtml(title)}"><g>${grid}</g><line x1="${plotLeft}" y1="${plotBottom}" x2="${plotRight}" y2="${plotBottom}" class="rline-chart-axisline" />${bars}</svg>`;
   return chartCard(title, subtitle, svg, datasets, emptyLabel);

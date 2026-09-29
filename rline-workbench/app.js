@@ -1,7 +1,8 @@
-import * as rlineDailyView from "./modules/views/rline-daily.js?v=20260929-weekly-report";
+import * as rlineDailyView from "./modules/views/rline-daily.js?v=20260929-weekly-scope";
 import { RLINE_DAILY_SNAPSHOT } from "./modules/data/rline-daily-data.js?v=20260923-full-analysis";
 import { enrichRlineComparisonSnapshot } from "./modules/data/rline-cohort-comparison.js?v=20260923-full-analysis";
 import { mergeLiveSnapshot, validateLivePayload } from "./modules/live-data.js";
+import { loadArchiveEntries, loadQAEntries, saveArchiveEntries, saveQAEntries } from "./modules/rline-input-store.js?v=20260929-input-qa";
 
 const LIVE_SNAPSHOT_URL = "./data/rline-live-snapshot.json";
 const LIVE_REFRESH_INTERVAL_MS = 60_000;
@@ -50,6 +51,8 @@ function loadProjectItems() {
 }
 
 let projectItems = loadProjectItems();
+let inputArchives = loadArchiveEntries();
+let qaEntries = loadQAEntries();
 
 function persistProjectItems(items) {
   projectItems = Array.isArray(items) ? items : projectItems;
@@ -58,6 +61,16 @@ function persistProjectItems(items) {
   } catch {
     // The project ledger stays usable even when browser storage is unavailable.
   }
+}
+
+function persistInputArchives(entries) {
+  inputArchives = Array.isArray(entries) ? entries : inputArchives;
+  saveArchiveEntries(inputArchives);
+}
+
+function persistQAEntries(entries) {
+  qaEntries = Array.isArray(entries) ? entries : qaEntries;
+  saveQAEntries(qaEntries);
 }
 
 function persistReportDrafts() {
@@ -141,6 +154,16 @@ function renderWorkbench() {
     selectedBiCohortId,
     reportDrafts,
     projects: projectItems,
+    inputArchives,
+    qaEntries,
+    onArchivesChange: (entries) => {
+      persistInputArchives(entries);
+      renderWorkbench();
+    },
+    onQAChange: (entries) => {
+      persistQAEntries(entries);
+      renderWorkbench();
+    },
     onProjectsChange: (items) => {
       persistProjectItems(items);
       renderWorkbench();
