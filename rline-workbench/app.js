@@ -6,6 +6,7 @@ import { mergeLiveSnapshot, validateLivePayload } from "./modules/live-data.js";
 const LIVE_SNAPSHOT_URL = "./data/rline-live-snapshot.json";
 const LIVE_REFRESH_INTERVAL_MS = 60_000;
 const REPORT_DRAFT_STORAGE_KEY = "rline-workbench-report-drafts-v1";
+const PROJECT_STORAGE_KEY = "rline-workbench-projects-v1";
 const SOURCE_FETCH_WINDOWS = [
   { sourceTime: "12:00", fetchTime: "12:30", minute: 12 * 60 + 30 },
   { sourceTime: "14:00", fetchTime: "14:30", minute: 14 * 60 + 30 },
@@ -38,6 +39,26 @@ function loadReportDrafts() {
 }
 
 let reportDrafts = loadReportDrafts();
+
+function loadProjectItems() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(PROJECT_STORAGE_KEY) || "null");
+    return Array.isArray(stored) && stored.length ? stored : [...(rlineDailyView.DEFAULT_PROJECTS || [])];
+  } catch {
+    return [...(rlineDailyView.DEFAULT_PROJECTS || [])];
+  }
+}
+
+let projectItems = loadProjectItems();
+
+function persistProjectItems(items) {
+  projectItems = Array.isArray(items) ? items : projectItems;
+  try {
+    window.localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify(projectItems));
+  } catch {
+    // The project ledger stays usable even when browser storage is unavailable.
+  }
+}
 
 function persistReportDrafts() {
   try {
@@ -119,6 +140,11 @@ function renderWorkbench() {
     selectedBiStage,
     selectedBiCohortId,
     reportDrafts,
+    projects: projectItems,
+    onProjectsChange: (items) => {
+      persistProjectItems(items);
+      renderWorkbench();
+    },
     onCohortChange: (nextCohortId) => {
       selectedCohortId = nextCohortId;
       selectedDate = "";
