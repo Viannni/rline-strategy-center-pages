@@ -3,7 +3,7 @@ import { icon } from "../ui/icons.js";
 import { RLINE_DAILY_SNAPSHOT } from "../data/rline-daily-data.js?v=20260923-full-analysis";
 import { renderBarChart, renderLineChart } from "./rline-charts.js";
 import { ALL_COHORTS, cohortEntries, dayEndRecords, deriveWeeklyRollups, historyDates, previousDailyRecord, selectSnapshotForCohort, summarizeHistory } from "../history.js";
-import { bindReportingActions, renderDataArchive, renderProjectProgress, renderWeeklyReport } from "./rline-reporting.js?v=20260929-leadership-report";
+import { bindReportingActions, renderDataArchive, renderProjectProgress, renderWeeklyReport } from "./rline-reporting.js?v=20260929-point-values";
 
 function snapshotFrom(context) {
   return context.state.rlineDailyWorkbench || RLINE_DAILY_SNAPSHOT;
