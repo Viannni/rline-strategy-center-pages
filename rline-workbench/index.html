@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>R线运营策略工作台</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./base-styles.css" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" integrity="sha384-uTYyvsSSUZeaPhb5RbKlQa0zY/WpX/QHfvg2mczXyBQOpkWPEDy9lczyp+w7SKXu" crossorigin="anonymous"></script>
+  </head>
+  <body class="rline-standalone">
+    <a class="skip-link" href="#rlineRoot">跳到R线工作区</a>
+    <div class="rline-app">
+      <header class="rline-app__topbar">
+        <a class="rline-app__brand" href="./" aria-label="R线运营策略工作台首页">
+          <span class="rline-app__mark" aria-hidden="true">R</span>
+          <span><strong>R线运营策略工作台</strong><small>日策略 · 周复盘 · 月度规划</small></span>
+        </a>
+        <div class="rline-app__meta">
+          <span>策略视角</span>
+          <a href="../R线工作台更新说明.md" target="_blank" rel="noreferrer">更新说明</a>
+          <span id="rlineLiveStatus" class="rline-live-status" role="status" aria-live="polite">正在连接数据源</span>
+          <span id="rlineSyncPlan" class="rline-sync-plan" role="status" aria-live="polite">源表节点后30分钟 · 本地快照每60秒检查</span>
+          <button id="rlineRefreshButton" class="rline-refresh-button" type="button" title="立即刷新数据">刷新</button>
+        </div>
+      </header>
+      <main id="rlineRoot" tabindex="-1"></main>
+    </div>
+    <script type="module" src="./app.js?v=20260923-full-analysis"></script>
+  </body>
+</html>
