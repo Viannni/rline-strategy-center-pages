@@ -1083,3 +1083,26 @@ body.rline-standalone {
   .rline-sop-add > div, .rline-renewal-add > div, .rline-renewal-record__edit { grid-template-columns: 1fr; }
   .rline-project-delete { margin-left: 0; }
 }
+
+/* Monthly SOP sources: daily operations and completion activity remain separate. */
+.rline-sop-source-board { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0 22px 18px; }
+.rline-sop-source-board article { padding: 14px 15px; border: 1px solid #cde3d8; border-left: 4px solid var(--rline-teal); border-radius: 9px; background: #f7fbf8; }
+.rline-sop-source-board article + article { border-left-color: var(--rline-amber); background: #fffaf1; }
+.rline-sop-source-board strong { display: block; color: var(--rline-deep); font-size: 13px; }
+.rline-sop-source-board p { margin: 5px 0 8px; color: #60776d; font-size: 11px; line-height: 1.6; }
+.rline-sop-source-board a { color: #1d7a63; font-size: 11px; font-weight: 850; text-decoration: none; }
+.rline-sop-source-board a:hover, .rline-sop-source-board a:focus-visible { color: #0d5c48; text-decoration: underline; }
+.rline-sop-track-list { display: grid; gap: 18px; }
+.rline-sop-track { padding-top: 14px; border-top: 1px solid #dce9e3; }
+.rline-sop-track > header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.rline-sop-track > header strong { color: var(--rline-deep); font-size: 14px; }
+.rline-sop-track > header span { color: #697f75; font-size: 10px; font-weight: 800; }
+.rline-sop-track .rline-sop-flow { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.rline-sop-track .rline-sop-flow article + article::before { display: none; }
+.rline-sop-empty { margin: 0; padding: 14px; color: #71867d; font-size: 11px; }
+.rline-sop-editor > .rline-sop-source-board { margin-top: 0; }
+.rline-sop-editor .rline-sop-add > p { margin: 0; color: #6f857b; font-size: 11px; line-height: 1.55; }
+
+@media (max-width: 720px) {
+  .rline-sop-source-board { grid-template-columns: 1fr; margin-right: 15px; margin-left: 15px; }
+}

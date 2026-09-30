@@ -15,7 +15,7 @@ test("weekly report is leadership-oriented and keeps weekly/daily dimensions sep
   assert.match(reporting, /D2 14:00不进入分析/);
   assert.doesNotMatch(reporting, /可直接用于周会播报/);
   assert.doesNotMatch(reporting, /已归档周次的日终覆盖/);
-  assert.match(index, /app\.js\?v=20260930-integrated/);
+  assert.match(index, /app\.js\?v=20260930-month-sop/);
 });
 
 test("workbench exposes editable strategy, effectiveness and renewal modules", async () => {

@@ -1,4 +1,4 @@
-import * as rlineDailyView from "./modules/views/rline-daily.js?v=20260930-integrated";
+import * as rlineDailyView from "./modules/views/rline-daily.js?v=20260930-month-sop";
 import { RLINE_DAILY_SNAPSHOT } from "./modules/data/rline-daily-data.js?v=20260923-full-analysis";
 import { enrichRlineComparisonSnapshot } from "./modules/data/rline-cohort-comparison.js?v=20260923-full-analysis";
 import { mergeLiveSnapshot, validateLivePayload } from "./modules/live-data.js";

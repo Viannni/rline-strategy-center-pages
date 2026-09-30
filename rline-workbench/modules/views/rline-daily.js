@@ -4,7 +4,7 @@ import { RLINE_DAILY_SNAPSHOT } from "../data/rline-daily-data.js?v=20260923-ful
 import { renderBarChart, renderLineChart } from "./rline-charts.js";
 import { ALL_COHORTS, cohortEntries, dayEndRecords, deriveWeeklyRollups, historyDates, previousDailyRecord, selectSnapshotForCohort, summarizeHistory } from "../history.js";
 import { bindReportingActions, renderDataArchive, renderProjectProgress, renderQACenter, renderWeeklyReport } from "./rline-reporting.js?v=20260930-final2";
-import { bindStrategyActions, renderStrategySettings } from "./rline-strategy.js?v=20260930-final";
+import { bindStrategyActions, renderStrategySettings } from "./rline-strategy.js?v=20260930-month-sop";
 import { bindEffectivenessActions, renderEffectiveness } from "./rline-effectiveness.js?v=20260930-final";
 import { bindRenewalActions, renderRenewal } from "./rline-renewal.js?v=20260930-final";
 
