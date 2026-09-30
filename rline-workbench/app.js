@@ -1,4 +1,4 @@
-import * as rlineDailyView from "./modules/views/rline-daily.js?v=20260929-weekly-scope";
+import * as rlineDailyView from "./modules/views/rline-daily.js?v=20260930-integrated";
 import { RLINE_DAILY_SNAPSHOT } from "./modules/data/rline-daily-data.js?v=20260923-full-analysis";
 import { enrichRlineComparisonSnapshot } from "./modules/data/rline-cohort-comparison.js?v=20260923-full-analysis";
 import { mergeLiveSnapshot, validateLivePayload } from "./modules/live-data.js";
@@ -27,6 +27,8 @@ let selectedCohortId = initialParams.get("cohort") || "all";
 let selectedDate = initialParams.get("date") || "";
 let selectedBiStage = initialParams.get("biStage") || "all";
 let selectedBiCohortId = initialParams.get("biCohort") || "all";
+let selectedTrendLevels = initialParams.get("trendLevels")?.split(",").filter(Boolean) || [];
+let selectedTrendCohorts = initialParams.get("trendCohorts")?.split(",").filter(Boolean) || [];
 let snapshot = enrichRlineComparisonSnapshot(RLINE_DAILY_SNAPSHOT);
 let isRefreshing = false;
 
@@ -152,6 +154,8 @@ function renderWorkbench() {
     selectedDate,
     selectedBiStage,
     selectedBiCohortId,
+    selectedTrendLevels,
+    selectedTrendCohorts,
     reportDrafts,
     projects: projectItems,
     inputArchives,
@@ -194,6 +198,19 @@ function renderWorkbench() {
       if (selectedDate) params.set("date", selectedDate);
       params.set("biStage", selectedBiStage);
       params.set("biCohort", selectedBiCohortId);
+      window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+    },
+    onTrendFilterChange: ({ levels, cohorts }) => {
+      selectedTrendLevels = Array.isArray(levels) ? levels : [];
+      selectedTrendCohorts = Array.isArray(cohorts) ? cohorts : [];
+      const params = new URLSearchParams(window.location.search);
+      params.set("tab", activeTab);
+      params.set("cohort", selectedCohortId);
+      if (selectedDate) params.set("date", selectedDate);
+      if (selectedTrendLevels.length) params.set("trendLevels", selectedTrendLevels.join(","));
+      else params.delete("trendLevels");
+      if (selectedTrendCohorts.length) params.set("trendCohorts", selectedTrendCohorts.join(","));
+      else params.delete("trendCohorts");
       window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
     },
     onReportDraftChange: (draft) => storeReportDraft(draft),

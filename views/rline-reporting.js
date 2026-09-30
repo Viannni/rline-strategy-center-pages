@@ -1,7 +1,7 @@
 import { escapeAttribute, escapeHtml, renderBadge } from "../ui/components.js";
 import { renderBarChart, renderLineChart } from "./rline-charts.js?v=20260929-bar-values";
 import { ALL_COHORTS, dayEndRecords, summarizeHistory } from "../history.js";
-import { buildArchiveEntry, normalizeQAEntries, parseUploadedText } from "../rline-input-store.js?v=20260929-input-qa";
+import { buildArchiveEntry, normalizeQAEntries, parseUploadedText } from "../modules/rline-input-store.js?v=20260929-input-qa";
 import { buildWeeklyReport, progressOverview } from "../reporting.js";
 
 const IP_ROWS = [
@@ -22,7 +22,7 @@ const pct = (value, decimals = 2) => value === null || value === undefined || !N
 const delta = (value) => value === null || value === undefined || !Number.isFinite(Number(value)) ? "暂无数据" : `${value > 0 ? "+" : ""}${Number(value).toFixed(2)}pp`;
 const countText = (value) => value === null || value === undefined ? "暂无数据" : `${Number(value).toFixed(0)}人`;
 const card = (name, text, tone = "") => `<article class="rline-weekly-insight ${tone}"><span>${escapeHtml(name)}</span><p>${escapeHtml(text)}</p></article>`;
-const section = (title, note, body, badge = "") => `<section class="panel rline-section rline-report-panel"><header class="panel__header"><div><p class="section-kicker">周报分析</p><h2>${escapeHtml(title)}</h2><p>${escapeHtml(note)}</p></div>${badge}</header>${body}</section>`;
+const section = (title, note, body, badge = "") => `<section class="panel rline-section rline-report-panel"><header class="panel__header"><div><p class="section-kicker">自动周报</p><h2>${escapeHtml(title)}</h2><p>${escapeHtml(note)}</p></div>${badge}</header>${body}</section>`;
 
 function chosenCohort(snapshot, cohortId) {
   return cohortId === ALL_COHORTS ? snapshot.weekly?.cohortComparison?.primaryCohortId || ALL_COHORTS : cohortId;
@@ -54,7 +54,7 @@ function weeklyMetricCards(report) {
   return report.weeklyComparison.map((item) => card(item.label, `目标 ${pct(item.target, 1)} · 实际 ${pct(item.actual, 1)} · 差值 ${delta(item.gap)}`, statusTone(item.gap))).join("");
 }
 function weeklyOverviewPanel(report) {
-  return section("本周整体目标达成", "周维度只看周汇总；日维度单独放在下一部分，不与周结果混读。", `<div class="rline-target-summary">${weeklyMetricCards(report)}</div><div class="rline-chart-grid rline-report-chart-grid">${renderBarChart({ title: "本周三项指标：实际 vs 目标", subtitle: "周汇总实际与周目标差值，完课无值时保留空缺", labels: report.weeklyComparison.map((item) => item.label), datasets: [{ label: "实际", data: report.weeklyComparison.map((item) => item.actual), color: "#16795a" }, { label: "目标", data: report.weeklyComparison.map((item) => item.target), color: "#dd9d22", dashed: true }], yMax: 100, unit: "%", decimals: 1, showValues: true, emptyLabel: report.weeklyComparison.some((item) => item.actual === null) ? "周数据待回填" : "" })}</div><div class="rline-report-reading"><strong>周报读法</strong><span>先看周目标差值，再看首周每日哪一天开始偏离；如果周完课暂无值，页面只显示“待回填”，不拿BI阶段结果替代。</span></div>`, renderBadge(report.weeklyStatus === "已结周" ? "success" : "info", `周数据${report.weeklyStatus}`));
+  return section("本周整体目标达成", "周维度只看周汇总；日维度单独放在下一部分，不与周结果混读。", `<div class="rline-target-summary">${weeklyMetricCards(report)}</div><div class="rline-chart-grid rline-report-chart-grid">${renderBarChart({ title: "本周三项指标：实际 vs 目标", subtitle: "周汇总实际与周目标差值，完课无值时保留空缺", labels: report.weeklyComparison.map((item) => item.label), datasets: [{ label: "实际", data: report.weeklyComparison.map((item) => item.actual), color: "#16795a" }, { label: "目标", data: report.weeklyComparison.map((item) => item.target), color: "#dd9d22", dashed: true }], yMax: 100, unit: "%", decimals: 1, emptyLabel: report.weeklyComparison.some((item) => item.actual === null) ? "周数据待回填" : "" })}</div><div class="rline-report-reading"><strong>周报读法</strong><span>先看周目标差值，再看首周每日哪一天开始偏离；如果周完课暂无值，页面只显示“待回填”，不拿BI阶段结果替代。</span></div>`, renderBadge(report.weeklyStatus === "已结周" ? "success" : "info", `周数据${report.weeklyStatus}`));
 }
 
 function monthlyTargetSeries(snapshot, key, labels) {
@@ -104,7 +104,7 @@ function dailyTrendPanel(report) {
 }
 function narrativePanel(report) {
   const sections = report.narrative.sections;
-  return section("结论与业务洞察", "每条结论按事实 → 判断 → 动作 → 验证输出，避免只有数据没有业务决策。", `<div class="rline-narrative-grid">${sections.map((item) => `<article class="rline-narrative-card" data-narrative="${escapeHtml(item.id)}"><header><span>${escapeHtml(item.title)}</span><b>${item.id === "overall" ? "结论" : item.id === "strategy" ? "策略" : "QA"}</b></header><div><small>事实</small><p>${escapeHtml(item.fact)}</p></div><div><small>判断</small><p>${escapeHtml(item.judgment)}</p></div><div><small>动作</small><p>${escapeHtml(item.action)}</p></div><div><small>验证</small><p>${escapeHtml(item.validation)}</p></div></article>`).join("")}</div>`, renderBadge("info", "业务洞察"));
+  return section("结论与业务洞察", "每条结论按事实 → 判断 → 动作 → 验证输出，避免只有数据没有业务决策。", `<div class="rline-narrative-grid">${sections.map((item) => `<article class="rline-narrative-card" data-narrative="${escapeHtml(item.id)}"><header><span>${escapeHtml(item.title)}</span><b>${item.id === "overall" ? "结论" : item.id === "strategy" ? "策略" : "QA"}</b></header><div><small>事实</small><p>${escapeHtml(item.fact)}</p></div><div><small>判断</small><p>${escapeHtml(item.judgment)}</p></div><div><small>动作</small><p>${escapeHtml(item.action)}</p></div><div><small>验证</small><p>${escapeHtml(item.validation)}</p></div></article>`).join("")}</div>`, renderBadge("info", "可直接用于周会播报"));
 }
 function cohortRows(snapshot, cohortId) {
   const id = chosenCohort(snapshot, cohortId);
@@ -138,7 +138,7 @@ function channelPanel(snapshot) {
   const rows = channelRows(snapshot);
   if (!rows.length) return section("渠道分析", "渠道定义为扩品、用户召回、APP部等用户来源；Kitty/Taby不在此处。", `<div class="rline-report-empty">暂无行课中渠道数据。</div>`, renderBadge("warning", "待回填"));
   const labels = rows.map((row) => row.name);
-  return section("渠道分析：扩科 / 扩品 / 用户召回 / APP部", "使用R1/R2 1期行课中班期的用户来源渠道；看规模、参与、深度、完课和补读，不把内容IP当成渠道。", `<div class="rline-chart-grid rline-report-chart-grid">${renderBarChart({ title: "渠道用户规模", subtitle: "R1/R2 1期来源用户数", labels, datasets: [{ label: "用户数", data: rows.map((row) => row.users), color: "#7b9fe8" }], yMax: Math.max(100, ...rows.map((row) => row.users)), unit: "人", decimals: 0 })}${renderBarChart({ title: "渠道用户占比", subtitle: "R1/R2 1期来源结构", labels, datasets: [{ label: "用户占比", data: rows.map((row) => row.userShare), color: "#e5a438" }], yMax: 100, unit: "%", decimals: 1 })}${renderBarChart({ title: "渠道参与 / 深度 / 完课", subtitle: "按渠道用户数加权", labels, datasets: [{ label: "参与率", data: rows.map((row) => row.participation), color: "#16795a" }, { label: "深度", data: rows.map((row) => row.depth), color: "#4d8fe3" }, { label: "完课率", data: rows.map((row) => row.completion), color: "#dd9d22" }], yMax: 100, unit: "%", decimals: 1, showValues: true })}</div><div class="rline-channel-cards">${rows.map((row) => `<article><strong>${escapeHtml(row.name)}</strong><span>用户${row.users}人 · 占比${pct(row.userShare, 1)}</span><small>参与${pct(row.participation, 1)} · 深度${pct(row.depth, 1)} · 完课${pct(row.completion, 1)} · 补读完课${pct(row.supplementCompletion, 1)}</small></article>`).join("")}</div>`, renderBadge("info", "来源渠道"));
+  return section("渠道分析：扩科 / 扩品 / 用户召回 / APP部", "使用R1/R2 1期行课中班期的用户来源渠道；看规模、参与、深度、完课和补读，不把内容IP当成渠道。", `<div class="rline-chart-grid rline-report-chart-grid">${renderBarChart({ title: "渠道用户规模", subtitle: "R1/R2 1期来源用户数", labels, datasets: [{ label: "用户数", data: rows.map((row) => row.users), color: "#7b9fe8" }], yMax: Math.max(100, ...rows.map((row) => row.users)), unit: "人", decimals: 0 })}${renderBarChart({ title: "渠道用户占比", subtitle: "R1/R2 1期来源结构", labels, datasets: [{ label: "用户占比", data: rows.map((row) => row.userShare), color: "#e5a438" }], yMax: 100, unit: "%", decimals: 1 })}${renderBarChart({ title: "渠道参与 / 深度 / 完课", subtitle: "按渠道用户数加权", labels, datasets: [{ label: "参与率", data: rows.map((row) => row.participation), color: "#16795a" }, { label: "深度", data: rows.map((row) => row.depth), color: "#4d8fe3" }, { label: "完课率", data: rows.map((row) => row.completion), color: "#dd9d22" }], yMax: 100, unit: "%", decimals: 1 })}</div><div class="rline-channel-cards">${rows.map((row) => `<article><strong>${escapeHtml(row.name)}</strong><span>用户${row.users}人 · 占比${pct(row.userShare, 1)}</span><small>参与${pct(row.participation, 1)} · 深度${pct(row.depth, 1)} · 完课${pct(row.completion, 1)} · 补读完课${pct(row.supplementCompletion, 1)}</small></article>`).join("")}</div>`, renderBadge("info", "来源渠道"));
 }
 function ipPanel() {
   const labels = [...new Set(IP_ROWS.map((row) => row[0]))];
@@ -146,79 +146,11 @@ function ipPanel() {
   return section("内容IP分析：Kitty / Taby", "Kitty 与 Taby是内容IP，不是用户来源渠道；只在有IP拆分快照时分析其留存和深度。", `<div class="rline-chart-grid rline-report-chart-grid">${renderBarChart({ title: "IP留存", subtitle: "R1/R2二期D5日终IP快照", labels, datasets: [{ label: "Kitty", data: values("Kitty", 2), color: "#4d8fe3" }, { label: "Taby", data: values("Taby", 2), color: "#e86c56" }], yMax: 100, unit: "%", decimals: 1 })}${renderBarChart({ title: "IP深度", subtitle: "R1/R2二期D5日终IP快照", labels, datasets: [{ label: "Kitty", data: values("Kitty", 3), color: "#4d8fe3" }, { label: "Taby", data: values("Taby", 3), color: "#e86c56" }], yMax: 100, unit: "%", decimals: 1 })}</div>`, renderBadge("info", "内容IP"));
 }
 
-function trendCohortOptions(snapshot) {
-  const history = snapshot.history || {};
-  const options = [];
-  const seen = new Set();
-  (history.cohorts || []).forEach((cohort) => {
-    const option = { id: cohort.id, name: cohort.name, startDate: cohort.startDate, hasData: (history.daily || []).some((row) => row.cohortId === cohort.id && (row.asOf === "24:00" || row.isDayEnd)) };
-    options.push(option); seen.add(option.name);
-  });
-  (snapshot.bi?.cohorts || []).forEach((cohort) => {
-    const match = String(cohort.cohortName || "").match(/(\d+期)$/);
-    if (!match || seen.has(match[1])) return;
-    const name = match[1];
-    options.push({ id: `bi-${name}`, name, startDate: cohort.courseStartDate || "待回填", hasData: false });
-    seen.add(name);
-  });
-  return options;
-}
-function trendRecordFor(row, cohort) {
-  return row.cohortId === cohort.id || row.cohortName === cohort.name;
-}
-function dayEndTrendRows(snapshot, cohort) {
-  const rows = (snapshot.history?.daily || []).filter((row) => trendRecordFor(row, cohort) && (row.asOf === "24:00" || row.isDayEnd));
-  const byDay = new Map();
-  rows.forEach((row) => {
-    const day = row.day || String(row.stage || "").match(/D\d+/)?.[0];
-    if (!day) return;
-    const previous = byDay.get(day);
-    if (!previous || String(row.capturedAt || "") > String(previous.capturedAt || "")) byDay.set(day, row);
-  });
-  return ["D1", "D2", "D3", "D4", "D5"].map((day) => byDay.get(day) || null);
-}
-function trendValue(row, level, metric) {
-  if (!row) return null;
-  if (level === "整体") return row.metrics?.[metric] ?? null;
-  return row.split?.find((item) => item.level === level)?.[metric] ?? null;
-}
-function trendFilterPanel(snapshot, selectedLevels = [], selectedCohorts = []) {
-  const cohorts = trendCohortOptions(snapshot);
-  const realCohorts = cohorts.filter((item) => item.hasData).map((item) => item.id);
-  const chosenCohorts = selectedCohorts.filter((id) => cohorts.some((item) => item.id === id));
-  const effectiveCohorts = chosenCohorts.length ? chosenCohorts : (realCohorts.length ? realCohorts : cohorts.slice(0, 1).map((item) => item.id));
-  const levels = ["整体", "R1", "R2"];
-  const effectiveLevels = selectedLevels.filter((level) => levels.includes(level));
-  const finalLevels = effectiveLevels.length ? effectiveLevels : ["整体"];
-  return `<div class="rline-trend-filters"><div><strong>趋势筛选</strong><small>可单选或多选；所有实际点只读取24:00日终</small></div><fieldset><legend>级别</legend>${levels.map((level) => `<label><input type="checkbox" data-rline-trend-filter="level" value="${escapeAttribute(level)}"${finalLevels.includes(level) ? " checked" : ""}>${escapeHtml(level)}</label>`).join("")}</fieldset><fieldset class="rline-trend-filter-cohorts"><legend>班期</legend>${cohorts.map((cohort) => `<label title="${escapeAttribute(cohort.hasData ? "已有24:00趋势数据" : "暂无24:00趋势数据")}"><input type="checkbox" data-rline-trend-filter="cohort" value="${escapeAttribute(cohort.id)}"${effectiveCohorts.includes(cohort.id) ? " checked" : ""}>${escapeHtml(cohort.name)}<small>${escapeHtml(cohort.hasData ? "有数据" : "待回填")}</small></label>`).join("")}</fieldset></div>`;
-}
-function trendChart(snapshot, cohorts, levels, metric, title, color, target) {
-  const palette = ["#238a73", "#4c78c8", "#d59627", "#d9695b", "#7c6ac7", "#2d9cdb"];
-  const datasets = [];
-  cohorts.forEach((cohort) => levels.forEach((level) => {
-    const rows = dayEndTrendRows(snapshot, cohort);
-    const data = rows.map((row) => trendValue(row, level, metric));
-    if (data.some((value) => value !== null && value !== undefined)) datasets.push({ label: `${cohort.name} · ${level}`, data, color: palette[datasets.length % palette.length], valueLabelOffset: datasets.length % 2 ? -12 : 16 });
-  }));
-  const actual = datasets.length ? datasets : [{ label: "暂无24:00日终数据", data: [null, null, null, null, null], color }];
-  return renderLineChart({ title, subtitle: "实线=实际；每个点为当日24:00日终；虚线=首周每日目标", labels: ["D1", "D2", "D3", "D4", "D5"], datasets: [...actual, { label: "目标", data: target, color, dashed: true, valueLabelOffset: -14 }], yMax: 100, unit: "%", decimals: 1, showValues: true, emptyLabel: datasets.length ? "" : "所选班期暂无日终数据" });
-}
-function periodTrendPanel(snapshot, options = {}) {
-  const cohorts = trendCohortOptions(snapshot).filter((cohort) => (options.trendCohorts || []).includes(cohort.id));
-  const all = trendCohortOptions(snapshot);
-  const selectedCohorts = cohorts.length ? cohorts : all.filter((cohort) => cohort.hasData);
-  const levels = (options.trendLevels || []).length ? options.trendLevels : ["整体"];
-  const targets = snapshot.weekly?.targets?.daily || { retention: [72, 68, 65, 62, 55], depth: [69, 66.5, 63.5, 60.5, 52.5], completion: [69, 69.2, 69.2, 69, 66.5] };
-  return section("首周每日趋势：按期次和级别查看", "首周日维度只读D1-D5的24:00日终；与上方W1-W4周维度分开。", `${trendFilterPanel(snapshot, options.trendLevels, options.trendCohorts)}<div class="rline-chart-grid rline-report-chart-grid">${trendChart(snapshot, selectedCohorts, levels, "retention", "首周留存趋势", "#238a73", targets.retention)}${trendChart(snapshot, selectedCohorts, levels, "depth", "首周深度趋势", "#4c78c8", targets.depth)}${trendChart(snapshot, selectedCohorts, levels, "completion", "首周完课趋势", "#d59627", targets.completion)}</div>`, renderBadge("info", `${selectedCohorts.length}个班期 · ${levels.join("、")}`));
+export function renderWeeklyReport(snapshot, cohortId = ALL_COHORTS) {
+  const report = reportFor(snapshot, cohortId);
+  return `<div class="rline-tab-content"><section class="rline-hero rline-weekly-hero"><div><p class="section-kicker">R线策略工作台 · 周汇报</p><h1>${escapeHtml(report.week)}领导周会版自动周报</h1><p class="rline-hero__sub">播报顺序：周目标达成 → 首周W1每日趋势 → 班期/IP/渠道下钻 → 用户QA/课程QA → 策略调整与验证。数据口径固定为24:00日终。</p><div class="rline-hero__status">${renderBadge("success", "D2 14:00排除")}${renderBadge(report.dataQuality.capturedDays === 5 ? "success" : "warning", `日终${report.dataQuality.capturedDays}/5天`)}</div></div></section>${weeklyOverviewPanel(report)}${dailyTrendPanel(report)}${monthlyWeeklyTargetPanel(snapshot, cohortId)}${cohortPanel(snapshot, cohortId)}${ipPanel()}${channelPanel(snapshot)}${narrativePanel(report)}<section class="panel rline-section"><header class="panel__header"><div><p class="section-kicker">自动周报播报摘要</p><h2>可直接复制到周会纪要</h2></div>${renderBadge("info", "目标—实际—差值—动作")}</header><div class="rline-weekly-summary-text"><p>${escapeHtml(report.narrative.summary)}</p>${report.narrative.sections.filter((item) => item.id !== "overall").map((item) => `<p><strong>${escapeHtml(item.title)}：</strong>${escapeHtml(item.judgment)} 当前动作：${escapeHtml(item.action)} 验证：${escapeHtml(item.validation)}</p>`).join("")}</div></section></div>`;
 }
 
-export function renderWeeklyReport(snapshot, cohortId = ALL_COHORTS, options = {}) {
-  const report = reportFor(snapshot, cohortId);
-  const reportDate = snapshot.current?.date || new Date().toISOString().slice(0, 10);
-  const summary = report.narrative?.summary || "本周数据待回填。";
-  const sections = report.narrative?.sections || [];
-  return `<div class="rline-tab-content"><section class="rline-hero rline-weekly-hero"><div><p class="section-kicker">R线策略工作台 · 周报</p><h1>${escapeHtml(reportDate)} 周报</h1><p class="rline-hero__sub">24:00日终口径；D2 14:00不进入分析。周维度与首周日维度分开呈现。</p><div class="rline-hero__status">${renderBadge("success", "24:00日终")}${renderBadge(report.dataQuality.capturedDays === 5 ? "success" : "warning", `首周${report.dataQuality.capturedDays}/5天`)}</div></div></section>${weeklyOverviewPanel(report)}${monthlyWeeklyTargetPanel(snapshot, cohortId)}${periodTrendPanel(snapshot, options)}${cohortPanel(snapshot, cohortId)}${channelPanel(snapshot)}${ipPanel()}${narrativePanel(report)}<section class="panel rline-section"><header class="panel__header"><div><p class="section-kicker">周会结论</p><h2>事实、判断、动作、验证</h2></div>${renderBadge("info", "领导汇报")}</header><div class="rline-weekly-summary-text"><p>${escapeHtml(summary)}</p>${sections.filter((item) => item.id !== "overall").map((item, index) => `<p><strong>${index + 1}. ${escapeHtml(item.title)}：</strong>${escapeHtml(item.judgment)} 当前动作：${escapeHtml(item.action)} 验证：${escapeHtml(item.validation)}</p>`).join("")}</div></section></div>`;
-}
 
 function inputSection(title, note, body, badge = "") {
   return `<section class="panel rline-section rline-input-panel"><header class="panel__header"><div><p class="section-kicker">R线工作台</p><h2>${escapeHtml(title)}</h2><p>${escapeHtml(note)}</p></div>${badge}</header>${body}</section>`;
@@ -258,18 +190,13 @@ function renderArchiveEntry(entry) {
   return `<article class="rline-archive-card" data-archive-id="${escapeAttribute(entry.id)}"><header><div><span>${escapeHtml(entry.kind === "table" ? "表格存档" : entry.kind === "image" ? "图片存档" : "原文件")}</span><strong>${escapeHtml(entry.name)}</strong></div><button type="button" class="rline-text-button" data-archive-delete>删除本地存档</button></header><div class="rline-archive-meta">${source}<small>采集：${escapeHtml(archiveMeta(entry))} · ${escapeHtml(entry.parseStatus || "已登记")}</small></div>${entry.note ? `<p class="rline-archive-note">${escapeHtml(entry.note)}</p>` : ""}${preview}</article>`;
 }
 
-function renderWeeklyArchiveTable(snapshot, cohortId) {
-  const id = chosenCohort(snapshot, cohortId);
-  const rows = (snapshot.history?.weekly || []).filter((row) => id === ALL_COHORTS || row.cohortId === id).sort((a, b) => String(b.capturedAt || "").localeCompare(String(a.capturedAt || "")));
-  const head = ["班期", "周次", "状态", "覆盖日终", "最新日", "周留存", "周深度", "周完课"];
-  const body = rows.map((row) => `<div class="rline-source-row rline-weekly-source-row"><span>${escapeHtml(row.cohortName || row.cohortId || "未命名")}</span><span>${escapeHtml(row.week || "-")}</span><span>${escapeHtml(row.status === "closed" ? "已结周" : "进行中")}</span><span>${escapeHtml(`${row.daysCaptured || 0}/${row.expectedDays || 5}天`)}</span><span>${escapeHtml(row.latestDay || "待回填")}</span><span>${pct(row.summary?.retention, 2)}</span><span>${pct(row.summary?.depth, 2)}</span><span>${pct(row.summary?.completion, 2)}</span></div>`).join("");
-  return `<div class="rline-source-table"><div class="rline-source-row rline-source-row--head rline-weekly-source-row">${head.map((item) => `<span>${item}</span>`).join("")}</div>${body || `<div class="rline-history-empty">暂无周汇总存档</div>`}</div>`;
-}
-
 export function renderDataArchive(snapshot, cohortId = ALL_COHORTS, context = {}) {
   const summary = summarizeHistory(snapshot.history || {});
+  const records = dayEndRecords(snapshot.history || {}, chosenCohort(snapshot, cohortId));
+  const labels = records.map((row) => `${row.week || ""}${row.day || ""}`);
+  const weeks = snapshot.history?.weekly || [];
   const archives = Array.isArray(context.inputArchives) ? context.inputArchives : [];
-  return `<div class="rline-tab-content"><section class="page-header rline-subheader"><div><p class="section-kicker">R线策略工作台 · 数据留存</p><h1>数据留存</h1><p>原始图片、表格、在线链接、24:00日终明细和周汇总分别留档，后续复盘可追溯。</p></div><button type="button" class="rline-export-button" data-rline-export-archive>导出全部留存数据</button></section><section class="rline-retention-stats"><article><span>内置快照</span><strong>${summary.dailyCount}</strong><small>日内及24:00历史</small></article><article><span>周汇总</span><strong>${summary.weeklyCount}</strong><small>按班期/周次保存</small></article><article><span>原始资料</span><strong>${archives.length}</strong><small>图片、表格、链接</small></article><article><span>最近时间</span><strong>${escapeHtml(summary.latestAsOf)}</strong><small>源表采集时间</small></article></section>${inputSection("上传原始资料", "支持图片、CSV、TSV、JSON、XLSX登记和在线表格链接；原文件与解析结果同时保留。", renderArchiveIntake(), renderBadge("info", "可上传"))}${inputSection("24:00日终明细", "D2 14:00仍保留在原始历史中，但不会进入周报趋势。", renderHistoryArchive(snapshot, cohortId), renderBadge("success", "历史不覆盖"))}${inputSection("周度表格存档", "每一期每一周的周汇总单独保留，周报读取这里的周维度结果。", renderWeeklyArchiveTable(snapshot, cohortId), renderBadge("success", "周维度"))}${inputSection("原始表格 / 图片存档", "可回看、导出或删除本地副本。", archives.length ? `<div class="rline-archive-grid">${archives.map(renderArchiveEntry).join("")}</div>` : `<div class="rline-empty-workflow"><strong>还没有原始资料存档</strong><p>从上传入口添加日报表、周表、QA表或截图。</p></div>`, renderBadge(archives.length ? "success" : "warning", archives.length ? "已归档" : "待上传"))}</div>`;
+  return `<div class="rline-tab-content"><section class="page-header rline-subheader"><div><p class="section-kicker">R线策略工作台 · 数据留存</p><h1>数据资产留存：源数据、原始表格、24:00历史分开保存</h1><p>这里保存你上传的图片/表格/原始链接和工作台的日终数据，支持后续周报复盘；D2 14:00仍保留在源表存档，但不进入周度分析。</p></div><button type="button" class="rline-export-button" data-rline-export-archive>导出全部留存数据</button></section><section class="rline-retention-stats"><article><span>内置日终快照</span><strong>${summary.dailyCount}</strong><small>24:00优先用于分析</small></article><article><span>周汇总存档</span><strong>${summary.weeklyCount}</strong><small>按班期/周次独立保存</small></article><article><span>原始文件存档</span><strong>${archives.length}</strong><small>本浏览器留存</small></article><article><span>最近快照</span><strong>${escapeHtml(summary.latestAsOf)}</strong><small>以源表时间为准</small></article></section>${inputSection("上传入口", "上传后的原始资料和解析行会在本浏览器保留，后续可以回看、导出或删除本地副本。", renderArchiveIntake(), renderBadge("info", "可上传"))}${inputSection("工作台内置日终明细", "这是工作台已经接入的结构化历史；所有日内时点都保留，周报只读取24:00。", renderHistoryArchive(snapshot, cohortId), renderBadge("success", "历史不覆盖"))}${inputSection("原始表格 / 图片存档", "这里保留你上传的OA表格、图片和在线表格登记记录；它们是证据材料，不会直接改写指标。", archives.length ? `<div class="rline-archive-grid">${archives.map(renderArchiveEntry).join("")}</div>` : `<div class="rline-empty-workflow"><strong>还没有原始资料存档</strong><p>从上方上传日报表、周表、QA表或截图后，这里会出现原文件预览和解析后的表格行。</p></div>`, renderBadge(archives.length ? "success" : "warning", archives.length ? "已归档" : "待上传"))}${inputSection("周度复盘覆盖", "这张图只回答“每个班期周次已有多少个24:00日终”，不是数据存档本身。", renderBarChart({ title: "已归档周次的日终覆盖", subtitle: "用于发现哪些周次还缺D3-D5；缺失不代表用户表现为0", labels: weeks.map((row) => `${row.cohortName || row.cohortId} ${row.week}`), datasets: [{ label: "日终覆盖天数", data: weeks.map((row) => row.daysCaptured ?? null), color: "#dd9d22" }], yMax: 5, unit: "天", decimals: 0, showValues: true }), renderBadge("info", "复盘提醒"))}</div>`;
 }
 
 function qaStatusOptions(status) {
@@ -462,20 +389,17 @@ function bindQAActions(container, context) {
 }
 
 function safeValue(value, fallback = "") { return value === null || value === undefined ? fallback : value; }
-function projectCard(item, index = 0) {
+function projectCard(item) {
   const statusOptions = ["已完成", "验证中", "待协同", "有风险", "已验收"].map((status) => `<option value="${status}"${item.status === status ? " selected" : ""}>${status}</option>`).join("");
-  return `<article class="rline-project-card rline-project-card--editable" data-status="${escapeHtml(item.status)}" data-project-id="${escapeHtml(item.id)}"><header><div><span class="rline-project-index">${String(index + 1).padStart(2, "0")}</span><span>${escapeHtml(item.status)}</span><strong>${escapeHtml(item.title)}</strong></div><b>${Number(item.progress || 0)}%</b></header><div class="rline-project-progress"><i style="width:${Math.min(100, Math.max(0, Number(item.progress || 0)))}%"></i></div><div class="rline-project-loop"><span>目标</span><p>${escapeHtml(item.goal)}</p><span>当前产出</span><p>${escapeHtml(item.output)}</p><span>卡点</span><p class="${item.blocker ? "is-blocked" : "is-clear"}">${escapeHtml(item.blocker || "当前无卡点")}</p><span>协同 / 截止</span><p>${escapeHtml(item.collaborators || "待填写")} · ${escapeHtml(item.dueDate || "待填写")}</p><span>下一步</span><p>${escapeHtml(item.next)}</p><span>验收标准</span><p>${escapeHtml(item.acceptance)}</p></div><div class="rline-project-form"><label><span>状态</span><select data-project-field="status">${statusOptions}</select></label><label><span>进度%</span><input data-project-field="progress" type="number" min="0" max="100" value="${Number(item.progress || 0)}"></label><label><span>负责人</span><input data-project-field="owner" value="${escapeHtml(safeValue(item.owner))}"></label><label><span>截止日期</span><input data-project-field="dueDate" type="date" value="${escapeHtml(safeValue(item.dueDate))}"></label><label class="is-wide"><span>本周产出</span><textarea data-project-field="output">${escapeHtml(safeValue(item.output))}</textarea></label><label class="is-wide"><span>卡点</span><textarea data-project-field="blocker">${escapeHtml(safeValue(item.blocker))}</textarea></label><label class="is-wide"><span>协同人/团队</span><input data-project-field="collaborators" value="${escapeHtml(safeValue(item.collaborators))}"></label><label class="is-wide"><span>下一步</span><textarea data-project-field="next">${escapeHtml(safeValue(item.next))}</textarea></label><label class="is-wide"><span>验收标准</span><textarea data-project-field="acceptance">${escapeHtml(safeValue(item.acceptance))}</textarea></label></div><div class="rline-project-actions"><button type="button" class="rline-project-save" data-project-save>保存本事项</button><button type="button" class="rline-project-delete rline-danger-button" data-project-delete>删除事项</button></div><small class="rline-project-save-status" data-project-save-status>修改后点击保存，进度会保留在本浏览器</small></article>`;
+  return `<article class="rline-project-card rline-project-card--editable" data-status="${escapeHtml(item.status)}" data-project-id="${escapeHtml(item.id)}"><header><div><span>${escapeHtml(item.status)}</span><strong>${escapeHtml(item.title)}</strong></div><b>${Number(item.progress || 0)}%</b></header><div class="rline-project-progress"><i style="width:${Math.min(100, Math.max(0, Number(item.progress || 0)))}%"></i></div><div class="rline-project-loop"><span>目标</span><p>${escapeHtml(item.goal)}</p><span>当前产出</span><p>${escapeHtml(item.output)}</p><span>卡点</span><p class="${item.blocker ? "is-blocked" : "is-clear"}">${escapeHtml(item.blocker || "当前无卡点")}</p><span>协同 / 截止</span><p>${escapeHtml(item.collaborators || "待填写")} · ${escapeHtml(item.dueDate || "待填写")}</p><span>下一步</span><p>${escapeHtml(item.next)}</p><span>验收标准</span><p>${escapeHtml(item.acceptance)}</p></div><div class="rline-project-form"><label><span>状态</span><select data-project-field="status">${statusOptions}</select></label><label><span>进度%</span><input data-project-field="progress" type="number" min="0" max="100" value="${Number(item.progress || 0)}"></label><label><span>负责人</span><input data-project-field="owner" value="${escapeHtml(safeValue(item.owner))}"></label><label><span>截止日期</span><input data-project-field="dueDate" type="date" value="${escapeHtml(safeValue(item.dueDate))}"></label><label class="is-wide"><span>本周产出</span><textarea data-project-field="output">${escapeHtml(safeValue(item.output))}</textarea></label><label class="is-wide"><span>卡点</span><textarea data-project-field="blocker">${escapeHtml(safeValue(item.blocker))}</textarea></label><label class="is-wide"><span>协同人/团队</span><input data-project-field="collaborators" value="${escapeHtml(safeValue(item.collaborators))}"></label><label class="is-wide"><span>下一步</span><textarea data-project-field="next">${escapeHtml(safeValue(item.next))}</textarea></label><label class="is-wide"><span>验收标准</span><textarea data-project-field="acceptance">${escapeHtml(safeValue(item.acceptance))}</textarea></label></div><button type="button" class="rline-project-save" data-project-save>保存本事项</button><small class="rline-project-save-status" data-project-save-status>修改后点击保存，进度会保留在本浏览器</small></article>`;
 }
 export function renderProjectProgress(projects = DEFAULT_PROJECTS) {
-  const items = Array.isArray(projects) ? projects : DEFAULT_PROJECTS;
+  const items = Array.isArray(projects) && projects.length ? projects : DEFAULT_PROJECTS;
   const summary = progressOverview(items);
-  const rank = { "有风险": 0, "待协同": 1, "验证中": 2, "已完成": 3, "已验收": 4 };
-  const ordered = [...items].sort((a, b) => (rank[a.status] ?? 5) - (rank[b.status] ?? 5) || Number(a.progress || 0) - Number(b.progress || 0));
-  const blockedItems = ordered.filter((item) => item.status === "有风险" || item.status === "待协同");
-  const openItems = ordered.filter((item) => item.status !== "已验收" && item.status !== "已完成");
-  const closedItems = ordered.filter((item) => item.status === "已验收" || item.status === "已完成");
-  const list = (itemsToShow, empty = "暂无") => itemsToShow.map((item, index) => `<article><b>${String(index + 1).padStart(2, "0")}</b><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.next || item.output || "待填写")}</p><small>负责人：${escapeHtml(item.owner || "待填写")} · 协同：${escapeHtml(item.collaborators || "待填写")} · 截止：${escapeHtml(item.dueDate || "待填写")}</small></div></article>`).join("") || `<p>${empty}</p>`;
-  return `<div class="rline-tab-content"><section class="page-header rline-subheader"><div><p class="section-kicker">R线策略工作台 · 项目推进</p><h1>项目推进</h1><p>按目标、产出、卡点、协同、截止、下一步和验收标准形成闭环。</p></div><div class="rline-project-head-actions">${renderBadge(summary.closureRate >= 50 ? "success" : "warning", `闭环率${summary.closureRate}%`)}<button type="button" class="rline-export-button" data-project-add>新增事项</button></div></section><section class="rline-project-overview"><article><span>事项总数</span><strong>${summary.total}</strong><small>本周纳入跟踪</small></article><article><span>已闭环</span><strong>${summary.closed}</strong><small>已完成 / 已验收</small></article><article><span>开放事项</span><strong>${summary.open}</strong><small>继续推进</small></article><article><span>卡点事项</span><strong>${summary.blocked}</strong><small>待协同 / 有风险</small></article><article><span>闭环率</span><strong>${summary.closureRate}%</strong><small>按事项数</small></article></section>${section("项目推进台账", "按风险优先排序；每个事项都可以编辑、保存或删除。", `<div class="rline-project-grid">${ordered.map(projectCard).join("")}</div>`)}${section("本周闭环", "已闭环、未闭环和当前卡点分开呈现。", `<div class="rline-closure-grid"><article><strong>已闭环 ${closedItems.length} 项</strong><p>${escapeHtml(closedItems.map((item) => item.title).join("；") || "暂无")}</p></article><article><strong>未闭环 ${openItems.length} 项</strong><p>${escapeHtml(openItems.map((item) => item.title).join("；") || "暂无")}</p></article><article class="is-alert"><strong>当前卡点 ${blockedItems.length} 项</strong><p>${escapeHtml(blockedItems.map((item) => `${item.title}｜${item.blocker || "待填写"}｜协同：${item.collaborators || "待填写"}｜截止：${item.dueDate || "待填写"}`).join("；") || "暂无")}</p></article></div>`)}${section("下周安排", "从未闭环事项生成，按优先级编号。", `<div class="rline-next-plan-list">${list(openItems, "暂无未闭环安排")}</div>`)}</div>`;
+  const blockedItems = items.filter((item) => item.status === "有风险" || item.status === "待协同");
+  const openItems = items.filter((item) => item.status !== "已验收" && item.status !== "已完成");
+  const closedItems = items.filter((item) => item.status === "已验收" || item.status === "已完成");
+  return `<div class="rline-tab-content"><section class="page-header rline-subheader"><div><p class="section-kicker">R线策略工作台 · 项目推进</p><h1>项目进度不是一句“推进中”，而是一条可验收的闭环</h1><p>填报顺序：目标 → 当前产出 → 卡点 → 协同人 → 截止时间 → 下一步 → 验收标准；周报自动读取这里的状态。</p></div><div class="rline-project-head-actions">${renderBadge(summary.closureRate >= 50 ? "success" : "warning", `闭环率${summary.closureRate}%`)}<button type="button" class="rline-export-button" data-project-add>新增事项</button></div></section><section class="rline-project-overview"><article><span>事项总数</span><strong>${summary.total}</strong><small>本周纳入跟踪</small></article><article><span>已闭环</span><strong>${summary.closed}</strong><small>已完成 / 已验收</small></article><article><span>开放事项</span><strong>${summary.open}</strong><small>需要下周继续推进</small></article><article><span>卡点事项</span><strong>${summary.blocked}</strong><small>待协同 / 有风险</small></article><article><span>闭环率</span><strong>${summary.closureRate}%</strong><small>按事项数计算</small></article></section>${section("项目推进台账（可编辑）", "每个事项保存后才进入下一次周报；页面不再依赖固定文案猜测进度。", `<div class="rline-project-grid">${items.map(projectCard).join("")}</div>`)}${section("本周闭环", "闭环的判断标准是：有产出、有验收、有结果回写；不是仅完成配置。", `<div class="rline-closure-grid"><article><strong>已闭环 ${closedItems.length} 项</strong><p>${escapeHtml(closedItems.map((item) => `${item.title}（${item.acceptance}）`).join("；") || "暂无")}</p></article><article><strong>未闭环 ${openItems.length} 项</strong><p>${escapeHtml(openItems.map((item) => `${item.title}：${item.next}`).join("；") || "暂无")}</p></article><article class="is-alert"><strong>当前卡点 ${blockedItems.length} 项</strong><p>${escapeHtml(blockedItems.map((item) => `${item.title}｜卡点：${item.blocker || "待填写"}｜协同：${item.collaborators || "待填写"}｜截止：${item.dueDate || "待填写"}`).join("；") || "暂无")}</p></article></div>`)}${section("下周安排", "下周安排自动从未闭环事项生成；每项都有负责人、截止时间和验收标准。", `<div class="rline-next-plan-list">${openItems.map((item, index) => `<article><b>0${index + 1}</b><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.next)}</p><small>负责人：${escapeHtml(item.owner || "待填写")} · 协同：${escapeHtml(item.collaborators || "待填写")} · 截止：${escapeHtml(item.dueDate || "待填写")} · 验收：${escapeHtml(item.acceptance || "待填写")}</small></div></article>`).join("") || "暂无未闭环安排"}</div>`)}</div>`;
 }
 
 export function bindReportingActions(container, snapshot, context = {}) {
@@ -502,9 +426,4 @@ export function bindReportingActions(container, snapshot, context = {}) {
     const next = [...collectProjects(), { id: `project-${Date.now()}`, title: "新事项（请填写）", goal: "", status: "待协同", progress: 0, owner: "", collaborators: "", dueDate: "", output: "", blocker: "", next: "", acceptance: "" }];
     context.onProjectsChange?.(next);
   });
-  container.querySelectorAll("[data-project-delete]").forEach((button) => button.addEventListener("click", () => {
-    const id = button.closest("[data-project-id]")?.dataset.projectId;
-    if (!id || !window.confirm("确认删除这个项目事项吗？删除后不会自动恢复。")) return;
-    context.onProjectsChange?.((context.projects || []).filter((item) => item.id !== id));
-  }));
 }

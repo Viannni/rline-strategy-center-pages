@@ -3,14 +3,7 @@ import { icon } from "../ui/icons.js";
 import { RLINE_DAILY_SNAPSHOT } from "../data/rline-daily-data.js?v=20260923-full-analysis";
 import { renderBarChart, renderLineChart } from "./rline-charts.js";
 import { ALL_COHORTS, cohortEntries, dayEndRecords, deriveWeeklyRollups, historyDates, previousDailyRecord, selectSnapshotForCohort, summarizeHistory } from "../history.js";
-import { bindReportingActions, renderDataArchive, renderProjectProgress, renderQACenter, renderWeeklyReport } from "./rline-reporting.js?v=20260930-final2";
-import { bindStrategyActions, renderStrategySettings } from "./rline-strategy.js?v=20260930-final";
-import { bindEffectivenessActions, renderEffectiveness } from "./rline-effectiveness.js?v=20260930-final";
-import { bindRenewalActions, renderRenewal } from "./rline-renewal.js?v=20260930-final";
-
-// Re-export the default project ledger so the standalone app can seed the
-// editable project page on a clean browser profile.
-export { DEFAULT_PROJECTS } from "./rline-reporting.js?v=20260930-final2";
+import { bindReportingActions, renderDataArchive, renderProjectProgress, renderQACenter, renderWeeklyReport } from "./rline-reporting.js?v=20260929-weekly-scope";
 
 function snapshotFrom(context) {
   return context.state.rlineDailyWorkbench || RLINE_DAILY_SNAPSHOT;
@@ -83,7 +76,6 @@ function historyDateEntries(snapshot, cohortId = ALL_COHORTS) {
 }
 
 function renderCohortFilter(snapshot, selectedCohortId, selectedDate, activeTab) {
-  if (["weekly", "settings", "effectiveness", "renewal"].includes(activeTab)) return "";
   const history = historyFrom(snapshot);
   const cohorts = cohortEntries(history);
   const summary = summarizeHistory(history);
@@ -437,7 +429,6 @@ function biPercent(value) {
   return hasNumber(value) ? `${Number(value).toFixed(1)}%` : "待BI回填";
 }
 
-function renderSourceLabel(url, label) { const safeLabel = escapeHtml(label || "数据源"); return url ? `<a href="${escapeAttribute(url)}" target="_blank" rel="noreferrer">${safeLabel}</a>` : `<span>${safeLabel}</span>`; }
 function biCapturedAt(value) {
   if (!value) return "未知时间";
   return String(value).replace("T", " ").replace(/\+08:00$/, "").slice(0, 16);
@@ -565,7 +556,7 @@ function renderBiPanel(snapshot, selectedStage = ALL_BI_STAGES, selectedCohortId
   const sourceCount = visibleCohorts.reduce((total, cohort) => total + (cohort.sources || []).length, 0);
   const rateComparison = renderBiRateComparison(visibleCohorts);
   const completionDistribution = renderBiCompletionDistribution(visibleCohorts, selectedStageLabel, selectedCohortLabel);
-  return `<section class="panel rline-section rline-bi-panel" data-rline-bi aria-labelledby="rline-bi-title"><header class="panel__header"><div><p class="section-kicker">课程BI实时结果</p><h2 id="rline-bi-title">按班期和来源渠道观察课程结果</h2><p>${escapeHtml(bi.note || "仅用于经营观察，不覆盖日内和日终历史快照。")}</p></div>${renderBadge(bi.status === "refreshed" ? "success" : "warning", `BI刷新 ${biCapturedAt(bi.capturedAt)}`)}</header><div class="rline-bi-toolbar" aria-label="课程BI筛选"><label for="rlineBiStageSelector"><span>查看阶段</span><select id="rlineBiStageSelector" data-rline-bi-stage>${stageOptions}</select></label><label for="rlineBiCohortSelector"><span>看哪一期</span><select id="rlineBiCohortSelector" data-rline-bi-cohort>${cohortOptions}</select></label><span class="rline-bi-toolbar__summary">当前查看：${escapeHtml(selectedStageLabel)} · ${escapeHtml(selectedCohortLabel)} · ${visibleCohorts.length}个班期 / ${sourceCount}个渠道</span></div>${rateComparison}<div class="rline-bi-table"><div class="rline-bi-row rline-bi-row--head"><span>班期</span><span>状态</span><span>开班日期</span><span>来源渠道</span><span>在班用户</span><span>用户占比</span><span>参与率</span><span>课时完课</span><span>100%深度</span><span>补完率</span><span>退单率</span><span>转化率</span></div>${rows || `<div class="rline-history-empty">当前筛选下暂无课程BI结果</div>`}</div>${completionDistribution}<p class="rline-history-note">数据源：${renderSourceLabel(bi.url, bi.name || "R线课程BI")}；未开课班期保留BI原始0值，但不纳入行课策略达成判断。</p></section>`;
+  return `<section class="panel rline-section rline-bi-panel" data-rline-bi aria-labelledby="rline-bi-title"><header class="panel__header"><div><p class="section-kicker">课程BI实时结果</p><h2 id="rline-bi-title">按班期和来源渠道观察课程结果</h2><p>${escapeHtml(bi.note || "仅用于经营观察，不覆盖日内和日终历史快照。")}</p></div>${renderBadge(bi.status === "refreshed" ? "success" : "warning", `BI刷新 ${biCapturedAt(bi.capturedAt)}`)}</header><div class="rline-bi-toolbar" aria-label="课程BI筛选"><label for="rlineBiStageSelector"><span>查看阶段</span><select id="rlineBiStageSelector" data-rline-bi-stage>${stageOptions}</select></label><label for="rlineBiCohortSelector"><span>看哪一期</span><select id="rlineBiCohortSelector" data-rline-bi-cohort>${cohortOptions}</select></label><span class="rline-bi-toolbar__summary">当前查看：${escapeHtml(selectedStageLabel)} · ${escapeHtml(selectedCohortLabel)} · ${visibleCohorts.length}个班期 / ${sourceCount}个渠道</span></div>${rateComparison}<div class="rline-bi-table"><div class="rline-bi-row rline-bi-row--head"><span>班期</span><span>状态</span><span>开班日期</span><span>来源渠道</span><span>在班用户</span><span>用户占比</span><span>参与率</span><span>课时完课</span><span>100%深度</span><span>补完率</span><span>退单率</span><span>转化率</span></div>${rows || `<div class="rline-history-empty">当前筛选下暂无课程BI结果</div>`}</div>${completionDistribution}<p class="rline-history-note">数据源：<a href="${escapeAttribute(bi.url || "#")}" target="_blank" rel="noreferrer">${escapeHtml(bi.name || "R线课程BI")}</a>；未开课班期保留BI原始0值，但不纳入行课策略达成判断。</p></section>`;
 }
 
 function metricCard(label, value, detail, tone = "blue") {
@@ -848,22 +839,13 @@ export function render(container, context) {
     const availableDates = historyDateEntries(baseSnapshot, selectedCohortId);
     const effectiveDate = availableDates.some((item) => item.date === selectedDate) ? selectedDate : availableDates[0]?.date || baseSnapshot.current.date;
     const snapshot = selectSnapshotForCohort(baseSnapshot, selectedCohortId, activeTab === "daily" ? effectiveDate : null);
-    const tabs = [["daily", "今日策略"], ["weekly", "周报"], ["archive", "数据留存"], ["qa", "QA中心"], ["progress", "项目推进"], ["settings", "策略设置"], ["effectiveness", "效果分析"], ["renewal", "续费转化"], ["monthly", "月度规划"]];
+    const tabs = [["daily", "今日策略"], ["weekly", "周汇报"], ["archive", "数据留存"], ["qa", "QA中心"], ["progress", "项目推进"], ["monthly", "月度规划"]];
     const reportDraft = context.reportDrafts?.[`${selectedCohortId}::${effectiveDate}`]?.rows || {};
-    const body = activeTab === "weekly" ? renderWeeklyReport(snapshot, selectedCohortId, { trendLevels: context.selectedTrendLevels, trendCohorts: context.selectedTrendCohorts }) : activeTab === "archive" ? renderDataArchive(baseSnapshot, selectedCohortId, context) : activeTab === "qa" ? renderQACenter(baseSnapshot, context.qaEntries, context) : activeTab === "progress" ? renderProjectProgress(context.projects) : activeTab === "settings" ? renderStrategySettings(context) : activeTab === "effectiveness" ? renderEffectiveness(baseSnapshot) : activeTab === "renewal" ? renderRenewal(baseSnapshot) : activeTab === "monthly" ? renderMonthly(snapshot, selectedCohortId) : renderDaily(snapshot, { stage: selectedBiStage, cohortId: selectedBiCohortId, historyCohortId: selectedCohortId, reportDraft });
+    const body = activeTab === "weekly" ? renderWeeklyReport(snapshot, selectedCohortId) : activeTab === "archive" ? renderDataArchive(baseSnapshot, selectedCohortId, context) : activeTab === "qa" ? renderQACenter(baseSnapshot, context.qaEntries, context) : activeTab === "progress" ? renderProjectProgress(context.projects) : activeTab === "monthly" ? renderMonthly(snapshot, selectedCohortId) : renderDaily(snapshot, { stage: selectedBiStage, cohortId: selectedBiCohortId, historyCohortId: selectedCohortId, reportDraft });
     const historyPanel = "";
     const previousReview = activeTab === "daily" ? renderPreviousDayReview(baseSnapshot, selectedCohortId, effectiveDate, selectedBiStage, selectedBiCohortId) : "";
-    container.innerHTML = `<section class="rline-workbench-shell"><nav class="rline-tab-nav" aria-label="R线工作台视图">${tabs.map(([id, label]) => `<button type="button" class="rline-tab${activeTab === id ? " is-current" : ""}" data-rline-tab="${id}" aria-selected="${activeTab === id}">${icon(id === "daily" ? "calendar-days" : id === "weekly" ? "chart-no-axes-combined" : id === "archive" ? "database" : id === "qa" ? "messages-square" : id === "progress" ? "list-checks" : id === "settings" ? "workflow" : id === "effectiveness" ? "chart-spline" : id === "renewal" ? "badge-yuan" : "route")}${escapeHtml(label)}</button>`).join("")}</nav>${renderCohortFilter(baseSnapshot, selectedCohortId, effectiveDate, activeTab)}${historyPanel}${previousReview}${body}</section>`;
+    container.innerHTML = `<section class="rline-workbench-shell"><nav class="rline-tab-nav" aria-label="R线工作台视图">${tabs.map(([id, label]) => `<button type="button" class="rline-tab${activeTab === id ? " is-current" : ""}" data-rline-tab="${id}" aria-selected="${activeTab === id}">${icon(id === "daily" ? "calendar-days" : id === "weekly" ? "chart-no-axes-combined" : "route")}${escapeHtml(label)}</button>`).join("")}</nav>${renderCohortFilter(baseSnapshot, selectedCohortId, effectiveDate, activeTab)}${historyPanel}${previousReview}${body}</section>`;
     bindReportingActions(container, baseSnapshot, context);
-    if (activeTab === "settings") bindStrategyActions(container, context, paint);
-    if (activeTab === "effectiveness") bindEffectivenessActions(container, context, paint);
-    if (activeTab === "renewal") bindRenewalActions(container, context, paint);
-    container.querySelectorAll("[data-rline-trend-filter]").forEach((input) => input.addEventListener("change", () => {
-      selectedTrendLevels = [...container.querySelectorAll("[data-rline-trend-filter=level]:checked")].map((node) => node.value);
-      selectedTrendCohorts = [...container.querySelectorAll("[data-rline-trend-filter=cohort]:checked")].map((node) => node.value);
-      context.onTrendFilterChange?.({ levels: selectedTrendLevels, cohorts: selectedTrendCohorts });
-      paint();
-    }));
     container.querySelectorAll("[data-rline-tab]").forEach((button) => button.addEventListener("click", () => {
       activeTab = button.dataset.rlineTab;
       context.onTabChange?.(activeTab);
